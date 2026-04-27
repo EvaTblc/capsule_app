@@ -1,7 +1,10 @@
 class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable,
-         :omniauthable, omniauth_providers: [:google_oauth2]
+  :recoverable, :rememberable, :validatable,
+  :omniauthable, omniauth_providers: [:google_oauth2]
+
+  has_many :user_collections
+  has_many :collections, through: :user_collections
 
   def self.from_omniauth(auth)
     where(provider: auth.provider, uid: auth.uid).first_or_create do |user|
