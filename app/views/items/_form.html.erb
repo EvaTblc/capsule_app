@@ -1,0 +1,106 @@
+<h1 class="text-2xl font-black tracking-tight mb-6">Nouvel item</h1>
+
+<%= form_with model: [@collection, @item], local: false do |f| %>
+  <div data-controller="item-type">
+
+    <%= f.hidden_field :item_type, data: { item_type_target: "input" } %>
+
+    <label class="text-sm font-semibold text-gray-600 mb-3 block">Type d'item</label>
+    <div class="grid grid-cols-3 gap-2 mb-6">
+
+      <% [["BookDetail", "book"], ["VideoGameDetail", "video_games"], ["MovieDetail", "movies"],
+          ["MusicDetail", "music"], ["FigurineDetail", "figurines"], ["TcgDetail", "trading_cards"],
+          ["BoardGameDetail", "board_games"]].each do |type, icon| %>
+        <div data-item-type-target="card"
+              data-type="<%= type %>"
+              data-action="click->item-type#select"
+              class="border-2 border-gray-100 bg-white rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer transition-all duration-150 active:scale-95">
+          <%= render "collections/icons/#{icon}" %>
+          <span class="text-xs font-medium text-gray-500"><%= type.gsub('Detail', '').titleize %></span>
+        </div>
+      <% end %>
+
+    </div>
+
+    <%# Champs communs %>
+    <div class="flex flex-col gap-4 mb-6">
+      <div>
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
+        <%= f.text_field :title, placeholder: "Titre de l'item...", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div>
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Condition</label>
+        <%= f.select :condition, ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"],
+            { include_blank: "Sélectionner..." },
+            class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div>
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
+        <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div>
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Barcode</label>
+        <%= f.text_field :barcode, placeholder: "Scanner ou saisir...", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+    </div>
+
+    <%# Champs spécifiques par type — cachés par défaut %>
+    <div data-item-type-target="form" data-form="BookDetail" class="hidden flex flex-col gap-4 mb-6">
+      <p class="text-sm font-bold text-gray-600">Détails du livre</p>
+      <input name="book_detail[author]" placeholder="Auteur" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="book_detail[isbn]" placeholder="ISBN" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="book_detail[publisher]" placeholder="Éditeur" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="book_detail[pages]" type="number" placeholder="Nombre de pages" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="book_detail[genre]" placeholder="Genre" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    </div>
+
+    <div data-item-type-target="form" data-form="VideoGameDetail" class="hidden flex flex-col gap-4 mb-6">
+      <p class="text-sm font-bold text-gray-600">Détails du jeu vidéo</p>
+      <input name="video_game_detail[platform]" placeholder="Plateforme" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="video_game_detail[genre]" placeholder="Genre" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="video_game_detail[developer]" placeholder="Développeur" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    </div>
+
+    <div data-item-type-target="form" data-form="MovieDetail" class="hidden flex flex-col gap-4 mb-6">
+      <p class="text-sm font-bold text-gray-600">Détails du film</p>
+      <input name="movie_detail[director]" placeholder="Réalisateur" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="movie_detail[year]" type="number" placeholder="Année" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="movie_detail[studio]" placeholder="Studio" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="movie_detail[format]" placeholder="Format (DVD, Blu-ray...)" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    </div>
+
+    <div data-item-type-target="form" data-form="MusicDetail" class="hidden flex flex-col gap-4 mb-6">
+      <p class="text-sm font-bold text-gray-600">Détails musicaux</p>
+      <input name="music_detail[artist]" placeholder="Artiste" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="music_detail[album]" placeholder="Album" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="music_detail[label]" placeholder="Label" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="music_detail[format]" placeholder="Format (CD, Vinyl...)" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    </div>
+
+    <div data-item-type-target="form" data-form="FigurineDetail" class="hidden flex flex-col gap-4 mb-6">
+      <p class="text-sm font-bold text-gray-600">Détails de la figurine</p>
+      <input name="figurine_detail[brand]" placeholder="Marque" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="figurine_detail[scale]" placeholder="Échelle" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="figurine_detail[material]" placeholder="Matériau" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    </div>
+
+    <div data-item-type-target="form" data-form="TcgDetail" class="hidden flex flex-col gap-4 mb-6">
+      <p class="text-sm font-bold text-gray-600">Détails de la carte</p>
+      <input name="tcg_detail[game]" placeholder="Jeu (Pokemon, Magic...)" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="tcg_detail[card_set]" placeholder="Set" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="tcg_detail[card_number]" placeholder="Numéro de carte" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="tcg_detail[rarity]" placeholder="Rareté" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    </div>
+
+    <div data-item-type-target="form" data-form="BoardGameDetail" class="hidden flex flex-col gap-4 mb-6">
+      <p class="text-sm font-bold text-gray-600">Détails du jeu de plateau</p>
+      <input name="board_game_detail[publisher]" placeholder="Éditeur" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="board_game_detail[min_players]" type="number" placeholder="Joueurs min" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="board_game_detail[max_players]" type="number" placeholder="Joueurs max" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <input name="board_game_detail[duration]" type="number" placeholder="Durée (minutes)" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    </div>
+
+    <%= f.submit "Ajouter l'item", class: "w-full bg-purple-600 text-white font-semibold py-3 rounded-xl shadow-md shadow-purple-200 active:scale-95 transition-transform duration-150" %>
+
+  </div>
+<% end %>

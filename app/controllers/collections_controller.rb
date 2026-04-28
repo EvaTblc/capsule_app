@@ -9,6 +9,7 @@ class CollectionsController < ApplicationController
 
   def show
     @items = @collection.items
+    @members = @collection.user_collections.includes(:user)
   end
 
   def new

@@ -18,4 +18,7 @@ Rails.application.routes.draw do
   resources :collections do
     resources :items
   end
+
+    get "profile", to: "pages#profile"
+    get "invite/:token", to: "invites#join", as: "invite"
 end

@@ -1,7 +1,11 @@
 class Collection < ApplicationRecord
   has_many :items
-  has_many :user_collections
+  has_many :user_collections, dependent: :destroy
   has_many :users, through: :user_collections
+
+  has_one_attached :image
+
+  before_create :generate_invite_token
 
   CATEGORIES = %w[comics movies music video_games figurines trading_cards board_games books mixed other]
   CATEGORY_STYLES = {
@@ -19,4 +23,11 @@ class Collection < ApplicationRecord
 
   validates :title, presence: true
   validates :category, inclusion: { in: CATEGORIES }
+
+
+  private
+
+  def generate_invite_token
+    self.invite_token = SecureRandom.urlsafe_base64(12)
+  end
 end

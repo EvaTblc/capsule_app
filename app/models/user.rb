@@ -3,7 +3,7 @@ class User < ApplicationRecord
   :recoverable, :rememberable, :validatable,
   :omniauthable, omniauth_providers: [:google_oauth2]
 
-  has_many :user_collections
+  has_many :user_collections, dependent: :destroy
   has_many :collections, through: :user_collections
 
   def self.from_omniauth(auth)
