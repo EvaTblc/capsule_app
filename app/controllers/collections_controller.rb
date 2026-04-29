@@ -52,8 +52,8 @@ class CollectionsController < ApplicationController
       redirect_to @collection, alert: "Action réservée au propriétaire."
     end
   end
-
+  
   def collection_params
-    params.require(:collection).permit(:title, :description, :category, :public)
+    params.require(:collection).permit(:title, :description, :category, :public, :cover_image)
   end
 end

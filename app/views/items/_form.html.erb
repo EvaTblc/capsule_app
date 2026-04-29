@@ -99,8 +99,11 @@
       <input name="board_game_detail[max_players]" type="number" placeholder="Joueurs max" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       <input name="board_game_detail[duration]" type="number" placeholder="Durée (minutes)" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
     </div>
-
-    <%= f.submit "Ajouter l'item", class: "w-full bg-purple-600 text-white font-semibold py-3 rounded-xl shadow-md shadow-purple-200 active:scale-95 transition-transform duration-150" %>
+    <div>
+      <label class="text-sm font-semibold text-gray-600 mb-1 block">Images (max 4)</label>
+      <%= f.file_field :images, accept: "image/*", multiple: true, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400" %>
+    </div>
+    <%= f.submit "Valider", class: "w-full bg-purple-600 text-white font-semibold py-3 rounded-xl shadow-md shadow-purple-200 active:scale-95 transition-transform duration-150" %>
 
   </div>
 <% end %>

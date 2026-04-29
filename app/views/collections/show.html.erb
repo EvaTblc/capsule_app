@@ -1,36 +1,6 @@
-<div class="mt-6 min-h-screen p-4 pt-14">
+<div class="p-4 pb-24">
 
   <% style = Collection::CATEGORY_STYLES[@collection.category] %>
-
-  <div class="<%= style %> rounded-3xl p-6 mb-6 flex flex-col gap-3">
-    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm">
-      <%= render "collections/icons/#{@collection.category}" %>
-    </div>
-    <div>
-      <p class="text-xs font-semibold uppercase tracking-widest text-gray-400"><%= @collection.category.humanize.titleize %></p>
-    </div>
-    <div class="flex items-center justify-between">
-      <h1 class="text-3xl font-black tracking-tight"><%= @collection.title %></h1>
-      <div class="flex items-center gap-2">
-        <%= link_to edit_collection_path(@collection), class: "w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm" do %>
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-        <% end %>
-
-        <button data-controller="share"
-                data-share-url-value="<%= invite_url(token: @collection.invite_token) %>"
-                data-action="click->share#copy"
-                class="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-          </svg>
-        </button>
-      </div>
-    </div>
-
-  </div>
-
   <% type_to_icon = {
     "BookDetail"      => "book",
     "VideoGameDetail" => "video_games",
@@ -41,7 +11,45 @@
     "BoardGameDetail" => "board_games"
   } %>
 
-  <div class="flex flex-col gap-2">
+<div class="rounded-3xl mt-14 mb-6 relative overflow-hidden <%= @collection.cover_image.attached? ? 'h-48' : style %>"
+     style="<%= @collection.cover_image.attached? ? "background-image: url('#{url_for(@collection.cover_image)}'); background-size: cover; background-position: center;" : "" %>">
+
+  <% if @collection.cover_image.attached? %>
+    <div class="absolute inset-0 bg-black opacity-40 rounded-3xl"></div>
+  <% end %>
+
+  <div class="relative z-10 h-full flex flex-col justify-between p-6">
+
+    <div>
+      <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-3">
+        <%= render "collections/icons/#{@collection.category}" %>
+      </div>
+      <p class="text-xs font-semibold uppercase tracking-widest <%= @collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @collection.category.humanize.titleize %></p>
+      <div class="flex items-center justify-between gap-2">
+        <h1 class="text-3xl font-black tracking-tight <%= @collection.cover_image.attached? ? 'text-white' : '' %>"><%= @collection.title %></h1>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <%= link_to edit_collection_path(@collection), class: "w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          <% end %>
+          <button data-controller="share"
+                  data-share-url-value="<%= invite_url(token: @collection.invite_token) %>"
+                  data-action="click->share#copy"
+                  class="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <p class="text-sm <%= @collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @collection.items.count %> items</p>
+    </div>
+
+  </div>
+</div>
+  <%# Items %>
+  <div class="flex flex-col gap-2 mb-6">
     <% @items.each do |item| %>
       <%= link_to collection_item_path(@collection, item) do %>
         <div class="bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-center gap-3 active:scale-95 transition-transform duration-150">
@@ -60,6 +68,7 @@
     <% end %>
   </div>
 
+  <%# Membres %>
   <div class="mt-6">
     <h2 class="text-sm font-black tracking-tight mb-3">Membres</h2>
     <div class="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3">
@@ -79,6 +88,7 @@
       <% end %>
     </div>
   </div>
+
 </div>
 
 <%= link_to new_collection_item_path(@collection), class: "fixed bottom-24 right-6 z-10 bg-purple-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-purple-300 active:scale-95 transition-transform duration-150" do %>

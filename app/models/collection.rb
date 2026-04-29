@@ -3,7 +3,7 @@ class Collection < ApplicationRecord
   has_many :user_collections, dependent: :destroy
   has_many :users, through: :user_collections
 
-  has_one_attached :image
+  has_one_attached :cover_image
 
   before_create :generate_invite_token
 
