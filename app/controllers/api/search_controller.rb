@@ -97,4 +97,48 @@ class Api::SearchController < ApplicationController
       studio: data["production_companies"]&.map { |c| c["name"] }&.join(", ")
     }
   end
+
+  def music
+    query = params[:query]
+    token = Rails.application.credentials.dig(:discogs, :token)
+
+    url = "https://api.discogs.com/database/search?q=#{CGI.escape(query)}&type=release&per_page=5&token=#{token}"
+
+    uri = URI(url)
+    request = Net::HTTP::Get.new(uri)
+    request["User-Agent"] = "CapsuleApp/1.0"
+
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(request) }
+    data = JSON.parse(response.body)
+
+    results = data["results"]&.map do |release|
+      {
+        id: release["id"],
+        title: release["title"],
+        year: release["year"],
+        label: release["label"]&.first,
+        format: release["format"]&.first,
+        genre: release["genre"]&.first
+      }
+    end
+
+    render json: results || []
+  end
+
+  def music_detail
+    token = Rails.application.credentials.dig(:discogs, :token)
+    url = "https://api.discogs.com/releases/#{params[:id]}?token=#{token}"
+
+    uri = URI(url)
+    request = Net::HTTP::Get.new(uri)
+    request["User-Agent"] = "CapsuleApp/1.0"
+
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(request) }
+    data = JSON.parse(response.body)
+
+    render json: {
+      artist: data["artists"]&.map { |a| a["name"] }&.join(", "),
+      description: data["notes"]
+    }
+  end
 end

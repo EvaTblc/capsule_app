@@ -7,9 +7,8 @@ class Collection < ApplicationRecord
 
   before_create :generate_invite_token
 
-  CATEGORIES = %w[comics movies music video_games figurines trading_cards board_games books mixed other]
+  CATEGORIES = %w[movies music video_games figurines trading_cards board_games books mixed other]
   CATEGORY_STYLES = {
-  "comics"        => "bg-yellow-50 shadow-yellow-100",
   "movies"        => "bg-red-50 shadow-red-100",
   "music"         => "bg-pink-50 shadow-pink-100",
   "video_games"   => "bg-blue-50 shadow-blue-100",

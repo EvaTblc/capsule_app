@@ -25,6 +25,8 @@ Rails.application.routes.draw do
     get "search/book", to: "search#book"
     get "search/movie", to: "search#movie"
     get "search/movie_detail/:id", to: "search#movie_detail"
+    get "search/music", to: "search#music"
+    get "search/music_detail/:id", to: "search#music_detail"
   end
 
   get "profile", to: "pages#profile"
