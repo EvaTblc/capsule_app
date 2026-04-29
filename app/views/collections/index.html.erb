@@ -23,14 +23,15 @@
             <div class="absolute inset-0 bg-black opacity-40 rounded-2xl"></div>
           <% end %>
 
-          <div class="relative z-10">
-            <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm mb-2">
+          <div class="relative z-10 h-full flex flex-col justify-between">
+            <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
               <%= render "collections/icons/#{collection.category == 'books' ? 'book' : collection.category}" %>
             </div>
-            <h2 class="text-lg font-bold mt-3 <%= collection.cover_image.attached? ? 'text-white' : '' %>"><%= collection.title %></h2>
-            <p class="text-xs mt-2 <%= collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= collection.items.count %> items</p>
+            <div>
+              <h2 class="text-lg font-bold <%= collection.cover_image.attached? ? 'text-white' : '' %>"><%= collection.title %></h2>
+              <p class="text-xs <%= collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= collection.items.count %> items</p>
+            </div>
           </div>
-
         </div>
       <% end %>
     <% end %>

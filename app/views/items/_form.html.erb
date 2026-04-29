@@ -28,9 +28,6 @@
       <% end %>
     </div>
 
-    <%# Champs communs toujours visibles %>
-
-
     <%# Champs spécifiques VideoGameDetail %>
     <div data-item-type-target="form" data-form="VideoGameDetail" class="hidden mb-4">
       <div class="relative mb-4">
@@ -83,42 +80,92 @@
     </div>
 
     <%# Champs spécifiques BookDetail %>
-    <div data-item-type-target="form" data-form="BookDetail" class="hidden mb-4">
+    <div data-item-type-target="form" data-form="BookDetail" class="hidden mb-4" data-controller="book-search">
+      <div class="relative mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Recherche</label>
+        <input data-book-search-target="query"
+              data-action="input->book-search#search"
+              placeholder="Rechercher un livre..."
+              class="w-full border border-purple-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        <div data-book-search-target="results" class="hidden absolute z-20 w-full bg-white border border-gray-100 rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto"></div>
+      </div>
+
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
+        <input data-book-search-target="title" name="item[title]" placeholder="Titre de l'item..." value="<%= @item.title %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">État</label>
+        <%= f.select :condition, ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"], { include_blank: "Sélectionner..." }, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
+        <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Description</label>
+        <textarea data-book-search-target="description" name="book_detail[description]" placeholder="Description..." rows="3" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200 resize-none"><%= book_detail&.description %></textarea>
+      </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Auteur</label>
-        <input name="book_detail[author]" placeholder="Auteur" value="<%= book_detail&.author %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        <input data-book-search-target="author" name="book_detail[author]" placeholder="Auteur" value="<%= book_detail&.author %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">ISBN</label>
-        <input name="book_detail[isbn]" placeholder="ISBN" value="<%= book_detail&.isbn %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        <input data-book-search-target="isbn" name="book_detail[isbn]" placeholder="ISBN" value="<%= book_detail&.isbn %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Éditeur</label>
-        <input name="book_detail[publisher]" placeholder="Éditeur" value="<%= book_detail&.publisher %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        <input data-book-search-target="publisher" name="book_detail[publisher]" placeholder="Éditeur" value="<%= book_detail&.publisher %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Pages</label>
-        <input name="book_detail[pages]" type="number" placeholder="Nombre de pages" value="<%= book_detail&.pages %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        <input data-book-search-target="pages" name="book_detail[pages]" type="number" placeholder="Nombre de pages" value="<%= book_detail&.pages %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Genre</label>
-        <input name="book_detail[genre]" placeholder="Genre" value="<%= book_detail&.genre %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        <input data-book-search-target="genre" name="book_detail[genre]" placeholder="Genre" value="<%= book_detail&.genre %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       </div>
     </div>
 
     <%# Champs spécifiques MovieDetail %>
-    <div data-item-type-target="form" data-form="MovieDetail" class="hidden mb-4">
+    <div data-item-type-target="form" data-form="MovieDetail" class="hidden mb-4" data-controller="movie-search">
+      <div class="relative mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Recherche</label>
+        <input data-movie-search-target="query"
+              data-action="input->movie-search#search"
+              placeholder="Rechercher un film..."
+              class="w-full border border-purple-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        <div data-movie-search-target="results" class="hidden absolute z-20 w-full bg-white border border-gray-100 rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto"></div>
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
+        <input data-movie-search-target="title" name="item[title]" placeholder="Titre de l'item..." value="<%= @item.title %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">État</label>
+        <%= f.select :condition, ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"], { include_blank: "Sélectionner..." }, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
+        <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Description</label>
+        <textarea data-movie-search-target="description" name="movie_detail[description]" placeholder="Description..." rows="3" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200 resize-none"><%= movie_detail&.description %></textarea>
+      </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Réalisateur</label>
-        <input name="movie_detail[director]" placeholder="Réalisateur" value="<%= movie_detail&.director %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        <input data-movie-search-target="director" name="movie_detail[director]" placeholder="Réalisateur" value="<%= movie_detail&.director %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Année</label>
-        <input name="movie_detail[year]" type="number" placeholder="Année" value="<%= movie_detail&.year %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        <input data-movie-search-target="year" name="movie_detail[year]" type="number" placeholder="Année" value="<%= movie_detail&.year %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Studio</label>
-        <input name="movie_detail[studio]" placeholder="Studio" value="<%= movie_detail&.studio %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        <input data-movie-search-target="studio" name="movie_detail[studio]" placeholder="Studio" value="<%= movie_detail&.studio %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Format</label>
@@ -128,6 +175,18 @@
 
     <%# Champs spécifiques MusicDetail %>
     <div data-item-type-target="form" data-form="MusicDetail" class="hidden mb-4">
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
+        <%= f.text_field :title, placeholder: "Titre de l'item...", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">État</label>
+        <%= f.select :condition, ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"], { include_blank: "Sélectionner..." }, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
+        <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Artiste</label>
         <input name="music_detail[artist]" placeholder="Artiste" value="<%= music_detail&.artist %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
@@ -149,6 +208,18 @@
     <%# Champs spécifiques FigurineDetail %>
     <div data-item-type-target="form" data-form="FigurineDetail" class="hidden mb-4">
       <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
+        <%= f.text_field :title, placeholder: "Titre de l'item...", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">État</label>
+        <%= f.select :condition, ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"], { include_blank: "Sélectionner..." }, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
+        <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Marque</label>
         <input name="figurine_detail[brand]" placeholder="Marque" value="<%= figurine_detail&.brand %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       </div>
@@ -164,6 +235,18 @@
 
     <%# Champs spécifiques TcgDetail %>
     <div data-item-type-target="form" data-form="TcgDetail" class="hidden mb-4">
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
+        <%= f.text_field :title, placeholder: "Titre de l'item...", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">État</label>
+        <%= f.select :condition, ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"], { include_blank: "Sélectionner..." }, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
+        <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Jeu</label>
         <input name="tcg_detail[game]" placeholder="Jeu (Pokemon, Magic...)" value="<%= tcg_detail&.game %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
@@ -184,6 +267,18 @@
 
     <%# Champs spécifiques BoardGameDetail %>
     <div data-item-type-target="form" data-form="BoardGameDetail" class="hidden mb-4">
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
+        <%= f.text_field :title, placeholder: "Titre de l'item...", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">État</label>
+        <%= f.select :condition, ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"], { include_blank: "Sélectionner..." }, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
+      <div class="mb-4">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
+        <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Éditeur</label>
         <input name="board_game_detail[publisher]" placeholder="Éditeur" value="<%= board_game_detail&.publisher %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">

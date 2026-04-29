@@ -22,8 +22,8 @@
 
     <div>
       <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-3">
-        <%= render "collections/icons/#{@collection.category}" %>
-      </div>
+        <% category_to_icon = { "comics" => "comics", "movies" => "movies", "music" => "music", "video_games" => "video_games", "figurines" => "figurines", "trading_cards" => "trading_cards", "board_games" => "board_games", "books" => "book", "mixed" => "mixed", "other" => "other" } %>
+        <%= render "collections/icons/#{category_to_icon[@collection.category]}" %>      </div>
       <p class="text-xs font-semibold uppercase tracking-widest <%= @collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @collection.category.humanize.titleize %></p>
       <div class="flex items-center justify-between gap-2">
         <h1 class="text-3xl font-black tracking-tight <%= @collection.cover_image.attached? ? 'text-white' : '' %>"><%= @collection.title %></h1>
@@ -48,7 +48,7 @@
       </div>
       <p class="text-sm <%= @collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @collection.items.count %> items</p>
 
-      <%= link_to collections_path, class: "flex items-center gap-1 text-xs text-white opacity-75 w-fit mt-3" do %>
+      <%= link_to collections_path, class: "flex items-center gap-1 text-xs text-white opacity-75 w-fit mt-1" do %>
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>

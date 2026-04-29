@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_29_104725) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_29_123421) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -54,6 +54,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_104725) do
   create_table "book_details", force: :cascade do |t|
     t.string "author"
     t.datetime "created_at", null: false
+    t.text "description"
     t.string "genre"
     t.string "isbn"
     t.integer "pages"
@@ -98,6 +99,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_104725) do
 
   create_table "movie_details", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.text "description"
     t.string "director"
     t.string "format"
     t.string "studio"

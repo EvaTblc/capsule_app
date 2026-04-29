@@ -4,6 +4,11 @@ export default class extends Controller {
   static targets = ["card", "input", "form"]
 
   connect() {
+    // Désactiver tous les inputs par défaut
+    this.formTargets.forEach(form => {
+      form.querySelectorAll("input, select, textarea").forEach(el => el.disabled = true)
+    })
+
     const currentType = this.inputTarget.value
     if (currentType) {
       const card = this.cardTargets.find(c => c.dataset.type === currentType)
@@ -16,6 +21,7 @@ export default class extends Controller {
           form.style.display = "flex"
           form.style.flexDirection = "column"
           form.style.gap = "1rem"
+          form.querySelectorAll("input, select, textarea").forEach(el => el.disabled = false)
         }
       }
     }
@@ -38,6 +44,8 @@ export default class extends Controller {
     this.formTargets.forEach(form => {
       form.classList.add("hidden")
       form.style.display = ""
+      // Désactiver tous les inputs de cette div
+      form.querySelectorAll("input, select, textarea").forEach(el => el.disabled = true)
     })
 
     const targetForm = this.element.querySelector(`[data-form="${type}"]`)
@@ -46,6 +54,8 @@ export default class extends Controller {
       targetForm.style.display = "flex"
       targetForm.style.flexDirection = "column"
       targetForm.style.gap = "1rem"
+      // Réactiver les inputs de la div visible
+      targetForm.querySelectorAll("input, select, textarea").forEach(el => el.disabled = false)
     }
   }
 }
