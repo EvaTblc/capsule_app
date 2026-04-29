@@ -2,7 +2,7 @@ class Item < ApplicationRecord
   belongs_to :item_detailable, polymorphic: true
   belongs_to :collection
 
-  has_many_attached :image
+  has_many_attached :images
 
   ITEM_TYPE_STYLES = {
   "BookDetail"      => "bg-emerald-50 shadow-emerald-100",

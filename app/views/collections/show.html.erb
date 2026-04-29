@@ -27,12 +27,15 @@
       <p class="text-xs font-semibold uppercase tracking-widest <%= @collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @collection.category.humanize.titleize %></p>
       <div class="flex items-center justify-between gap-2">
         <h1 class="text-3xl font-black tracking-tight <%= @collection.cover_image.attached? ? 'text-white' : '' %>"><%= @collection.title %></h1>
-        <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="flex items-center gap-2 shrink-0">
+
+
           <%= link_to edit_collection_path(@collection), class: "w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm" do %>
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
           <% end %>
+
           <button data-controller="share"
                   data-share-url-value="<%= invite_url(token: @collection.invite_token) %>"
                   data-action="click->share#copy"
@@ -44,6 +47,13 @@
         </div>
       </div>
       <p class="text-sm <%= @collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @collection.items.count %> items</p>
+
+      <%= link_to collections_path, class: "flex items-center gap-1 text-xs text-white opacity-75 w-fit mt-3" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        <p>Retour à la liste</p>
+      <% end %>
     </div>
 
   </div>

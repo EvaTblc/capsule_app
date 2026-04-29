@@ -19,6 +19,11 @@ Rails.application.routes.draw do
     resources :items
   end
 
-    get "profile", to: "pages#profile"
-    get "invite/:token", to: "invites#join", as: "invite"
+  namespace :api do
+    get "search/game", to: "search#game"
+    get "search/game_detail/:id", to: "search#game_detail"
+  end
+
+  get "profile", to: "pages#profile"
+  get "invite/:token", to: "invites#join", as: "invite"
 end

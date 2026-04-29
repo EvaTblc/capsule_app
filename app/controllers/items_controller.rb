@@ -44,6 +44,16 @@ class ItemsController < ApplicationController
   def edit; end
 
   def update
+    if params[:remove_image]
+      image = @item.images.find(params[:remove_image])
+      image.purge
+      redirect_to edit_collection_item_path(@collection, @item)
+      return
+    end
+    if params[:item].present? && params[:item][:images].present?
+      @item.images.attach(params[:item][:images])
+    end
+
     new_type = params[:item][:item_type]
 
     if new_type != @item.item_type
@@ -79,7 +89,7 @@ class ItemsController < ApplicationController
   private
 
   def item_params
-    params.require(:item).permit(:title, :description, :acquired_at, :condition, :barcode, :item_type, images: [])
+    params.require(:item).permit(:title, :description, :acquired_at, :condition, :barcode, :item_type)
   end
 
   def set_collection
