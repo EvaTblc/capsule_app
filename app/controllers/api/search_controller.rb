@@ -32,6 +32,120 @@ class Api::SearchController < ApplicationController
     }
   end
 
+  def game_barcode
+    ean = params[:ean].to_s.strip
+    return render json: { error: "Barcode manquant" }, status: :unprocessable_entity if ean.blank?
+
+    token = IgdbService.access_token
+    return render json: { error: "Token IGDB indisponible" }, status: :service_unavailable unless token
+
+    # Étape 1 : UPCitemdb pour récupérer le nom
+    upc_response = HTTP.get(
+      "https://api.upcitemdb.com/prod/trial/lookup",
+      params: { upc: ean }
+    )
+    upc_data = JSON.parse(upc_response.body.to_s)
+    product = upc_data.dig('items', 0)
+
+    return render json: { error: "Jeu non trouvé" }, status: :not_found unless product
+
+    game_name = clean_game_title(product['title'])
+    Rails.logger.info("[game_barcode] UPCitemdb: #{product['title']} → #{game_name}")
+
+    # Étape 2 : IGDB par nom
+    igdb_response = HTTParty.post(
+      "https://api.igdb.com/v4/games",
+      headers: {
+        'Client-ID' => Rails.application.credentials.igdb[:client_id],
+        'Authorization' => "Bearer #{token}"
+      },
+      body: "fields name,cover.url,platforms.name,summary,genres.name,first_release_date; search \"#{game_name}\"; limit 1;"
+    )
+
+    return render json: { error: "Jeu non trouvé sur IGDB" }, status: :not_found unless igdb_response.code == 200 && igdb_response.parsed_response.any?
+
+    game = igdb_response.parsed_response.first
+    cover_url = game.dig('cover', 'url') ? "https:#{game['cover']['url'].gsub('t_thumb', 't_cover_big')}" : nil
+    release_date = game['first_release_date'] ? Time.at(game['first_release_date']).to_date : nil
+    summary = TranslationService.translate_batch([game['summary'].to_s]).first
+
+    render json: {
+      id: game['id'],
+      name: game['name'],
+      cover_url: cover_url,
+      platforms: game['platforms']&.map { |p| p['name'] }&.join(', '),
+      release_date: game['first_release_date'] ? Time.at(game['first_release_date']).year : nil,
+      summary: summary,
+      genres: game['genres']&.map { |g| g['name'] }&.join(', '),
+      metadata: {
+        platforms: game['platforms']&.map { |p| p['name'] }&.join(', '),
+        summary: summary,
+        cover_url: cover_url,
+        genres: game['genres']&.map { |g| g['name'] }&.join(', '),
+        release_date: release_date&.to_s
+      }
+    }
+  rescue => e
+    Rails.logger.error("[game_barcode] Erreur: #{e.message}")
+    render json: { error: e.message }, status: :internal_server_error
+  end
+
+
+
+
+  def search_game
+    query = params[:query].to_s.strip
+    return render json: { error: "Query vide" }, status: :unprocessable_entity if query.blank?
+
+    token = IgdbService.access_token
+    return render json: { error: "Token IGDB indisponible" }, status: :service_unavailable unless token
+
+    response = HTTParty.post(
+      "https://api.igdb.com/v4/games",
+      headers: {
+        'Client-ID' => Rails.application.credentials.igdb[:client_id],
+        'Authorization' => "Bearer #{token}"
+      },
+      body: "fields name,cover.url,platforms.name,summary,genres.name,first_release_date; search \"#{query}\"; limit 10;"
+    )
+
+    return render json: { games: [] } unless response.code == 200 && response.parsed_response.any?
+
+    games = response.parsed_response
+
+    # Traduire tous les summaries en un seul appel
+    summaries = games.map { |g| g['summary'].to_s }
+    translated_summaries = TranslationService.translate_batch(summaries)
+
+    result = games.each_with_index.map do |game, i|
+      cover_url = game.dig('cover', 'url') ? "https:#{game['cover']['url'].gsub('t_thumb', 't_cover_big')}" : nil
+      release_date = game['first_release_date'] ? Time.at(game['first_release_date']).to_date : nil
+      summary = translated_summaries[i].presence || game['summary']
+
+      {
+        id: game['id'],
+        name: game['name'],
+        cover_url: cover_url,
+        platforms: game['platforms']&.map { |p| p['name'] }&.join(', '),
+        release_date: game['first_release_date'] ? Time.at(game['first_release_date']).year : nil,
+        summary: summary,
+        genres: game['genres']&.map { |g| g['name'] }&.join(', '),
+        metadata: {
+          platforms: game['platforms']&.map { |p| p['name'] }&.join(', '),
+          summary: summary,
+          cover_url: cover_url,
+          genres: game['genres']&.map { |g| g['name'] }&.join(', '),
+          release_date: release_date&.to_s
+        }
+      }
+    end
+
+    render json: { games: result }
+  rescue => e
+    Rails.logger.error("[search_game] Erreur: #{e.message}")
+    render json: { error: e.message }, status: :internal_server_error
+  end
+
   def book
     query = params[:query]
     api_key = Rails.application.credentials.dig(:google, :books_api_key)
@@ -141,4 +255,21 @@ class Api::SearchController < ApplicationController
       description: data["notes"]
     }
   end
+
+  private
+
+  def clean_game_title(title)
+    platforms = [
+      "Nintendo Switch", "PlayStation 5", "PS5", "PlayStation 4", "PS4",
+      "Xbox Series X", "Xbox One", "PC", "Steam", "Nintendo 3DS", "Wii U"
+    ]
+    clean = title
+    platforms.each do |platform|
+      clean = clean.gsub(/\s*-\s*#{platform}/i, '')
+      clean = clean.gsub(/\s*\(#{platform}\)/i, '')
+      clean = clean.gsub(/\s*\[#{platform}\]/i, '')
+    end
+    clean.strip
+  end
+
 end
