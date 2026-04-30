@@ -1,0 +1,1 @@
+//= link manifest.json
