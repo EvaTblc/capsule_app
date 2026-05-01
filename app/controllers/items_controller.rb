@@ -89,7 +89,7 @@ class ItemsController < ApplicationController
   private
 
   def item_params
-    params.require(:item).permit(:title, :description, :acquired_at, :condition, :barcode, :item_type, :comment)
+    params.require(:item).permit(:title, :description, :acquired_at, :condition, :barcode, :item_type, :comment, images: [])
   end
 
   def set_collection
