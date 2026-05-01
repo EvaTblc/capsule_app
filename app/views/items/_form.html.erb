@@ -382,7 +382,6 @@
 
     <%# Images %>
     <div class="mb-6">
-      <label class="text-sm font-semibold text-gray-600 mb-3 block">Images</label>
       <% if @item.persisted? && @item.images.attached? %>
         <div class="grid grid-cols-3 gap-2 mb-3">
           <% @item.images.each do |image| %>
@@ -399,7 +398,6 @@
         </div>
       <% end %>
 <div class="mb-6" data-controller="image-preview">
-  <label class="text-sm font-semibold text-gray-600 mb-3 block">Images</label>
 
   <%# Miniatures existantes %>
   <% if @item.persisted? && @item.images.attached? %>
