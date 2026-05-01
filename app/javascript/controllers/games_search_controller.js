@@ -18,7 +18,7 @@ export default class extends Controller {
 
   search() {
     const query = this.queryTarget.value
-    if (query.length < 3) return
+    if (query.length < 4) return
 
     clearTimeout(this.searchTimeout)
     this.searchTimeout = setTimeout(() => {
@@ -36,7 +36,7 @@ export default class extends Controller {
           })
           this.resultsTarget.classList.remove("hidden")
         })
-    }, 500)
+    }, 800)
   }
 
   async startScan() {
