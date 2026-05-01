@@ -380,7 +380,7 @@
           <% end %>
         </div>
       <% end %>
-      <%= f.file_field :images, accept: "image/*", multiple: true, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      <%= f.file_field :images, accept: "image/*", capture: "environment", multiple: true, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
     </div>
 
     <%= f.submit "Valider", class: "w-full bg-purple-600 text-white font-semibold py-3 rounded-xl shadow-md shadow-purple-200 active:scale-95 transition-transform duration-150 mt-2" %>

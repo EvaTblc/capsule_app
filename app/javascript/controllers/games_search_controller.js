@@ -58,13 +58,13 @@ export default class extends Controller {
   }
 
   searchByBarcode(ean) {
-    this.queryTarget.value = ean
-
     fetch(`/api/search/game_barcode?ean=${encodeURIComponent(ean)}`)
       .then(res => res.json())
       .then(data => {
         if (data.error) {
-          alert("Aucun jeu trouvé pour ce barcode")
+          this.queryTarget.value = ""
+          this.queryTarget.placeholder = "Jeu non trouvé, recherche manuelle..."
+          this.queryTarget.focus()
         } else {
           this.fill(data)
         }

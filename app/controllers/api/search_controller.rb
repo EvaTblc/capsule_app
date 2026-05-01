@@ -62,7 +62,17 @@ class Api::SearchController < ApplicationController
       body: "fields name,cover.url,platforms.name,summary,genres.name,first_release_date; search \"#{game_name}\"; limit 1;"
     )
 
-    return render json: { error: "Jeu non trouvé sur IGDB" }, status: :not_found unless igdb_response.code == 200 && igdb_response.parsed_response.any?
+    if product
+      game_name = clean_game_title(product['title'])
+      Rails.logger.info("[game_barcode] UPCitemdb: #{product['title']} → #{game_name}")
+    else
+      # Fallback : recherche IGDB directe avec l'EAN
+      Rails.logger.info("[game_barcode] UPCitemdb vide, fallback IGDB direct")
+      game_name = nil
+    end
+
+    # Si pas de nom via UPCitemdb, on ne peut pas chercher sur IGDB
+    return render json: { error: "Jeu non trouvé", fallback: true }, status: :not_found unless game_name
 
     game = igdb_response.parsed_response.first
     cover_url = game.dig('cover', 'url') ? "https:#{game['cover']['url'].gsub('t_thumb', 't_cover_big')}" : nil
