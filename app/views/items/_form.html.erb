@@ -1,4 +1,4 @@
-<%= form_with model: [@collection, @item], local: false do |f| %>
+<%= form_with model: [@collection, @item], local: false, multipart: true do |f| %>
 
   <% book_detail       = @item.item_type == "BookDetail"      ? @item.item_detailable : nil %>
   <% video_game_detail = @item.item_type == "VideoGameDetail" ? @item.item_detailable : nil %>

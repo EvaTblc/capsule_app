@@ -1,13 +1,47 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["query", "results", "platform", "genre", "releaseDate", "description", "scanner"]
+  static targets = ["query", "results", "platform", "genre", "releaseDate", "description", "scanner", "title"]
+
+  connect() {
+    this.closeResults = (e) => {
+      if (!this.element.contains(e.target)) {
+        this.resultsTarget.classList.add("hidden")
+      }
+    }
+    document.addEventListener("click", this.closeResults)
+  }
+
+  disconnect() {
+    document.removeEventListener("click", this.closeResults)
+  }
+
+  search() {
+    const query = this.queryTarget.value
+    if (query.length < 3) return
+
+    clearTimeout(this.searchTimeout)
+    this.searchTimeout = setTimeout(() => {
+      fetch(`/api/search/search_game?query=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(data => {
+          this.resultsTarget.innerHTML = ""
+          const games = data.games || []
+          games.forEach(game => {
+            const div = document.createElement("div")
+            div.className = "p-3 border-b border-gray-100 cursor-pointer hover:bg-purple-50 text-sm"
+            div.textContent = game.name + (game.release_date ? ` — ${game.release_date}` : "")
+            div.addEventListener("click", () => this.fill(game))
+            this.resultsTarget.appendChild(div)
+          })
+          this.resultsTarget.classList.remove("hidden")
+        })
+    }, 500)
+  }
 
   async startScan() {
     this.scannerTarget.classList.remove("hidden")
-
     const video = document.getElementById("game-scanner-video")
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" }
@@ -30,7 +64,6 @@ export default class extends Controller {
     }
 
     const detector = new BarcodeDetector({ formats: ["ean_13", "ean_8"] })
-
     this.scanInterval = setInterval(async () => {
       try {
         const barcodes = await detector.detect(video)
@@ -58,6 +91,7 @@ export default class extends Controller {
   }
 
   searchByBarcode(ean) {
+    this.queryTarget.value = ean
     fetch(`/api/search/game_barcode?ean=${encodeURIComponent(ean)}`)
       .then(res => res.json())
       .then(data => {
@@ -73,11 +107,7 @@ export default class extends Controller {
 
   selectPlatform(event) {
     const selected = event.currentTarget.dataset.platform
-
-    // Mettre à jour le champ caché
     this.platformTarget.value = selected
-
-    // Mettre à jour le style des pills
     const buttons = event.currentTarget.closest('.flex').querySelectorAll('button')
     buttons.forEach(btn => {
       if (btn.dataset.platform === selected) {
@@ -90,40 +120,16 @@ export default class extends Controller {
     })
   }
 
-  search() {
-    const query = this.queryTarget.value
-    if (query.length < 3) return
-
-    fetch(`/api/search/search_game?query=${encodeURIComponent(query)}`)
-      .then(res => res.json())
-      .then(data => {
-        this.resultsTarget.innerHTML = ""
-        const games = data.games || []
-        games.forEach(game => {
-          const div = document.createElement("div")
-          div.className = "p-3 border-b border-gray-100 cursor-pointer hover:bg-purple-50 text-sm"
-          div.textContent = game.name + (game.release_date ? ` — ${game.release_date}` : "")
-          div.addEventListener("click", () => this.fill(game))
-          this.resultsTarget.appendChild(div)
-        })
-        this.resultsTarget.classList.remove("hidden")
-      })
-  }
-
   fill(game) {
-    const nameInput = this.element.querySelector("input[name='item[name]']")
-    if (nameInput) nameInput.value = game.name || ""
-
+    if (this.hasTitleTarget) this.titleTarget.value = game.name || ""
     if (this.hasPlatformTarget) this.platformTarget.value = game.platforms || ""
     if (this.hasGenreTarget) this.genreTarget.value = game.genres || ""
     if (this.hasReleaseDateTarget) this.releaseDateTarget.value = game.release_date || ""
     if (this.hasDescriptionTarget) this.descriptionTarget.value = game.summary || ""
 
-    // Stocker les metadata dans un champ caché si présent
     const metadataInput = this.element.querySelector("input[name='item[metadata]']")
     if (metadataInput) metadataInput.value = JSON.stringify(game.metadata || {})
 
-    // Stocker la cover_url
     const coverInput = this.element.querySelector("input[name='item[cover_url]']")
     if (coverInput) coverInput.value = game.cover_url || ""
 
