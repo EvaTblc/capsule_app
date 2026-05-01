@@ -83,7 +83,18 @@
       </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Plateforme</label>
-        <input data-games-search-target="platform" name="video_game_detail[platform]" placeholder="Plateforme" value="<%= video_game_detail&.platform %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        <input type="hidden" data-games-search-target="platform" name="video_game_detail[platform]" value="<%= video_game_detail&.platform %>">
+        <div class="flex flex-wrap gap-2">
+          <% ["Switch", "Switch 2", "PS1", "PS2", "PS3", "PS4", "PS5", "Xbox", "Xbox 360", "Xbox One", "Xbox Series", "Nintendo DS", "Nintendo 3DS", "Wii", "Wii U", "Gamecube", "Autres"].each do |platform| %>
+            <button type="button"
+                    onclick="this.closest('div').previousElementSibling || document.querySelector('[name=\'video_game_detail[platform]\']').value = '<%= platform %>'"
+                    data-platform="<%= platform %>"
+                    data-action="click->games-search#selectPlatform"
+                    class="px-3 py-1 rounded-full text-xs font-medium border border-gray-200 text-gray-500 hover:border-purple-400 hover:text-purple-600 transition-colors duration-200 <%= video_game_detail&.platform == platform ? 'bg-purple-100 border-purple-400 text-purple-600' : 'bg-white' %>">
+              <%= platform %>
+            </button>
+          <% end %>
+        </div>
       </div>
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Genre</label>
@@ -96,6 +107,13 @@
       <div class="mb-4">
         <label class="text-sm font-semibold text-gray-600 mb-1 block">Date de sortie</label>
         <input data-games-search-target="release_date" name="video_game_detail[release_date]" type="date" value="<%= video_game_detail&.release_date %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      </div>
+
+      <div class="mb-4 flex items-center gap-3">
+        <input type="checkbox" name="video_game_detail[completed]" id="completed" value="1"
+              <%= "checked" if video_game_detail&.completed? %>
+              class="w-5 h-5 rounded accent-purple-600 cursor-pointer">
+        <label for="completed" class="text-sm font-semibold text-gray-600 cursor-pointer">Jeu terminé</label>
       </div>
     </div>
 
@@ -356,10 +374,10 @@
       </div>
     </div>
 
-    <%# Barcode %>
     <div class="mb-6">
-      <label class="text-sm font-semibold text-gray-600 mb-1 block">Barcode</label>
-      <%= f.text_field :barcode, placeholder: "Scanner ou saisir...", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      <label class="text-sm font-semibold text-gray-600 mb-1 block">Commentaire</label>
+      <textarea name="item[comment]" placeholder="Un commentaire sur cet item..." rows="2"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200 resize-none"><%= @item.comment %></textarea>
     </div>
 
     <%# Images %>

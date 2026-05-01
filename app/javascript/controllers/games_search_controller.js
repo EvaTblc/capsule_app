@@ -71,6 +71,25 @@ export default class extends Controller {
       })
   }
 
+  selectPlatform(event) {
+    const selected = event.currentTarget.dataset.platform
+
+    // Mettre à jour le champ caché
+    this.platformTarget.value = selected
+
+    // Mettre à jour le style des pills
+    const buttons = event.currentTarget.closest('.flex').querySelectorAll('button')
+    buttons.forEach(btn => {
+      if (btn.dataset.platform === selected) {
+        btn.classList.add('bg-purple-100', 'border-purple-400', 'text-purple-600')
+        btn.classList.remove('bg-white', 'border-gray-200', 'text-gray-500')
+      } else {
+        btn.classList.remove('bg-purple-100', 'border-purple-400', 'text-purple-600')
+        btn.classList.add('bg-white', 'border-gray-200', 'text-gray-500')
+      }
+    })
+  }
+
   search() {
     const query = this.queryTarget.value
     if (query.length < 3) return
