@@ -59,9 +59,19 @@
   </div>
 
   <% if @item.images.attached? %>
-    <div class="grid grid-cols-2 gap-2 mb-6 mt-6">
+    <div class="grid grid-cols-2 gap-2 mb-6 mt-6" data-controller="lightbox">
+
+      <%# Modal %>
+      <div data-lightbox-target="modal" class="hidden fixed inset-0 z-50 bg-black flex items-center justify-center"
+          data-action="click->lightbox#close">
+        <img data-lightbox-target="image" src="" class="max-w-full max-h-full object-contain">
+        <button class="absolute top-4 right-4 text-white text-2xl">✕</button>
+      </div>
+
       <% @item.images.each do |image| %>
-        <div class="h-40 rounded-2xl overflow-hidden">
+        <div class="h-40 rounded-2xl overflow-hidden cursor-pointer"
+            data-action="click->lightbox#open"
+            data-url="<%= url_for(image) %>">
           <%= image_tag image, class: "w-full h-full object-cover" %>
         </div>
       <% end %>

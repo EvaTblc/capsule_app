@@ -21,8 +21,18 @@ export default class extends Controller {
     if (query.length < 4) return
 
     clearTimeout(this.searchTimeout)
+
+    // Annuler la requête précédente si elle est encore en cours
+    if (this.abortController) {
+      this.abortController.abort()
+    }
+
     this.searchTimeout = setTimeout(() => {
-      fetch(`/api/search/search_game?query=${encodeURIComponent(query)}`)
+      this.abortController = new AbortController()
+
+      fetch(`/api/search/search_game?query=${encodeURIComponent(query)}`, {
+        signal: this.abortController.signal
+      })
         .then(res => res.json())
         .then(data => {
           this.resultsTarget.innerHTML = ""
@@ -36,7 +46,10 @@ export default class extends Controller {
           })
           this.resultsTarget.classList.remove("hidden")
         })
-    }, 800)
+        .catch(err => {
+          if (err.name !== "AbortError") console.log(err)
+        })
+    }, 400)
   }
 
   async startScan() {
