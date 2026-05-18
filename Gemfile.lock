@@ -468,6 +468,7 @@ DEPENDENCIES
   devise
   http
   httparty
+  i18n
   image_processing (~> 1.2)
   importmap-rails
   kamal
