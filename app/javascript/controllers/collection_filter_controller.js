@@ -128,6 +128,7 @@ export default class extends Controller {
     filter() {
       const query = this.searchTarget.value.toLowerCase().trim()
       const items = this.listTarget.querySelectorAll("a[data-title]")
+      let visibleCount = 0
 
       items.forEach(item => {
         let visible = true
@@ -144,6 +145,23 @@ export default class extends Controller {
         })
 
         item.style.display = visible ? "" : "none"
+        if (visible) visibleCount++
       })
+
+      // Afficher/cacher le message "aucun résultat"
+      let emptyMsg = this.listTarget.querySelector(".no-results")
+      if (visibleCount === 0) {
+        if (!emptyMsg) {
+          emptyMsg = document.createElement("div")
+          emptyMsg.className = "no-results py-12 text-center"
+          emptyMsg.innerHTML = `
+            <p class="text-sm font-semibold text-gray-500">Aucun résultat</p>
+            <p class="text-xs text-gray-400 mt-1">Essaie d'autres filtres</p>
+          `
+          this.listTarget.appendChild(emptyMsg)
+        }
+      } else {
+        if (emptyMsg) emptyMsg.remove()
+      }
     }
   }

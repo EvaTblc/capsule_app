@@ -24,7 +24,7 @@
       <p class="text-xs text-gray-400 mt-1">Partagées</p>
     </div>
     <div class="bg-purple-50 rounded-2xl px-4 py-3 flex-1 text-center">
-      <p class="text-2xl font-black text-purple-600"><%= current_user.collections.sum { |c| c.items.count } %></p>
+      <p class="text-2xl font-black text-purple-600"><%= @collections_owned.sum { |c| c.items.size } + @collections_shared.sum { |c| c.items.size } %></p>
       <p class="text-xs text-gray-400 mt-1">Items</p>
     </div>
   </div>

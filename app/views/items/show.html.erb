@@ -3,7 +3,7 @@
   <% style = Item::ITEM_TYPE_STYLES[@item.item_type] %>
   <% icon = Item::TYPE_TO_ICON[@item.item_type] %>
 
-<div class="rounded-3xl mb-6 flex flex-col justify-end relative overflow-hidden <%= @item.images.attached? ? 'h-48' : style + ' p-6' %>"
+<div class="rounded-3xl mb-4 flex flex-col justify-end relative overflow-hidden <%= @item.images.attached? ? 'h-48' : style + ' p-6' %>"
      style="<%= @item.images.attached? ? "background-image: url('#{url_for(@item.images.first)}'); background-size: cover; background-position: center;" : "" %>">
 
   <% if @item.images.attached? %>
@@ -26,16 +26,17 @@
         <% end %>
       </div>
       <% link_color = @item.images.attached? ? 'text-white opacity-75' : 'text-gray-400' %>
-      <%= link_to @collection, class: "flex items-center gap-1 text-xs #{link_color} w-fit" do %>
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-        <%= @collection.title %>
-      <% end %>
+
     </div>
   </div>
 </div>
 
+  <%= link_to collection_path(@item.collection), class: "flex items-center gap-1 text-xs text-gray-400 mb-3" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+<%= @item.collection.title %>
+  <% end %>
 
   <div class="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3">
     <% @item.item_detailable.attributes.except("id", "created_at", "updated_at").each do |key, value| %>

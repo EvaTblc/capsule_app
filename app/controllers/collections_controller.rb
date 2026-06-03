@@ -4,11 +4,11 @@ class CollectionsController < ApplicationController
   before_action :check_owner!, only: [:edit, :update, :destroy]
 
   def index
-    @collections = current_user.collections
+    @collections = current_user.collections.includes(:cover_image_attachment).with_attached_cover_image
   end
 
   def show
-    @items = @collection.items.sort_by { |item| item.title }
+    @items = @collection.items.includes(:item_detailable).sort_by(&:title)
     @members = @collection.user_collections.includes(:user)
   end
 
