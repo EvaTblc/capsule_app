@@ -8,7 +8,7 @@ class CollectionsController < ApplicationController
   end
 
   def show
-    @items = @collection.items
+    @items = @collection.items.sort_by { |item| item.title }
     @members = @collection.user_collections.includes(:user)
   end
 
@@ -52,7 +52,7 @@ class CollectionsController < ApplicationController
       redirect_to @collection, alert: "Action réservée au propriétaire."
     end
   end
-  
+
   def collection_params
     params.require(:collection).permit(:title, :description, :category, :public, :cover_image)
   end
