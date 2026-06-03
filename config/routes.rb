@@ -34,4 +34,5 @@ Rails.application.routes.draw do
 
   get "profile", to: "pages#profile"
   get "invite/:token", to: "invites#join", as: "invite"
+  get "offline", to: "pages#offline"
 end
