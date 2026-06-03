@@ -10,6 +10,14 @@ export default class extends Controller {
     this.buildPills();
   }
 
+  toggleDisplay(e) {
+    if (this.pillsTarget.classList.contains("hidden")) {
+      this.pillsTarget.classList.remove("hidden")
+    } else {
+      this.pillsTarget.classList.add("hidden")
+    }
+  }
+
   buildPills() {
     const filterConfig = {
       video_games:   ["condition", "platform", "completed"],

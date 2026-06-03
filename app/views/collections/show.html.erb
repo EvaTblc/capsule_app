@@ -73,8 +73,10 @@
       </svg>
     </div>
 
-    <div data-collection-filter-target="pills" class="flex flex-col mb-4"></div>
-
+    <div data-action="click->collection-filter#toggleDisplay">
+      <p class="px-2 py-3 text-xs font-semibold text-gray-400 uppercase">Recherche par filtres</p>
+      <div data-collection-filter-target="pills" class="flex flex-col mb-4 hidden"></div>
+    </div>
     <div data-collection-filter-target="list" class="flex flex-col gap-2 mb-6">
       <% @items.each do |item| %>
         <%= link_to collection_item_path(@collection, item),
