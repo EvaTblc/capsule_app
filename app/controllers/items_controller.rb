@@ -1,6 +1,6 @@
 class ItemsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_collection
+  before_action :set_collection, except: [:estimate]
   before_action :set_item, only: [:show, :edit, :update, :destroy]
 
   def show
@@ -84,6 +84,12 @@ class ItemsController < ApplicationController
   def destroy
     @item.destroy
     redirect_to @collection, notice: "Item supprimé."
+  end
+
+  def estimate
+    @item = Item.find(params[:id])
+    estimation = EstimationService.estimate(@item)
+    render turbo_stream: turbo_stream.update("estimation", html: estimation)
   end
 
   private

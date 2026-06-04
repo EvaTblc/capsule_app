@@ -19,6 +19,11 @@ Rails.application.routes.draw do
     resources :items
   end
 
+    resources :items, only: [] do
+      member do
+        post :estimate
+      end
+    end
   namespace :api do
     get "search/game", to: "search#game"
     get "search/game_detail/:id", to: "search#game_detail"

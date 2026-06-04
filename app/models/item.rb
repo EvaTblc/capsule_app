@@ -23,4 +23,15 @@ class Item < ApplicationRecord
     "TcgDetail"       => "trading_cards",
     "BoardGameDetail" => "board_games"
   }
+
+  def estimation_prompt
+    attributes = detailable.attributes.except("id", "created_at", "updated_at", "synopsis", "description", "duration")
+    "Tu es un expert en estimation de valeur de produits d'occasion.
+    Donne une fourchette de prix réaliste en euros pour cet item
+    sur le marché français de l'occasion (Vinted, LeBonCoin...) :
+    Nom : #{title}
+    État : #{condition}
+    #{attributes.map { |k, v| "#{k} : #{v}" }.join("\n")}
+    Réponds uniquement avec la fourchette de prix et une phrase d'explication courte."
+  end
 end
