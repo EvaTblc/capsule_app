@@ -144,7 +144,12 @@
         <% end %>
       </div>
     <% end %>
-
+    <%= link_to "https://www.vinted.fr/catalog?search_text=#{URI.encode_www_form_component(@collection.title)}",
+        target: "_blank",
+        rel: "noopener",
+        class: "btn-vinted" do %>
+      <%= image_tag "vinted-logo.svg", size: "50x50" %> Trouver des Pépites
+    <% end %>
   </div>
 
 <%= link_to new_collection_item_path(@collection), class: "fixed bottom-24 right-6 z-10 bg-purple-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-purple-300 active:scale-95 transition-transform duration-150" do %>
