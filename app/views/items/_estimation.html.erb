@@ -1,0 +1,8 @@
+<div class="estimation-card">
+  <div class="estimation-header">
+    <span class="estimation-label">Valeur estimée</span>
+  </div>
+  <p class="estimation-price"><%= estimation["price"] %></p>
+  <p class="estimation-explanation"><%= estimation["explanation"] %></p>
+  <%= button_to "Rafraîchir", estimate_item_path(@item), class: "btn-refresh" %>
+</div>

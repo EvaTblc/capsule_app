@@ -28,9 +28,57 @@
   }
 
 .btn-estimate {
-  border: gray solid 1px;
-  padding: 2px;
-  text-align: center;
+  background: none;
+  border: 0.5px solid #e0e0e0;
   border-radius: 8px;
-  opacity: 0.7;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: #888;
+  cursor: pointer;
+  width: 100%;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.estimation-card {
+  border: 0.5px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.estimation-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888;
+  font-weight: 500;
+}
+
+.estimation-price {
+  font-size: 26px;
+  font-weight: 500;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.estimation-explanation {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.btn-refresh {
+  align-self: flex-end;
+  font-size: 13px;
+  color: #888;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 4px;
 }

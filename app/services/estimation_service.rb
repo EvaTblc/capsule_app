@@ -2,17 +2,18 @@ class EstimationService
   ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 
   def self.estimate(item)
-    attributes = item.detailable.attributes.except(
+    attributes = item.item_detailable.attributes.except(
       "id", "created_at", "updated_at", "synopsis", "description", "duration").map { |k, v| "#{k} : #{v}" }.join("\n")
 
-    prompt = "Tu es un expert en estimation de valeur de produits d'occasion.
-Donne une fourchette de prix réaliste en euros pour cet item sur le marché français de l'occasion (Vinted, LeBonCoin...) :
+  prompt = "Tu es un expert en estimation de valeur de produits d'occasion.
+  Donne une fourchette de prix réaliste en euros pour cet item sur le marché français de l'occasion (Vinted, LeBonCoin...) :
 
-Nom : #{item.title}
-État : #{item.condition}
-#{attributes}
+  Nom : #{item.title}
+  État : #{item.condition}
+  #{attributes}
 
-Réponds uniquement avec la fourchette de prix et une phrase d'explication courte."
+  Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans backticks, exactement dans ce format :
+  {\"price\": \"15€ - 25€\", \"explanation\": \"Une phrase d'explication courte.\"}"
 
     response = HTTP.post(
       ANTHROPIC_API_URL,
@@ -29,9 +30,9 @@ Réponds uniquement avec la fourchette de prix et une phrase d'explication court
     )
 
     result = JSON.parse(response.body.to_s)
-    result.dig("content", 0, "text").to_s
-  rescue => e
-    Rails.logger.error("[EstimationService] Erreur: #{e.message}")
-    "Estimation indisponible"
+    raw = result.dig("content", 0, "text").to_s
+    JSON.parse(raw)
+  rescue JSON::ParserError
+    { "price" => "N/A", "explanation" => "Estimation indisponible" }
   end
 end

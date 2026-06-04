@@ -89,7 +89,9 @@ class ItemsController < ApplicationController
   def estimate
     @item = Item.find(params[:id])
     estimation = EstimationService.estimate(@item)
-    render turbo_stream: turbo_stream.update("estimation", html: estimation)
+    render turbo_stream: turbo_stream.update("estimation",
+      partial: "items/estimation",
+      locals: { estimation: estimation })
   end
 
   private
