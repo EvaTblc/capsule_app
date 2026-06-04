@@ -282,33 +282,68 @@
         <input data-music-search-target="genre" name="music_detail[genre]" placeholder="Genre" value="<%= music_detail&.genre %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       </div>
     </div>
+
     <%# Champs spécifiques FigurineDetail %>
-    <div data-item-type-target="form" data-form="FigurineDetail" class="hidden mb-4">
-      <div class="mb-4">
-        <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
-        <%= f.text_field :title, placeholder: "Titre de l'item...", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+      <div data-item-type-target="form" data-form="FigurineDetail" class="hidden mb-4"
+          data-controller="figurine-identify">
+
+        <%# Bouton photo d'identification %>
+        <div class="mb-4">
+          <label class="text-sm font-semibold text-gray-600 mb-1 block">Identifier par photo</label>
+          <div class="flex gap-2">
+            <input type="file" accept="image/*" capture="environment"
+                  class="hidden" id="figurine-identify-input"
+                  data-figurine-identify-target="input"
+                  data-action="change->figurine-identify#identify">
+            <label for="figurine-identify-input"
+                  class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-purple-300 text-sm font-medium text-purple-600 cursor-pointer hover:border-purple-400 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Identifier ma figurine
+            </label>
+          </div>
+          <div data-figurine-identify-target="loader" class="hidden mt-2 text-sm text-purple-500 text-center">
+            ✨ Identification en cours...
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
+          <%= f.text_field :title, placeholder: "Titre de l'item...",
+              data: { "figurine-identify-target": "title" },
+              class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+        </div>
+        <div class="mb-4">
+          <label class="text-sm font-semibold text-gray-600 mb-1 block">État</label>
+          <%= f.select :condition, ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"],
+              { include_blank: "Sélectionner..." },
+              class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+        </div>
+        <div class="mb-4">
+          <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
+          <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+        </div>
+        <div class="mb-4">
+          <label class="text-sm font-semibold text-gray-600 mb-1 block">Marque</label>
+          <input name="figurine_detail[brand]" placeholder="Marque" value="<%= figurine_detail&.brand %>"
+                data-figurine-identify-target="brand"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        </div>
+        <div class="mb-4">
+          <label class="text-sm font-semibold text-gray-600 mb-1 block">Échelle</label>
+          <input name="figurine_detail[scale]" placeholder="Échelle" value="<%= figurine_detail&.scale %>"
+                data-figurine-identify-target="scale"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        </div>
+        <div class="mb-4">
+          <label class="text-sm font-semibold text-gray-600 mb-1 block">Matériau</label>
+          <input name="figurine_detail[material]" placeholder="Matériau" value="<%= figurine_detail&.material %>"
+                data-figurine-identify-target="material"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        </div>
       </div>
-      <div class="mb-4">
-        <label class="text-sm font-semibold text-gray-600 mb-1 block">État</label>
-        <%= f.select :condition, ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"], { include_blank: "Sélectionner..." }, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
-      </div>
-      <div class="mb-4">
-        <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
-        <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
-      </div>
-      <div class="mb-4">
-        <label class="text-sm font-semibold text-gray-600 mb-1 block">Marque</label>
-        <input name="figurine_detail[brand]" placeholder="Marque" value="<%= figurine_detail&.brand %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
-      </div>
-      <div class="mb-4">
-        <label class="text-sm font-semibold text-gray-600 mb-1 block">Échelle</label>
-        <input name="figurine_detail[scale]" placeholder="Échelle" value="<%= figurine_detail&.scale %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
-      </div>
-      <div class="mb-4">
-        <label class="text-sm font-semibold text-gray-600 mb-1 block">Matériau</label>
-        <input name="figurine_detail[material]" placeholder="Matériau" value="<%= figurine_detail&.material %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
-      </div>
-    </div>
 
     <%# Champs spécifiques TcgDetail %>
     <div data-item-type-target="form" data-form="TcgDetail" class="hidden mb-4">

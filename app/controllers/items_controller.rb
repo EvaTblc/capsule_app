@@ -1,6 +1,6 @@
 class ItemsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_collection, except: [:estimate]
+  before_action :set_collection, except: [:estimate, :identify]
   before_action :set_item, only: [:show, :edit, :update, :destroy]
 
   def show
@@ -92,6 +92,12 @@ class ItemsController < ApplicationController
     render turbo_stream: turbo_stream.update("estimation",
       partial: "items/estimation",
       locals: { estimation: estimation })
+  end
+
+  def identify
+    base64 = params[:image]
+    result = FigurineIdentificationService.identify(base64)
+    render json: result
   end
 
   private
