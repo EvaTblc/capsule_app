@@ -180,7 +180,8 @@ class Api::SearchController < ApplicationController
         description: info["description"]
       }
     end
-
+    Rails.logger.info("[book] search_query: #{search_query}")
+    Rails.logger.info("[book] response: #{data}")
     render json: results || []
   end
 
