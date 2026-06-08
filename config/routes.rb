@@ -24,6 +24,7 @@ Rails.application.routes.draw do
         post :estimate
       end
     end
+
   namespace :api do
     get "search/game", to: "search#game"
     get "search/game_detail/:id", to: "search#game_detail"
@@ -36,6 +37,8 @@ Rails.application.routes.draw do
     get "search/game_barcode"
     get "search/game_barcode"
   end
+
+  resources :notes, only: [:index]
 
   get "profile", to: "pages#profile"
   get "invite/:token", to: "invites#join", as: "invite"
