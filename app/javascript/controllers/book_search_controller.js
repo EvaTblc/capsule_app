@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["query", "results", "author", "publisher", "pages", "genre", "isbn", "description", "scanner"]
+  static targets = ["query", "results", "author", "publisher", "pages", "genre", "isbn", "description", "scanner", "title"]
 
   async startScan() {
     this.scannerTarget.classList.remove("hidden")
@@ -62,6 +62,8 @@ export default class extends Controller {
     fetch(`/api/search/book?query=${encodeURIComponent(isbn)}`)
       .then(res => res.json())
       .then(data => {
+        console.log("data:", data)
+      console.log("data[0]:", data[0])
         if (data.length > 0) {
           this.fill(data[0])
         } else {
@@ -93,7 +95,6 @@ export default class extends Controller {
   fill(book) {
     const titleInput = this.element.querySelector("input[name='item[title]']")
     if (titleInput) titleInput.value = book.title || ""
-    this.titleTarget.value = book.title || ""
     this.authorTarget.value = book.author || ""
     this.publisherTarget.value = book.publisher || ""
     this.pagesTarget.value = book.pages || ""
