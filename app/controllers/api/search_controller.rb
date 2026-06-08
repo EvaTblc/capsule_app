@@ -157,11 +157,14 @@ class Api::SearchController < ApplicationController
   end
 
   def book
-    query = params[:query]
-    api_key = Rails.application.credentials.dig(:google, :books_api_key)
+def book
+  query = params[:query]
+  api_key = Rails.application.credentials.dig(:google, :books_api_key)
 
-    url = "https://www.googleapis.com/books/v1/volumes?q=#{CGI.escape(query)}&key=#{api_key}&maxResults=5&langRestrict=fr"
-    response = Net::HTTP.get(URI(url))
+  # Détecter si c'est un ISBN (que des chiffres, 10 ou 13 caractères)
+  search_query = query.match?(/^\d{10,13}$/) ? "isbn:#{query}" : query
+
+  url = "https://www.googleapis.com/books/v1/volumes?q=#{CGI.escape(search_query)}&key=#{api_key}&maxResults=5&langRestrict=fr"    response = Net::HTTP.get(URI(url))
     data = JSON.parse(response)
 
     results = data["items"]&.map do |item|
