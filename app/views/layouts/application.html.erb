@@ -42,7 +42,7 @@
   <body>
     <% if user_signed_in? %>
       <header class="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 flex justify-between items-center px-4 h-14 z-20">
-        <span class="text-xl font-black tracking-tight">Capsule</span>
+        <a href="/" class="text-xl font-black tracking-tight">Capsule</a>
         <div data-controller="avatar">
           <% if current_user.avatar_url %>
             <img src="<%= current_user.avatar_url %>"
@@ -78,7 +78,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <span class="text-xs">Explorer</span>
+          <span class="text-xs">Mon Carnet</span>
         <% end %>
 
         <%= link_to profile_path, class: "flex flex-col items-center gap-1 text-gray-400 hover:text-purple-600 transition-colors duration-200" do %>

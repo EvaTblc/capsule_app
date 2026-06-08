@@ -27,7 +27,7 @@ class FigurineIdentificationService
               {
                 type: "text",
                 text: "Identifie cette figurine de collection. Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans backticks :
-{\"title\": \"nom du personnage et série\", \"brand\": \"marque fabricant\", \"scale\": \"échelle si visible\", \"material\": \"matériau estimé\"}
+{\"title\": \"nom du personnage et série\", \"name\": \"nom du personnage\", \"series\": \"nom de la séries et/ou franchise\", \"manufacturer\": \"information fabricant\", \"line\": \"information sur la gamme\",  \"release_year\": \"année de lancement de la gamme/ligne de cette figurine, pas l'année de fabrication de cet exemplaire spécifique\"}
 Si tu ne peux pas identifier un champ, mets null."
               }
             ]

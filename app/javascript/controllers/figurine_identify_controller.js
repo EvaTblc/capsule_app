@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "title", "brand", "scale", "material", "loader"]
+  static targets = ["loader", "input", "title", "name", "series", "manufacturer", "line", "release_year"]
 
   async identify(event) {
     const file = event.target.files[0]
@@ -21,11 +21,14 @@ export default class extends Controller {
     })
 
     const data = await response.json()
+console.log(data.release_year);
 
     if (data.title)    this.titleTarget.value    = data.title
-    if (data.brand)    this.brandTarget.value    = data.brand
-    if (data.scale)    this.scaleTarget.value    = data.scale
-    if (data.material) this.materialTarget.value = data.material
+    if (data.name)    this.nameTarget.value    = data.name
+    if (data.series)    this.seriesTarget.value    = data.series
+    if (data.manufacturer) this.manufacturerTarget.value = data.manufacturer
+    if (data.line) this.lineTarget.value = data.line
+    if (data.release_year) this.release_yearTarget.value = data.release_year
 
     this.loaderTarget.classList.add("hidden")
   }
