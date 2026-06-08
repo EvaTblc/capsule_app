@@ -156,15 +156,15 @@ class Api::SearchController < ApplicationController
     render json: { error: e.message }, status: :internal_server_error
   end
 
+
   def book
-def book
-  query = params[:query]
-  api_key = Rails.application.credentials.dig(:google, :books_api_key)
+    query = params[:query]
+    api_key = Rails.application.credentials.dig(:google, :books_api_key)
 
-  # Détecter si c'est un ISBN (que des chiffres, 10 ou 13 caractères)
-  search_query = query.match?(/^\d{10,13}$/) ? "isbn:#{query}" : query
+    search_query = query.match?(/^\d{10,13}$/) ? "isbn:#{query}" : query
 
-  url = "https://www.googleapis.com/books/v1/volumes?q=#{CGI.escape(search_query)}&key=#{api_key}&maxResults=5&langRestrict=fr"    response = Net::HTTP.get(URI(url))
+    url = "https://www.googleapis.com/books/v1/volumes?q=#{CGI.escape(search_query)}&key=#{api_key}&maxResults=5&langRestrict=fr"
+    response = Net::HTTP.get(URI(url))
     data = JSON.parse(response)
 
     results = data["items"]&.map do |item|
