@@ -3,6 +3,25 @@ class EventsController < ApplicationController
   def show
   end
 
+  def list_events
+    results = Geocoder.search(current_user.address)
+    postal_code = results.first&.postal_code
+    department = postal_code&.first(2)
+    infos = Scraper.call(department)
+
+    infos.each do |info|
+      Event.create!(
+      user: current_user,
+      title: info[:title],
+      date: info[:date],
+      address: "#{info[:address]}, #{info[:city]}",
+      latitude: info[:latitude],
+      longitude: info[:longitude],
+      url: info[:url]
+    )
+    end
+  end
+
   def create
     @event = Event.new(events_params)
     @event.user = current_user

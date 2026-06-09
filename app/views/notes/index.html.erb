@@ -80,16 +80,16 @@
       <% end %>
     </div>
 
+    <%= link_to "Trouver des events", list_events_path, data: {turbo_method: "post"} %>
     <%# Map tous les events %>
     <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Carte</h2>
-<div style="width: 100%; height: 224px;"
-     class="rounded-2xl overflow-hidden mb-6"
-     data-controller="map"
-     data-map-markers-value="<%= @markers.to_json %>"
-     data-map-api-key-value="<%= Rails.application.credentials.mapbox[:api_key] %>"
-     data-map-user-lat-value="<%= current_user.latitude %>"
-     data-map-user-lng-value="<%= current_user.longitude %>">
-</div>
+    <div style="width: 100%; height: 224px;"
+        class="rounded-2xl overflow-hidden mb-6"
+        data-controller="map"
+        data-map-markers-value="<%= @markers.to_json %>"
+        data-map-api-key-value="<%= Rails.application.credentials.mapbox[:api_key] %>"
+        <%= "data-map-user-lat-value='#{current_user.latitude}' data-map-user-lng-value='#{current_user.longitude}'" if current_user.latitude.present? %>>
+    </div>
   <% end %>
 
 </div>

@@ -35,7 +35,7 @@ export default class extends Controller {
     })
 
     // Marker user
-    if (this.hasUserLatValue && this.hasUserLngValue) {
+    if (this.hasUserLatValue && this.hasUserLngValue && this.userLatValue !== 0 && this.userLngValue !== 0) {
       new mapboxgl.Marker({ color: '#f59e0b' })
         .setLngLat([this.userLngValue, this.userLatValue])
         .setPopup(new mapboxgl.Popup().setText('Ma position'))

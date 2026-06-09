@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_09_090004) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_09_100328) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -99,6 +99,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_090004) do
     t.integer "release_year"
     t.string "series"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "friendships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "receiver_id", null: false
+    t.bigint "requester_id", null: false
+    t.string "status"
+    t.datetime "updated_at", null: false
+    t.index ["receiver_id"], name: "index_friendships_on_receiver_id"
+    t.index ["requester_id"], name: "index_friendships_on_requester_id"
   end
 
   create_table "items", force: :cascade do |t|
@@ -344,6 +354,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_090004) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "events", "users"
+  add_foreign_key "friendships", "users", column: "receiver_id"
+  add_foreign_key "friendships", "users", column: "requester_id"
   add_foreign_key "items", "collections"
   add_foreign_key "notes", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

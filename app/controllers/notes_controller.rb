@@ -2,7 +2,7 @@ class NotesController < ApplicationController
   before_action :set_notes, only: [:show, :edit, :update, :destroy]
   def index
     @notes = Note.all
-    @events = Event.all
+    @events = Event.near(current_user.address, 50)
 
     @markers = @events.geocoded.map do |event|
       {

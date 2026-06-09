@@ -41,6 +41,14 @@ Rails.application.routes.draw do
   resources :notes, only: [:index, :show, :new, :create, :edit, :update, :destroy]
   resources :events, only: [:show, :new, :create, :edit, :update, :destroy]
 
+  resources :friendships, only: [:create, :destroy] do
+    member do
+      patch :accept
+      patch :reject
+    end
+  end
+
+  post "events/list", to: "events#list_events", as: "list_events"
   get "profile", to: "pages#profile"
   get "invite/:token", to: "invites#join", as: "invite"
   get "offline", to: "pages#offline"

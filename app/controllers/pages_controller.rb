@@ -16,6 +16,10 @@ class PagesController < ApplicationController
       .where(role: "member")
       .includes(collection: [:items, :cover_image_attachment])
       .map(&:collection)
+
+    @friends = current_user.all_friends
+    @pending_friendships = current_user.received_friendships.where(status: "pending")
+    @sent_friendships = current_user.sent_friendships.where(status: "pending").includes(:receiver)
   end
 
   def edit_address
@@ -23,8 +27,7 @@ class PagesController < ApplicationController
 
   def update_address
     if current_user.update(address_params)
-      # geocoder va automatiquement remplir lat/lng via after_validation
-      redirect_to profile_path, notice: "Adresse mise à jour !"
+      redirect_to profile_path
     else
       render :edit_address, status: :unprocessable_entity
     end
