@@ -1,5 +1,5 @@
 class EventsController < ApplicationController
-  before_action :set_event, only: [:show, :edit, :update, :destroy]
+  before_action :set_event, only: [:show, :edit, :update, :destroy, :share]
   def show
   end
 
@@ -10,15 +10,49 @@ class EventsController < ApplicationController
     infos = Scraper.call(department)
 
     infos.each do |info|
-      Event.create!(
-      user: current_user,
-      title: info[:title],
-      date: info[:date],
-      address: "#{info[:address]}, #{info[:city]}",
-      latitude: info[:latitude],
-      longitude: info[:longitude],
-      url: info[:url]
+      Event.find_or_create_by(url: info[:url], user: current_user) do |e|
+        e.title = info[:title]
+        e.date = info[:date]
+        e.address = "#{info[:address]}, #{info[:city]}"
+        e.latitude = info[:latitude]
+        e.longitude = info[:longitude]
+        e.url = info[:url]
+      end
+    end
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          "events-section",
+          partial: "notes/events_section",
+          locals: { events: @events, markers: @markers }
+        )
+      end
+    end
+  end
+
+  def share
+    friend = User.find(params[:friend_id])
+
+    Event.create!(
+      user: friend,
+      sender: current_user,
+      title: @event.title,
+      date: @event.date,
+      address: @event.address,
+      latitude: @event.latitude,
+      longitude: @event.longitude,
+      url: @event.url,
+      reminder: @event.reminder
     )
+
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          "share-event-#{@event.id}",
+          html: '<p class="text-xs text-green-500 font-semibold">Envoyé !</p>'.html_safe
+        )
+      end
+      format.html { redirect_to event_path(@event), notice: "Événement partagé !" }
     end
   end
 

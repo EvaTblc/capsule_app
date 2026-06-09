@@ -38,8 +38,16 @@ Rails.application.routes.draw do
     get "search/game_barcode"
   end
 
-  resources :notes, only: [:index, :show, :new, :create, :edit, :update, :destroy]
-  resources :events, only: [:show, :new, :create, :edit, :update, :destroy]
+  resources :notes, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
+    member do
+      post :share
+    end
+  end
+  resources :events, only: [:show, :new, :create, :edit, :update, :destroy] do
+      member do
+      post :share
+    end
+  end
 
   resources :friendships, only: [:create, :destroy] do
     member do

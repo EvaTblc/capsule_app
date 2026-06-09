@@ -1,14 +1,40 @@
 class NotesController < ApplicationController
-  before_action :set_notes, only: [:show, :edit, :update, :destroy]
+  before_action :set_notes, only: [:show, :edit, :update, :destroy, :share]
   def index
     @notes = Note.all
-    @events = Event.near(current_user.address, 50)
+    if current_user.address != nil
+      @events = Event.near(current_user.address, 50)
 
-    @markers = @events.geocoded.map do |event|
-      {
-        lat: event.latitude,
-        lng: event.longitude
-      }
+      @markers = @events.geocoded.map do |event|
+        {
+          lat: event.latitude.to_f,
+          lng: event.longitude.to_f
+        }
+      end
+    else
+      @events = Event.where(user: current_user)
+    end
+  end
+
+  def share
+    friend = User.find(params[:friend_id])
+
+    Note.create!(
+      user: friend,
+      sender: current_user,
+      title: @note.title,
+      comment: @note.comment,
+      reminder: @note.reminder
+    )
+
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          "share-note-#{@note.id}",
+          html: '<p class="text-xs text-green-500 font-semibold">Envoyé !</p>'
+        )
+      end
+      format.html { redirect_to note_path(@note), notice: "Note partagée !" }
     end
   end
 
