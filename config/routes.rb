@@ -38,10 +38,13 @@ Rails.application.routes.draw do
     get "search/game_barcode"
   end
 
-  resources :notes, only: [:index, :show, :new, :create, :edit]
+  resources :notes, only: [:index, :show, :new, :create, :edit, :update, :destroy]
+  resources :events, only: [:show, :new, :create, :edit, :update, :destroy]
 
   get "profile", to: "pages#profile"
   get "invite/:token", to: "invites#join", as: "invite"
   get "offline", to: "pages#offline"
   post "/items/identify", to: "items#identify"
+  get "profile/address/edit", to: "pages#edit_address", as: "edit_address"
+  patch "profile/address", to: "pages#update_address", as: "update_address"
 end

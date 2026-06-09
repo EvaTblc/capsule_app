@@ -18,7 +18,25 @@ class PagesController < ApplicationController
       .map(&:collection)
   end
 
+  def edit_address
+  end
+
+  def update_address
+    if current_user.update(address_params)
+      # geocoder va automatiquement remplir lat/lng via after_validation
+      redirect_to profile_path, notice: "Adresse mise à jour !"
+    else
+      render :edit_address, status: :unprocessable_entity
+    end
+  end
+
   def offline
     render layout: false
   end
+  private
+
+  def address_params
+    params.require(:user).permit(:address)
+  end
+
 end

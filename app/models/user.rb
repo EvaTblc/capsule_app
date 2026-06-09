@@ -6,7 +6,11 @@ class User < ApplicationRecord
   has_many :user_collections, dependent: :destroy
   has_many :collections, through: :user_collections
   has_many :notes
+  has_many :events
 
+  geocoded_by :address
+  after_validation :geocode, if: :will_save_change_to_address?
+  
   def self.from_omniauth(auth)
     where(provider: auth.provider, uid: auth.uid).first_or_create do |user|
       user.email = auth.info.email
