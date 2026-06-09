@@ -38,7 +38,7 @@ Rails.application.routes.draw do
     get "search/game_barcode"
   end
 
-  resources :notes, only: [:index]
+  resources :notes, only: [:index, :show, :new, :create, :edit]
 
   get "profile", to: "pages#profile"
   get "invite/:token", to: "invites#join", as: "invite"
