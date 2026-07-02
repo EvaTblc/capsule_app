@@ -72,7 +72,10 @@ class ItemsController < ApplicationController
       @item.item_detailable.destroy
       detail = case new_type
               when "BookDetail"      then BookDetail.new(params[:book_detail].permit!)
-              when "VideoGameDetail" then VideoGameDetail.new(params[:video_game_detail].permit!)
+              when "VideoGameDetail"
+                    p = params[:video_game_detail].permit!.to_h
+                    p["description"] = TranslationService.translate_batch([p["description"]]).first if p["description"].present?
+                    p
               when "MovieDetail"     then MovieDetail.new(params[:movie_detail].permit!)
               when "MusicDetail"     then MusicDetail.new(params[:music_detail].permit!)
               when "FigurineDetail"  then FigurineDetail.new(params[:figurine_detail].permit!)
@@ -83,6 +86,11 @@ class ItemsController < ApplicationController
       @item.item_detailable = detail
     else
       detail_params = params[new_type.underscore.to_sym]
+
+      if detail_params && new_type == "VideoGameDetail" && detail_params["description"].present?
+        detail_params["description"] = TranslationService.translate_batch([detail_params["description"]]).first
+      end
+
       @item.item_detailable.update(detail_params.permit!) if detail_params
     end
 
