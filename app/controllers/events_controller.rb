@@ -9,7 +9,7 @@ class EventsController < ApplicationController
     department = postal_code&.first(2)
     infos = Scraper.call(department)
 
-    infos.each do |info|
+    infos.select { |info| info[:date].present? && info[:date] <= 7.days.from_now.to_date && info[:date] >= Date.today }.each do |info|
       Event.find_or_create_by(url: info[:url], user: current_user) do |e|
         e.title = info[:title]
         e.date = info[:date]
@@ -19,6 +19,7 @@ class EventsController < ApplicationController
         e.url = info[:url]
       end
     end
+    
     respond_to do |format|
       format.turbo_stream do
         render turbo_stream: turbo_stream.replace(

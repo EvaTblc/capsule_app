@@ -48,7 +48,7 @@
     <%# Grille collections %>
     <h1 class="text-2xl font-black tracking-tight mb-4">Mes collections</h1>
     <div class="grid grid-cols-2 gap-4">
-      <% @collections.sort.each do |collection| %>
+      <% @collections.each do |collection| %>
         <%= link_to collection_path(collection) do %>
           <div class="rounded-2xl p-4 shadow-md active:scale-95 transition-transform duration-150 relative overflow-hidden min-h-32
                       <%= collection.cover_image.attached? ? 'h-36' : Collection::CATEGORY_STYLES[collection.category] %>"
