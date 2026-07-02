@@ -69,13 +69,13 @@ class ItemsController < ApplicationController
     new_type = params[:item][:item_type]
 
     if new_type != @item.item_type
-      @item.item_detailable.destroy
+      @item.item_detailable&.destroy
       detail = case new_type
               when "BookDetail"      then BookDetail.new(params[:book_detail].permit!)
               when "VideoGameDetail"
                     p = params[:video_game_detail].permit!.to_h
                     p["description"] = TranslationService.translate_batch([p["description"]]).first if p["description"].present?
-                    p
+                    VideoGameDetail.new(p)
               when "MovieDetail"     then MovieDetail.new(params[:movie_detail].permit!)
               when "MusicDetail"     then MusicDetail.new(params[:music_detail].permit!)
               when "FigurineDetail"  then FigurineDetail.new(params[:figurine_detail].permit!)

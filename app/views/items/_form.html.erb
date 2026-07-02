@@ -105,8 +105,8 @@
         <input data-games-search-target="developer" name="video_game_detail[developer]" placeholder="Développeur" value="<%= video_game_detail&.developer %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       </div>
       <div class="mb-4">
-        <label class="text-sm font-semibold text-gray-600 mb-1 block">Date de sortie</label>
-        <input data-games-search-target="release_date" name="video_game_detail[release_date]" type="date" value="<%= video_game_detail&.release_date %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+        <label class="text-sm font-semibold text-gray-600 mb-1 block">Année de sortie</label>
+        <input data-games-search-target="release_date" name="video_game_detail[release_date]" type="number" value="<%= video_game_detail&.release_date %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
       </div>
 
       <div class="mb-4 flex items-center gap-3">
