@@ -11,24 +11,36 @@ class ItemsController < ApplicationController
   end
 
   def create
-    # 1. On identifie le type de detail
     item_type = params[:item][:item_type]
 
-    # 2. On crée le bon detail model
-    detail = case item_type
-            when "BookDetail"      then BookDetail.new(params[:book_detail].permit!)
-            when "VideoGameDetail" then VideoGameDetail.new(params[:video_game_detail].permit!)
-            when "MovieDetail"     then MovieDetail.new(params[:movie_detail].permit!)
-            when "MusicDetail"     then MusicDetail.new(params[:music_detail].permit!)
-            when "FigurineDetail"  then FigurineDetail.new(params[:figurine_detail].permit!)
-            when "TcgDetail"       then TcgDetail.new(params[:tcg_detail].permit!)
-            when "BoardGameDetail" then BoardGameDetail.new(params[:board_game_detail].permit!)
-            end
+    detail_params = case item_type
+    when "VideoGameDetail"
+      p = params[:video_game_detail].permit!.to_h
+      # Traduction du summary uniquement pour les jeux vidéo
+      if p["description"].present?
+        p["description"] = TranslationService.translate_batch([p["description"]]).first
+      end
+      p
+    when "BookDetail"      then params[:book_detail].permit!.to_h
+    when "MovieDetail"     then params[:movie_detail].permit!.to_h
+    when "MusicDetail"     then params[:music_detail].permit!.to_h
+    when "FigurineDetail"  then params[:figurine_detail].permit!.to_h
+    when "TcgDetail"       then params[:tcg_detail].permit!.to_h
+    when "BoardGameDetail" then params[:board_game_detail].permit!.to_h
+    end
 
-    # 3. On sauvegarde le detail
+    detail = case item_type
+    when "BookDetail"      then BookDetail.new(detail_params)
+    when "VideoGameDetail" then VideoGameDetail.new(detail_params)
+    when "MovieDetail"     then MovieDetail.new(detail_params)
+    when "MusicDetail"     then MusicDetail.new(detail_params)
+    when "FigurineDetail"  then FigurineDetail.new(detail_params)
+    when "TcgDetail"       then TcgDetail.new(detail_params)
+    when "BoardGameDetail" then BoardGameDetail.new(detail_params)
+    end
+
     detail.save!
 
-    # 4. On crée l'item lié au detail et à la collection
     @item = Item.new(item_params)
     @item.collection = @collection
     @item.item_detailable = detail

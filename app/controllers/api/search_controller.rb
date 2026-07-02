@@ -123,14 +123,10 @@ class Api::SearchController < ApplicationController
 
     games = response.parsed_response
 
-    # Traduire tous les summaries en un seul appel
-    summaries = games.map { |g| g['summary'].to_s }
-    translated_summaries = TranslationService.translate_batch(summaries)
-
     result = games.each_with_index.map do |game, i|
       cover_url = game.dig('cover', 'url') ? "https:#{game['cover']['url'].gsub('t_thumb', 't_cover_big')}" : nil
       release_date = game['first_release_date'] ? Time.at(game['first_release_date']).to_date : nil
-      summary = translated_summaries[i].presence || game['summary']
+      summary = game['summary']
 
       {
         id: game['id'],

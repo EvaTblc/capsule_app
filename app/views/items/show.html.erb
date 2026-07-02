@@ -1,7 +1,7 @@
 <div class="min-h-screen p-4 pt-20 pb-24">
 
-  <% style = Item::ITEM_TYPE_STYLES[@item.item_type] %>
-  <% icon = Item::TYPE_TO_ICON[@item.item_type] %>
+  <% style = Item::ITEM_TYPE_STYLES[@item.item_detailable_type] %>
+  <% icon = Item::TYPE_TO_ICON[@item.item_detailable_type] %>
 
 <div class="rounded-3xl mb-4 flex flex-col justify-end relative overflow-hidden <%= @item.images.attached? ? 'h-48' : style + ' p-6' %>"
      style="<%= @item.images.attached? ? "background-image: url('#{url_for(@item.images.first)}'); background-size: cover; background-position: center;" : "" %>">
