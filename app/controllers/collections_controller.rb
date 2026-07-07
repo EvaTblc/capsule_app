@@ -8,7 +8,9 @@ class CollectionsController < ApplicationController
   end
 
   def show
-    @items = @collection.items.includes(:item_detailable).sort_by { |i| i.title.scan(/\d+/).map(&:to_i) }
+    @items = @collection.items.includes(:item_detailable).sort_by { |i|
+      i.title.gsub(/(\d+)/) { $1.rjust(10, '0') }
+    }
     @members = @collection.user_collections.includes(:user)
   end
 
