@@ -59,6 +59,7 @@ class NotesController < ApplicationController
   end
 
   def edit
+    @event = Event.new
   end
 
   def update

@@ -1,3 +1,52 @@
 <div class="min-h-screen p-4 pt-20 pb-24">
-  <%= render "form", event: @event %>
+  <div class="min-h-screen pt-20 pb-24 px-4">
+    <div class="mb-6">
+      <h1 class="text-2xl font-black tracking-tight">Nouvel événement</h1>
+    </div>
+
+    <%= form_with model: @event, class: "flex flex-col gap-4" do |f| %>
+
+      <div>
+        <%= f.text_field :title,
+            placeholder: "Titre",
+            class: "w-full bg-gray-50 rounded-xl px-4 py-3 text-sm font-semibold text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-purple-300" %>
+      </div>
+
+      <div>
+        <%= f.date_field :date,
+            class: "w-full bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-purple-300" %>
+      </div>
+
+      <div>
+        <%= f.text_field :address,
+            placeholder: "Adresse ou ville",
+            class: "w-full bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-purple-300" %>
+      </div>
+
+      <div>
+        <%= f.url_field :url,
+            placeholder: "Lien (optionnel)",
+            class: "w-full bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-purple-300" %>
+      </div>
+
+      <div>
+        <%= f.text_area :comment,
+            placeholder: "Notes...",
+            rows: 3,
+            class: "w-full bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-purple-300 resize-none" %>
+      </div>
+
+      <div class="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+        <div>
+          <p class="text-sm font-semibold text-gray-900">Reminder</p>
+          <p class="text-xs text-gray-400">Me rappeler cet événement</p>
+        </div>
+        <%= f.check_box :reminder, class: "w-5 h-5 accent-purple-600 rounded" %>
+      </div>
+
+      <%= f.submit "Enregistrer", class: "w-full bg-purple-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-purple-700 transition-colors duration-200" %>
+
+    <% end %>
+  </div>
+
 </div>
