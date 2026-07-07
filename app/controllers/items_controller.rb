@@ -80,11 +80,21 @@ class ItemsController < ApplicationController
     if new_type != @item.item_type
       @item.item_detailable&.destroy
       detail = case new_type
-              when "BookDetail"      then BookDetail.new(params[:book_detail].permit!)
+              when "BookDetail"
+                then BookDetail.new(params[:book_detail].permit!)
+                p = params[:book_detail].permit!.to_h
+                if p["description"].blank?
+                  p["description"] = BookDescriptionService.generate(
+                    title: params[:item][:title],
+                    author: p["author"],
+                    isbn: p["isbn"]
+                  )
+                end
+                BookDetail.new(p)
               when "VideoGameDetail"
-                    p = params[:video_game_detail].permit!.to_h
-                    p["description"] = TranslationService.translate_batch([p["description"]]).first if p["description"].present?
-                    VideoGameDetail.new(p)
+              p = params[:video_game_detail].permit!.to_h
+              p["description"] = TranslationService.translate_batch([p["description"]]).first if p["description"].present?
+              VideoGameDetail.new(p)
               when "MovieDetail"     then MovieDetail.new(params[:movie_detail].permit!)
               when "MusicDetail"     then MusicDetail.new(params[:music_detail].permit!)
               when "FigurineDetail"  then FigurineDetail.new(params[:figurine_detail].permit!)
