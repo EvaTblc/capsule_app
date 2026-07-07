@@ -44,12 +44,12 @@
 
   <body>
     <% if user_signed_in? %>
-      <% upcoming_reminders = current_user.events.where(reminder: true).where(date: Date.today..3.days.from_now.to_date).count %>
+      <% upcoming_reminders = current_user.events.where(reminder: true).where(date: Date.today..7.days.from_now.to_date).count %>
       <header class="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 flex justify-between items-center px-4 h-14 z-20">
         <a href="/" class="text-xl font-black tracking-tight">Capsule</a>
         <div class="flex items-center gap-2" data-controller="avatar">
           <% if upcoming_reminders > 0 %>
-            <% upcoming_events = current_user.events.where(reminder: true).where(date: Date.today..3.days.from_now.to_date) %>
+            <% upcoming_events = current_user.events.where(reminder: true).where(date: Date.today..7.days.from_now.to_date) %>
             <div data-controller="reminders-popup" class="relative">
               <button data-action="click->reminders-popup#toggle"
                       class="flex items-center gap-1 bg-red-50 text-red-500 text-xs font-bold px-2 py-1 rounded-full">

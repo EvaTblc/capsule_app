@@ -21,7 +21,16 @@ class ItemsController < ApplicationController
         p["description"] = TranslationService.translate_batch([p["description"]]).first
       end
       p
-    when "BookDetail"      then params[:book_detail].permit!.to_h
+    when "BookDetail"
+      p = params[:book_detail].permit!.to_h
+        if p["description"].blank?
+          p["description"] = BookDescriptionService.generate(
+            title: params[:item][:title],
+            author: p["author"],
+            isbn: p["isbn"]
+          )
+        end
+        p
     when "MovieDetail"     then params[:movie_detail].permit!.to_h
     when "MusicDetail"     then params[:music_detail].permit!.to_h
     when "FigurineDetail"  then params[:figurine_detail].permit!.to_h
