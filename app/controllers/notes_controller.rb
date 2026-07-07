@@ -2,18 +2,19 @@ class NotesController < ApplicationController
   before_action :authenticate_user!
   before_action :set_notes, only: [:show, :edit, :update, :destroy, :share]
   def index
-    @notes = Note.all
-    if current_user.address != nil
-      @events = Event.near(current_user.address, 50)
-
-      @markers = @events.geocoded.map do |event|
-        {
-          lat: event.latitude.to_f,
-          lng: event.longitude.to_f
-        }
-      end
+    @notes = current_user.notes
+    @events = if current_user.address.present?
+      Event.where(user: current_user).near(current_user.address, 50)
     else
-      @events = Event.where(user: current_user)
+      Event.where(user: current_user)
+    end
+
+    @markers = @events.geocoded.map do |event|
+      {
+        lat: event.latitude.to_f,
+        lng: event.longitude.to_f,
+        info_window_html: render_to_string(partial: "info_window", locals: {event: event})
+      }
     end
   end
 

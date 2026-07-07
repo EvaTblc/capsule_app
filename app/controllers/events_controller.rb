@@ -19,7 +19,10 @@ class EventsController < ApplicationController
         e.url = info[:url]
       end
     end
-    
+
+    @events = Event.where(user: current_user).near(current_user.address, 50)
+    @markers = @events.geocoded.map { |e| { lat: e.latitude.to_f, lng: e.longitude.to_f } }
+
     respond_to do |format|
       format.turbo_stream do
         render turbo_stream: turbo_stream.replace(

@@ -47,7 +47,8 @@ gem "omniauth-rails_csrf_protection"
 gem "cloudinary"
 gem "http"
 gem "httparty"
-gem 'i18n'
+gem "rails-i18n"
+# gem 'i18n'
 gem "geocoder"
 
 group :development, :test do
