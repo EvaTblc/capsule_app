@@ -1,5 +1,5 @@
 <%= turbo_frame_tag "events-section" do %>
-  <% if events.empty? %>
+  <% if events.empty? || events.nil? %>
     <div class="flex flex-col items-center justify-center gap-3 text-center bg-gray-50 rounded-2xl py-12 mb-6">
       <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
