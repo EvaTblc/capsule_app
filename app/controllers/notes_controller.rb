@@ -77,7 +77,7 @@ class NotesController < ApplicationController
   private
 
   def notes_params
-    params.require(:note).permit(:title, :comment, :reminder)
+    params.require(:note).permit(:title, :comment, :reminder, :collection_id)
   end
 
   def set_notes
