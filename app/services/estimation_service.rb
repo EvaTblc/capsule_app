@@ -33,7 +33,7 @@ class EstimationService
     raw = result.dig("content", 0, "text").to_s
     cleaned = raw.gsub(/```json\n?|\n?```/, "").strip
     JSON.parse(cleaned)
-  rescue JSON::ParserError
+  rescue JSON::ParserError, StandardError
     { "price" => "N/A", "explanation" => "Estimation indisponible" }
   end
 
