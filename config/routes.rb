@@ -35,7 +35,7 @@ Rails.application.routes.draw do
     get "search/music", to: "search#music"
     get "search/music_detail/:id", to: "search#music_detail"
     get "search/game_barcode"
-    get "search/movie_barcode", to: "api/search#movie_barcode"
+    get "search/movie_barcode", to: "search#movie_barcode"
   end
 
   resources :notes, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
