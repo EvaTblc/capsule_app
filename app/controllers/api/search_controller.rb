@@ -136,7 +136,9 @@ class Api::SearchController < ApplicationController
     ))
     detail_data = JSON.parse(detail_response)
     credits_data = JSON.parse(credits_response)
-
+    
+    movie_name = clean_movie_title(product['title'])
+    Rails.logger.info("[movie_barcode] titre nettoyé: #{movie_name}")
     director = credits_data["crew"]&.find { |p| p["job"] == "Director" }&.dig("name")
     studio = detail_data["production_companies"]&.map { |c| c["name"] }&.join(", ")
     poster_url = movie["poster_path"] ? "https://image.tmdb.org/t/p/w500#{movie['poster_path']}" : nil
@@ -204,6 +206,11 @@ class Api::SearchController < ApplicationController
     render json: { error: e.message }, status: :internal_server_error
   end
 
+  def clean_movie_title(title)
+    title = title.gsub(/^[^-]+-/, '').strip
+    title = title.gsub(/\s*(dvd|blu-ray|blu ray|4k|uhd|region \d|uk import|fr import|\[.*?\]|\(.*?import.*?\))/i, '').strip
+    title
+  end
 
   def book
     query = params[:query]
