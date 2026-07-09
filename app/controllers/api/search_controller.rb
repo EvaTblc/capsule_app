@@ -100,8 +100,60 @@ class Api::SearchController < ApplicationController
     render json: { error: e.message }, status: :internal_server_error
   end
 
+  def movie_barcode
+    ean = params[:ean].to_s.strip
+    return render json: { error: "Barcode manquant" }, status: :unprocessable_entity if ean.blank?
 
+    # Étape 1 : UPCitemdb pour récupérer le titre
+    upc_response = HTTP.get(
+      "https://api.upcitemdb.com/prod/trial/lookup",
+      params: { upc: ean }
+    )
+    upc_data = JSON.parse(upc_response.body.to_s)
+    product = upc_data.dig('items', 0)
 
+    return render json: { error: "Film non trouvé", fallback: true }, status: :not_found unless product
+
+    movie_name = product['title']
+    Rails.logger.info("[movie_barcode] UPCitemdb: #{movie_name}")
+
+    # Étape 2 : TMDB par titre
+    api_key = Rails.application.credentials.dig(:tmdb, :api_key)
+    tmdb_response = Net::HTTP.get(URI(
+      "https://api.themoviedb.org/3/search/movie?api_key=#{api_key}&query=#{CGI.escape(movie_name)}&language=fr-FR"
+    ))
+    tmdb_data = JSON.parse(tmdb_response)
+    movie = tmdb_data["results"]&.first
+
+    return render json: { error: "Film non trouvé", fallback: true }, status: :not_found unless movie
+
+    # Étape 3 : Détails + réalisateur
+    detail_response = Net::HTTP.get(URI(
+      "https://api.themoviedb.org/3/movie/#{movie['id']}?api_key=#{api_key}&language=fr-FR"
+    ))
+    credits_response = Net::HTTP.get(URI(
+      "https://api.themoviedb.org/3/movie/#{movie['id']}/credits?api_key=#{api_key}"
+    ))
+    detail_data = JSON.parse(detail_response)
+    credits_data = JSON.parse(credits_response)
+
+    director = credits_data["crew"]&.find { |p| p["job"] == "Director" }&.dig("name")
+    studio = detail_data["production_companies"]&.map { |c| c["name"] }&.join(", ")
+    poster_url = movie["poster_path"] ? "https://image.tmdb.org/t/p/w500#{movie['poster_path']}" : nil
+
+    render json: {
+      id: movie["id"],
+      title: movie["title"],
+      year: movie["release_date"]&.split("-")&.first&.to_i,
+      description: movie["overview"],
+      director: director,
+      studio: studio,
+      poster_url: poster_url
+    }
+  rescue => e
+    Rails.logger.error("[movie_barcode] Erreur: #{e.message}")
+    render json: { error: e.message }, status: :internal_server_error
+  end
 
   def search_game
     query = params[:query].to_s.strip
