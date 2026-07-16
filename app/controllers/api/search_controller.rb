@@ -125,6 +125,7 @@ class Api::SearchController < ApplicationController
         i: ean
       })
       omdb_data = JSON.parse(omdb_response.body.to_s)
+      Rails.logger.info("[movie_barcode] OMDb response: #{omdb_data.to_json}")
 
       if omdb_data["Response"] == "True"
         movie_name = omdb_data["Title"]
