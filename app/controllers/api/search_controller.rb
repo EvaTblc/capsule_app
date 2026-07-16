@@ -134,10 +134,9 @@ class Api::SearchController < ApplicationController
       end
     end
 
-    return render json: { error: "Film non trouvé", fallback: true }, status: :not_found if movie_name.blank?
-
     # Étape 3 : TMDB par titre
     api_key = Rails.application.credentials.dig(:tmdb, :api_key)
+
 
     # Étape 3 : TMDB find par EAN (si movie_name toujours vide)
     movie = nil
