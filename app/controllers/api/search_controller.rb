@@ -138,13 +138,33 @@ class Api::SearchController < ApplicationController
 
     # Étape 3 : TMDB par titre
     api_key = Rails.application.credentials.dig(:tmdb, :api_key)
-    tmdb_response = Net::HTTP.get(URI(
-      "https://api.themoviedb.org/3/search/movie?api_key=#{api_key}&query=#{CGI.escape(movie_name)}&language=fr-FR#{movie_year ? "&year=#{movie_year}" : ""}"
-    ))
-    tmdb_data = JSON.parse(tmdb_response)
-    movie = tmdb_data["results"]&.first
+
+    # Étape 3 : TMDB find par EAN (si movie_name toujours vide)
+    movie = nil
+    if movie_name.blank?
+      Rails.logger.info("[movie_barcode] Tentative TMDB find par EAN")
+      tmdb_find = Net::HTTP.get(URI(
+        "https://api.themoviedb.org/3/find/#{ean}?api_key=#{api_key}&external_source=ean_13"
+      ))
+      tmdb_find_data = JSON.parse(tmdb_find)
+      movie = tmdb_find_data["movie_results"]&.first
+      Rails.logger.info("[movie_barcode] TMDB find: #{tmdb_find_data.to_json}")
+    end
+
+    return render json: { error: "Film non trouvé", fallback: true }, status: :not_found if movie_name.blank? && movie.nil?
+
+    # Étape 4 : TMDB par titre (si on a un titre mais pas encore de movie)
+    if movie.nil? && movie_name.present?
+      tmdb_response = Net::HTTP.get(URI(
+        "https://api.themoviedb.org/3/search/movie?api_key=#{api_key}&query=#{CGI.escape(movie_name)}&language=fr-FR#{movie_year ? "&year=#{movie_year}" : ""}"
+      ))
+      tmdb_data = JSON.parse(tmdb_response)
+      movie = tmdb_data["results"]&.first
+    end
 
     return render json: { error: "Film non trouvé", fallback: true }, status: :not_found unless movie
+
+    # Étape 5 : Détails + réalisateur
 
     # Étape 4 : Détails + réalisateur
     detail_response = Net::HTTP.get(URI(
