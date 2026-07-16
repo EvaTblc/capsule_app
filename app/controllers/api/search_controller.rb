@@ -104,30 +104,48 @@ class Api::SearchController < ApplicationController
     ean = params[:ean].to_s.strip
     return render json: { error: "Barcode manquant" }, status: :unprocessable_entity if ean.blank?
 
-    # Étape 1 : UPCitemdb pour récupérer le titre
-    upc_response = HTTP.get(
-      "https://api.upcitemdb.com/prod/trial/lookup",
-      params: { upc: ean }
-    )
+    movie_name = nil
+    movie_year = nil
+
+    # Étape 1 : UPCitemdb
+    upc_response = HTTP.get("https://api.upcitemdb.com/prod/trial/lookup", params: { upc: ean })
     upc_data = JSON.parse(upc_response.body.to_s)
     product = upc_data.dig('items', 0)
 
-    return render json: { error: "Film non trouvé", fallback: true }, status: :not_found unless product
+    if product
+      movie_name = clean_movie_title(product['title'])
+      Rails.logger.info("[movie_barcode] UPCitemdb: #{product['title']} → #{movie_name}")
+    end
 
-    movie_name = product['title']
-    Rails.logger.info("[movie_barcode] UPCitemdb: #{movie_name}")
+    # Étape 2 : OMDb fallback si UPCitemdb vide
+    if movie_name.blank?
+      Rails.logger.info("[movie_barcode] UPCitemdb vide, fallback OMDb")
+      omdb_response = HTTP.get("http://www.omdbapi.com/", params: {
+        apikey: Rails.application.credentials.dig(:omdb, :api_key),
+        i: ean
+      })
+      omdb_data = JSON.parse(omdb_response.body.to_s)
 
-    # Étape 2 : TMDB par titre
+      if omdb_data["Response"] == "True"
+        movie_name = omdb_data["Title"]
+        movie_year = omdb_data["Year"]
+        Rails.logger.info("[movie_barcode] OMDb trouvé: #{movie_name}")
+      end
+    end
+
+    return render json: { error: "Film non trouvé", fallback: true }, status: :not_found if movie_name.blank?
+
+    # Étape 3 : TMDB par titre
     api_key = Rails.application.credentials.dig(:tmdb, :api_key)
     tmdb_response = Net::HTTP.get(URI(
-      "https://api.themoviedb.org/3/search/movie?api_key=#{api_key}&query=#{CGI.escape(movie_name)}&language=fr-FR"
+      "https://api.themoviedb.org/3/search/movie?api_key=#{api_key}&query=#{CGI.escape(movie_name)}&language=fr-FR#{movie_year ? "&year=#{movie_year}" : ""}"
     ))
     tmdb_data = JSON.parse(tmdb_response)
     movie = tmdb_data["results"]&.first
 
     return render json: { error: "Film non trouvé", fallback: true }, status: :not_found unless movie
 
-    # Étape 3 : Détails + réalisateur
+    # Étape 4 : Détails + réalisateur
     detail_response = Net::HTTP.get(URI(
       "https://api.themoviedb.org/3/movie/#{movie['id']}?api_key=#{api_key}&language=fr-FR"
     ))
@@ -136,9 +154,7 @@ class Api::SearchController < ApplicationController
     ))
     detail_data = JSON.parse(detail_response)
     credits_data = JSON.parse(credits_response)
-    
-    movie_name = clean_movie_title(product['title'])
-    Rails.logger.info("[movie_barcode] titre nettoyé: #{movie_name}")
+
     director = credits_data["crew"]&.find { |p| p["job"] == "Director" }&.dig("name")
     studio = detail_data["production_companies"]&.map { |c| c["name"] }&.join(", ")
     poster_url = movie["poster_path"] ? "https://image.tmdb.org/t/p/w500#{movie['poster_path']}" : nil
