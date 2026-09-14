@@ -16,10 +16,7 @@ class ItemsController < ApplicationController
     detail_params = case item_type
     when "VideoGameDetail"
       p = params[:video_game_detail].permit!.to_h
-      # Traduction du summary uniquement pour les jeux vidéo
-      if p["description"].present?
-        p["description"] = TranslationService.translate_batch([p["description"]]).first
-      end
+      p["summary_en"] = p.delete("description")
       p
     when "BookDetail"
       p = params[:book_detail].permit!.to_h
@@ -55,7 +52,21 @@ class ItemsController < ApplicationController
     @item.item_detailable = detail
 
     if @item.save
-      redirect_to collection_path(@collection), notice: "Item ajouté !"
+      TranslationJob.perform_later(@item.id) if item_type == "VideoGameDetail"
+
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: [
+            turbo_stream.prepend("quick-add-list",
+              "<div class='bg-purple-50 rounded-xl px-4 py-2 text-sm font-semibold text-purple-700'>✓ #{@item.title}</div>"
+            ),
+            turbo_stream.replace("quick-add-form",
+              "<form id='quick-add-form'></form>"
+            )
+          ]
+        end
+        format.html { redirect_to collection_path(@collection), notice: "Item ajouté !" }
+      end
     else
       detail.destroy
       render :new, status: :unprocessable_entity

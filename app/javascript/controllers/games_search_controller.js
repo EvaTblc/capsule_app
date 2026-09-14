@@ -134,6 +134,9 @@ export default class extends Controller {
   }
 
   fill(game) {
+      console.log("fill called", game)
+  console.log("hasTitleTarget", this.hasTitleTarget)
+  console.log("titleTarget", this.hasTitleTarget ? this.titleTarget.value : "no target")
     if (this.hasTitleTarget) this.titleTarget.value = game.name || ""
     if (this.hasPlatformTarget) this.platformTarget.value = game.platforms || ""
     if (this.hasGenreTarget) this.genreTarget.value = game.genres || ""
