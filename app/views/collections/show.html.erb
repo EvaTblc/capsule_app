@@ -236,7 +236,7 @@
           <input data-games-search-target="platform" name="video_game_detail[platform]" type="hidden">
 
           <div class="flex flex-wrap gap-2">
-            <% ["Switch", "Switch 2", "PS4", "PS5", "Xbox One", "Xbox Series", "PC"].each do |platform| %>
+            <% ["Switch", "Switch 2", "PS1", "PS2", "PS3", "PS4", "PS5", "Xbox", "Xbox 360", "Xbox One", "Xbox Series", "Nintendo DS", "Nintendo 3DS", "Wii", "Wii U", "Gamecube", "Autres"].each do |platform| %>
               <button type="button"
                       data-platform="<%= platform %>"
                       data-action="click->games-search#selectPlatform"
