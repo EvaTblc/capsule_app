@@ -134,14 +134,12 @@ export default class extends Controller {
   }
 
   fill(game) {
-      console.log("fill called", game)
-  console.log("hasTitleTarget", this.hasTitleTarget)
-  console.log("titleTarget", this.hasTitleTarget ? this.titleTarget.value : "no target")
     if (this.hasTitleTarget) this.titleTarget.value = game.name || ""
     if (this.hasPlatformTarget) this.platformTarget.value = game.platforms || ""
     if (this.hasGenreTarget) this.genreTarget.value = game.genres || ""
     if (this.hasReleaseDateTarget) this.releaseDateTarget.value = game.release_date || ""
     if (this.hasDescriptionTarget) this.descriptionTarget.value = game.summary || ""
+    if (this.hasQueryTarget) this.queryTarget.value = game.name || ""
 
     const metadataInput = this.element.querySelector("input[name='item[metadata]']")
     if (metadataInput) metadataInput.value = JSON.stringify(game.metadata || {})
