@@ -13,4 +13,5 @@ class TranslationJob < ApplicationJob
     translated = TranslationService.translate_batch([detail.summary_en]).first
     detail.update(description: translated) if translated.present?
   end
+  # Commentaire
 end
