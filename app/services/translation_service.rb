@@ -1,38 +1,25 @@
 class TranslationService
-  ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+  class Error < StandardError; end
 
+  # Renvoie les traductions dans le même ordre que texts.
+  # Lève TranslationService::Error si la traduction échoue : à l'appelant de décider quoi faire.
   def self.translate_batch(texts, target_language: "français")
     return texts if texts.all?(&:blank?)
 
-    numbered = texts.each_with_index.map { |t, i| "#{i + 1}. #{t}" }.join("\n\n")
-
-    response = HTTP.post(
-      ANTHROPIC_API_URL,
-      headers: {
-        "x-api-key" => Rails.application.credentials.anthropic[:api_key],
-        "anthropic-version" => "2023-06-01",
-        "content-type" => "application/json"
-      },
-      json: {
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 2048,
-        messages: [
-          {
-            role: "user",
-            content: "Traduis ces textes en #{target_language}. Réponds UNIQUEMENT avec les traductions numérotées dans le même format, sans commentaire.\n\n#{numbered}"
-          }
-        ]
-      }
+    translations = AnthropicClient.json(
+      "Traduis chaque texte de ce tableau JSON en #{target_language}, en conservant les paragraphes. " \
+      "Réponds UNIQUEMENT avec un tableau JSON de chaînes, dans le même ordre, sans markdown ni commentaire.\n\n" \
+      "#{texts.to_json}",
+      # Marge pour la réflexion, et pour le tokenizer de Haiku 5.5 (~30 % de tokens en plus pour le même texte)
+      max_tokens: 8192
     )
 
-    result = JSON.parse(response.body.to_s)
-    translated = result.dig("content", 0, "text").to_s
+    unless translations.is_a?(Array) && translations.size == texts.size
+      raise Error, "Réponse inattendue : #{translations.to_json.truncate(200)}"
+    end
 
-    # Parser les lignes numérotées
-    lines = translated.split(/\n\n|\n(?=\d+\.)/).map(&:strip)
-    lines.map { |l| l.sub(/^\d+\.\s*/, "") }
-  rescue => e
-    Rails.logger.error("[TranslationService] Erreur: #{e.message}")
-    texts
+    translations
+  rescue AnthropicClient::Error => e
+    raise Error, e.message
   end
 end

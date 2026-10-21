@@ -9,8 +9,8 @@ RSpec.describe EstimationService do
 
     context "quand l'API répond correctement" do
       it "retourne un prix et une explication" do
-        allow(HTTP).to receive(:post).and_return(
-          double(body: double(to_s: '{"content": [{"text": "{\"price\": \"10€ - 15€\", \"explanation\": \"Manga en bon état.\"}"}]}'))
+        allow(AnthropicClient).to receive(:text).and_return(
+          '{"price": "10€ - 15€", "explanation": "Manga en bon état."}'
         )
 
         result = EstimationService.estimate(item)
@@ -21,9 +21,7 @@ RSpec.describe EstimationService do
 
     context "quand l'API retourne du JSON malformé" do
       it "retourne une estimation par défaut" do
-        allow(HTTP).to receive(:post).and_return(
-          double(body: double(to_s: '{"content": [{"text": "pas du json"}]}'))
-        )
+        allow(AnthropicClient).to receive(:text).and_return("pas du json")
 
         result = EstimationService.estimate(item)
         expect(result["price"]).to eq("N/A")
@@ -33,7 +31,7 @@ RSpec.describe EstimationService do
 
     context "quand l'API échoue" do
       it "retourne une estimation par défaut" do
-        allow(HTTP).to receive(:post).and_raise(StandardError)
+        allow(AnthropicClient).to receive(:text).and_raise(AnthropicClient::Error, "API indisponible")
 
         result = EstimationService.estimate(item)
         expect(result["price"]).to eq("N/A")

@@ -1,5 +1,5 @@
 class EstimationService
-  ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+  DEFAULT_ESTIMATION = { "price" => "N/A", "explanation" => "Estimation indisponible" }.freeze
 
   def self.estimate(item)
     attributes = item.item_detailable.attributes.except(
@@ -15,27 +15,9 @@ class EstimationService
   Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans backticks, exactement dans ce format :
   {\"price\": \"15€ - 25€\", \"explanation\": \"Une phrase d'explication courte.\"}"
 
-    response = HTTP.post(
-      ANTHROPIC_API_URL,
-      headers: {
-        "x-api-key" => Rails.application.credentials.anthropic[:api_key],
-        "anthropic-version" => "2023-06-01",
-        "content-type" => "application/json"
-      },
-      json: {
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 256,
-        messages: [{ role: "user", content: prompt }]
-      }
-    )
-
-    result = JSON.parse(response.body.to_s)
-    raw = result.dig("content", 0, "text").to_s
-    cleaned = raw.gsub(/```json\n?|\n?```/, "").strip
-    JSON.parse(cleaned)
-  rescue JSON::ParserError, StandardError
-    { "price" => "N/A", "explanation" => "Estimation indisponible" }
+    AnthropicClient.json(prompt)
+  rescue AnthropicClient::Error => e
+    Rails.logger.error("[EstimationService] Erreur: #{e.message}")
+    DEFAULT_ESTIMATION.dup
   end
-
-
 end
