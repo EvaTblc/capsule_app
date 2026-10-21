@@ -42,13 +42,13 @@ RSpec.describe ItemsController, type: :controller do
         }.to change(Item, :count).by(1).and change(BookDetail, :count).by(1)
       end
 
-      it "redirige vers la collection" do
+      it "redirige vers la fiche du nouvel item" do
         post :create, params: {
           collection_id: collection.id,
           item: { title: "Dune", condition: "Neuf", item_type: "BookDetail" },
           book_detail: { author: "Frank Herbert", isbn: "9782266320481" }
         }
-        expect(response).to redirect_to(collection_path(collection))
+        expect(response).to redirect_to(collection_item_path(collection, Item.last))
       end
     end
   end

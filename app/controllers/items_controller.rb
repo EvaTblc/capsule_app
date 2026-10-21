@@ -33,31 +33,31 @@ class ItemsController < ApplicationController
     if saved
       enqueue_detail_jobs(translate: item_type == "VideoGameDetail")
 
-      respond_to do |format|
-        format.turbo_stream do
-          render turbo_stream: [
-            turbo_stream.prepend("quick-add-list",
-              helpers.tag.div("✓ #{@item.title}",
-                class: "bg-purple-50 rounded-xl px-4 py-2 text-sm font-semibold text-purple-700")
-            ),
-            turbo_stream.replace("quick-add-form",
-              helpers.tag.form(id: "quick-add-form")
-            )
-          ]
-        end
-        format.html { redirect_to collection_path(@collection), notice: "Item ajouté !" }
+      if quick_add?
+        # Ajout rapide : on reste dans le panneau pour enchaîner les jeux
+        render turbo_stream: [
+          turbo_stream.prepend("quick-add-list",
+            helpers.tag.div("✓ #{@item.title}",
+              class: "bg-purple-50 rounded-xl px-4 py-2 text-sm font-semibold text-purple-700")
+          ),
+          turbo_stream.replace("quick-add-form",
+            helpers.tag.form(id: "quick-add-form")
+          )
+        ]
+      else
+        # Formulaire complet : direction la fiche du nouvel item
+        redirect_to collection_item_path(@collection, @item), notice: "Item ajouté !"
       end
     else
       collect_errors(detail)
-      respond_to do |format|
-        # Ajout rapide : le message s'affiche dans le panneau, le formulaire reste rempli
-        format.turbo_stream do
-          render turbo_stream: turbo_stream.prepend("quick-add-list",
-            helpers.tag.div(@item.errors.map(&:message).join(" · "),
-              class: "bg-red-50 rounded-xl px-4 py-2 text-sm font-semibold text-red-600")
-          ), status: :unprocessable_entity
-        end
-        format.html { render :new, status: :unprocessable_entity }
+      if quick_add?
+        # Le message s'affiche dans le panneau, le formulaire reste rempli
+        render turbo_stream: turbo_stream.prepend("quick-add-list",
+          helpers.tag.div(@item.errors.map(&:message).join(" · "),
+            class: "bg-red-50 rounded-xl px-4 py-2 text-sm font-semibold text-red-600")
+        ), status: :unprocessable_entity
+      else
+        render :new, status: :unprocessable_entity
       end
     end
   end
@@ -166,6 +166,12 @@ class ItemsController < ApplicationController
       attrs["summary_en"] = attrs.delete("description")
     end
     attrs
+  end
+
+  # Turbo envoie les deux formulaires avec le même en-tête Accept (Turbo Stream accepté) :
+  # c'est le champ caché du panneau d'ajout rapide qui permet de choisir la bonne réponse
+  def quick_add?
+    params[:quick_add].present?
   end
 
   # Après un échec : réunit sur @item ses propres erreurs et celles du détail, pour les afficher ensemble.

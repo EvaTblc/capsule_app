@@ -98,7 +98,7 @@ RSpec.describe "Autorisations", type: :request do
 
     it "le titre de l'ajout rapide est échappé (XSS)" do
       post collection_items_path(collection), as: :turbo_stream, params: {
-        item: { title: "<img src=x onerror=alert(1)>", item_type: "BookDetail" }, book_detail: { description: "x" }
+        quick_add: "1", item: { title: "<img src=x onerror=alert(1)>", item_type: "BookDetail" }, book_detail: { description: "x" }
       }
       expect(response.body).to include("&lt;img src=x")
       expect(response.body).not_to include("<img src=x")
