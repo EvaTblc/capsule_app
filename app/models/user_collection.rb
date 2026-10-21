@@ -4,5 +4,4 @@ class UserCollection < ApplicationRecord
 
   ROLES = %w[owner member]
   validates :role, inclusion: { in: ROLES }
-  
 end

@@ -2,8 +2,8 @@ class Api::SearchController < ApplicationController
   class ExternalApiError < StandardError; end
 
   before_action :authenticate_user!
-  before_action :require_numeric_id, only: [:movie_detail, :music_detail]
-  rate_limit to: 20, within: 1.minute, only: [:game_barcode, :search_game]
+  before_action :require_numeric_id, only: [ :movie_detail, :music_detail ]
+  rate_limit to: 20, within: 1.minute, only: [ :game_barcode, :search_game ]
 
   # Filet de sécurité commun à toutes les actions : le détail part dans les logs,
   # le navigateur ne reçoit qu'un message générique
@@ -28,10 +28,10 @@ class Api::SearchController < ApplicationController
     return render json: { error: "Jeu non trouvé", fallback: true }, status: :not_found unless game
 
     summary = begin
-      TranslationService.translate_batch([game['summary'].to_s]).first
+      TranslationService.translate_batch([ game["summary"].to_s ]).first
     rescue TranslationService::Error => e
       Rails.logger.warn("[game_barcode] Traduction impossible, résumé laissé en anglais : #{e.message}")
-      game['summary']
+      game["summary"]
     end
 
     render json: igdb_game_json(game, summary: summary)
@@ -79,7 +79,7 @@ class Api::SearchController < ApplicationController
     games = igdb_search(query, limit: 10)
     return render json: { error: "IGDB indisponible" }, status: :service_unavailable if games.nil?
 
-    render json: { games: games.map { |game| igdb_game_json(game, summary: game['summary']) } }
+    render json: { games: games.map { |game| igdb_game_json(game, summary: game["summary"]) } }
   end
 
   def book
@@ -224,8 +224,8 @@ class Api::SearchController < ApplicationController
     response = HTTParty.post(
       "https://api.igdb.com/v4/games",
       headers: {
-        'Client-ID' => Rails.application.credentials.igdb[:client_id],
-        'Authorization' => "Bearer #{token}"
+        "Client-ID" => Rails.application.credentials.dig(:igdb, :client_id),
+        "Authorization" => "Bearer #{token}"
       },
       # Les guillemets fermeraient la chaîne de la requête IGDB : on les retire
       body: "fields name,cover.url,platforms.name,summary,genres.name,first_release_date; search \"#{name.delete('"\\')}\"; limit #{limit};",
@@ -239,14 +239,14 @@ class Api::SearchController < ApplicationController
   end
 
   def igdb_game_json(game, summary:)
-    cover_url = game.dig('cover', 'url') ? "https:#{game['cover']['url'].gsub('t_thumb', 't_cover_big')}" : nil
-    release_date = game['first_release_date'] ? Time.at(game['first_release_date']).to_date : nil
-    platforms = game['platforms']&.map { |p| p['name'] }&.join(', ')
-    genres = game['genres']&.map { |g| g['name'] }&.join(', ')
+    cover_url = game.dig("cover", "url") ? "https:#{game['cover']['url'].gsub('t_thumb', 't_cover_big')}" : nil
+    release_date = game["first_release_date"] ? Time.at(game["first_release_date"]).to_date : nil
+    platforms = game["platforms"]&.map { |p| p["name"] }&.join(", ")
+    genres = game["genres"]&.map { |g| g["name"] }&.join(", ")
 
     {
-      id: game['id'],
-      name: game['name'],
+      id: game["id"],
+      name: game["name"],
       cover_url: cover_url,
       platforms: platforms,
       release_date: release_date&.year,
@@ -264,10 +264,10 @@ class Api::SearchController < ApplicationController
 
   def clean_movie_title(title)
     # D'abord le format (« - Blu-ray », « (DVD) »...), en mots entiers pour ne pas couper « Spider-Man »
-    title = title.gsub(/\s*[-(\[]?\s*\b(dvd|blu-ray|blu ray|4k|uhd|region \d|uk import|fr import)\b\s*[)\]]?/i, '')
-    title = title.gsub(/\s*(\[.*?\]|\(.*?import.*?\))/i, '')
+    title = title.gsub(/\s*[-(\[]?\s*\b(dvd|blu-ray|blu ray|4k|uhd|region \d|uk import|fr import)\b\s*[)\]]?/i, "")
+    title = title.gsub(/\s*(\[.*?\]|\(.*?import.*?\))/i, "")
     # Puis un éventuel préfixe éditeur (« Warner - Inception »)
-    title = title.sub(/\A[^-]+\s+-\s+/, '') if title.include?(" - ")
+    title = title.sub(/\A[^-]+\s+-\s+/, "") if title.include?(" - ")
     title.strip
   end
 
@@ -278,11 +278,10 @@ class Api::SearchController < ApplicationController
     ]
     clean = title
     platforms.each do |platform|
-      clean = clean.gsub(/\s*-\s*#{platform}/i, '')
-      clean = clean.gsub(/\s*\(#{platform}\)/i, '')
-      clean = clean.gsub(/\s*\[#{platform}\]/i, '')
+      clean = clean.gsub(/\s*-\s*#{platform}/i, "")
+      clean = clean.gsub(/\s*\(#{platform}\)/i, "")
+      clean = clean.gsub(/\s*\[#{platform}\]/i, "")
     end
     clean.strip
   end
-
 end

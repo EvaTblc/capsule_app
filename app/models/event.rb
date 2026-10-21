@@ -3,7 +3,7 @@ class Event < ApplicationRecord
   belongs_to :sender, class_name: "User", optional: true
 
   validates :title, presence: true
-  
+
   geocoded_by :address
   after_validation :geocode, if: :address_changed_without_coordinates?
 
@@ -13,7 +13,7 @@ class Event < ApplicationRecord
     return events unless user.geocoded?
 
     # Coordonnées déjà stockées : pas d'appel à Mapbox
-    events.near([user.latitude, user.longitude], radius_km)
+    events.near([ user.latitude, user.longitude ], radius_km)
   end
 
   private

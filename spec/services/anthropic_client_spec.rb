@@ -28,7 +28,7 @@ RSpec.describe AnthropicClient do
         model: "claude-haiku-5-5",
         max_tokens: 2048,
         output_config: { effort: :low },
-        messages: [{ role: "user", content: "Bonjour" }]
+        messages: [ { role: "user", content: "Bonjour" } ]
       )).and_return(reply(text_block("Salut ")))
 
       expect(AnthropicClient.text("Bonjour")).to eq("Salut")
@@ -70,18 +70,18 @@ RSpec.describe AnthropicClient do
   describe "services qui l'utilisent" do
     it "TranslationService garde les paragraphes et demande assez de tokens" do
       expect(messages).to receive(:create).with(hash_including(max_tokens: 8192))
-        .and_return(reply(text_block(["Paragraphe un.\n\nParagraphe deux."].to_json)))
-      expect(TranslationService.translate_batch(["Para one.\n\nPara two."])).to eq(["Paragraphe un.\n\nParagraphe deux."])
+        .and_return(reply(text_block([ "Paragraphe un.\n\nParagraphe deux." ].to_json)))
+      expect(TranslationService.translate_batch([ "Para one.\n\nPara two." ])).to eq([ "Paragraphe un.\n\nParagraphe deux." ])
     end
 
     it "TranslationService lève TranslationService::Error en cas d'échec (pour que le job réessaie)" do
       allow(messages).to receive(:create).and_raise(Anthropic::Errors::Error, "boom")
-      expect { TranslationService.translate_batch(["Hello"]) }.to raise_error(TranslationService::Error)
+      expect { TranslationService.translate_batch([ "Hello" ]) }.to raise_error(TranslationService::Error)
     end
 
     it "TranslationService refuse une réponse avec le mauvais nombre de traductions" do
       allow(messages).to receive(:create).and_return(reply(text_block('["un", "deux"]')))
-      expect { TranslationService.translate_batch(["one"]) }.to raise_error(TranslationService::Error, /inattendue/)
+      expect { TranslationService.translate_batch([ "one" ]) }.to raise_error(TranslationService::Error, /inattendue/)
     end
 
     it "FigurineIdentificationService envoie l'image" do

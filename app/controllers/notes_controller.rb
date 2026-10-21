@@ -1,6 +1,6 @@
 class NotesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_notes, only: [:show, :edit, :update, :destroy, :share]
+  before_action :set_notes, only: [ :show, :edit, :update, :destroy, :share ]
   def index
     @notes = current_user.notes
     @events = Event.nearby_for(current_user)
@@ -9,7 +9,7 @@ class NotesController < ApplicationController
       {
         lat: event.latitude.to_f,
         lng: event.longitude.to_f,
-        info_window_html: render_to_string(partial: "info_window", locals: {event: event})
+        info_window_html: render_to_string(partial: "info_window", locals: { event: event })
       }
     end
   end

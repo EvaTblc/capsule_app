@@ -1,7 +1,7 @@
 class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
   :recoverable, :rememberable, :validatable,
-  :omniauthable, omniauth_providers: [:google_oauth2]
+  :omniauthable, omniauth_providers: [ :google_oauth2 ]
 
   # prepend : doit passer AVANT le dependent: :destroy ci-dessous, qui efface les rôles de propriétaire
   before_destroy :hand_over_owned_collections, prepend: true

@@ -4,7 +4,7 @@ class Item < ApplicationRecord
 
   has_many_attached :images
 
-  CONDITIONS = ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"].freeze
+  CONDITIONS = [ "Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état" ].freeze
 
   validates :title, presence: true
   # L'état reste facultatif : l'ajout rapide de jeux n'en demande pas

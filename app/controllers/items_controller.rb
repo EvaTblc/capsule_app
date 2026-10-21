@@ -2,9 +2,9 @@ class ItemsController < ApplicationController
   DETAIL_TYPES = Item::ITEM_TYPE_STYLES.keys.freeze
 
   before_action :authenticate_user!
-  before_action :set_collection, except: [:show, :estimate, :identify]
-  before_action :set_visible_collection, only: [:show]
-  before_action :set_item, only: [:show, :edit, :update, :destroy]
+  before_action :set_collection, except: [ :show, :estimate, :identify ]
+  before_action :set_visible_collection, only: [ :show ]
+  before_action :set_item, only: [ :show, :edit, :update, :destroy ]
 
   def show
     # Visiteur d'une collection publique : lecture seule
@@ -183,5 +183,4 @@ class ItemsController < ApplicationController
       BookDescriptionJob.perform_later(@item.id)
     end
   end
-
 end

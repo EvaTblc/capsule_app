@@ -1,8 +1,8 @@
 class CollectionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_collection, only: [:edit, :update, :destroy]
-  before_action :set_visible_collection, only: [:show]
-  before_action :check_owner!, only: [:edit, :update, :destroy]
+  before_action :set_collection, only: [ :edit, :update, :destroy ]
+  before_action :set_visible_collection, only: [ :show ]
+  before_action :check_owner!, only: [ :edit, :update, :destroy ]
 
   def index
     @collections = current_user.collections.with_attached_cover_image.sort_by { |c| NaturalSort.key(c.title) }

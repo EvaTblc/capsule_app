@@ -22,7 +22,7 @@ puts "Création des items..."
 [
   { title: "Hollow Knight", platform: "Nintendo Switch", completed: false },
   { title: "Hades", platform: "PC", completed: true },
-  { title: "Elden Ring", platform: "PS5", completed: false },
+  { title: "Elden Ring", platform: "PS5", completed: false }
 ].each do |attrs|
   detail = VideoGameDetail.create!(
     platform: attrs[:platform],

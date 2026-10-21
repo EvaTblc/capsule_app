@@ -74,7 +74,7 @@ RSpec.describe "Items", type: :request do
     it "ajouter une image conserve les images existantes" do
       item.images.attach(io: StringIO.new("a"), filename: "a.jpg", content_type: "image/jpeg")
       patch collection_item_path(books, item), params: {
-        item: { title: "Dune", item_type: "BookDetail", images: [Rack::Test::UploadedFile.new(StringIO.new("b"), "image/jpeg", original_filename: "b.jpg")] }
+        item: { title: "Dune", item_type: "BookDetail", images: [ Rack::Test::UploadedFile.new(StringIO.new("b"), "image/jpeg", original_filename: "b.jpg") ] }
       }
       expect(item.reload.images.count).to eq(2)
     end

@@ -31,11 +31,11 @@ RSpec.describe "API de recherche", type: :request do
     end
 
     it "movie : paramètres encodés par la librairie, même JSON qu'avant" do
-      stub_http { fake_response(200, { results: [{ id: 1, title: "Le Fabuleux Destin", release_date: "2001-04-25", overview: "..." }] }) }
+      stub_http { fake_response(200, { results: [ { id: 1, title: "Le Fabuleux Destin", release_date: "2001-04-25", overview: "..." } ] }) }
       get "/api/search/movie", params: { query: "amélie & co" }
       expect(http_calls.last[:url]).to eq("https://api.themoviedb.org/3/search/movie")
       expect(http_calls.last[:params]).to include(query: "amélie & co", language: "fr-FR")
-      expect(json).to eq([{ "id" => 1, "title" => "Le Fabuleux Destin", "year" => "2001", "description" => "..." }])
+      expect(json).to eq([ { "id" => 1, "title" => "Le Fabuleux Destin", "year" => "2001", "description" => "..." } ])
     end
 
     it "music : envoie le User-Agent exigé par Discogs" do
@@ -76,7 +76,7 @@ RSpec.describe "API de recherche", type: :request do
   describe "GET /api/search/game_barcode" do
     let(:game) do
       { "id" => 1, "name" => "Zelda", "summary" => "A game", "cover" => { "url" => "//img/t_thumb/x.jpg" },
-        "platforms" => [{ "name" => "Switch" }], "genres" => [{ "name" => "RPG" }], "first_release_date" => 1488499200 }
+        "platforms" => [ { "name" => "Switch" } ], "genres" => [ { "name" => "RPG" } ], "first_release_date" => 1488499200 }
     end
 
     it "code-barres inconnu : 404 avec fallback" do
@@ -102,8 +102,8 @@ RSpec.describe "API de recherche", type: :request do
 
     it "jeu trouvé : titre nettoyé, résumé traduit, même JSON qu'avant" do
       allow_any_instance_of(controller_class).to receive(:upc_product_title).and_return("Zelda - Nintendo Switch")
-      expect_any_instance_of(controller_class).to receive(:igdb_search).with("Zelda", limit: 1).and_return([game])
-      allow(TranslationService).to receive(:translate_batch).and_return(["Un jeu"])
+      expect_any_instance_of(controller_class).to receive(:igdb_search).with("Zelda", limit: 1).and_return([ game ])
+      allow(TranslationService).to receive(:translate_batch).and_return([ "Un jeu" ])
       get "/api/search/game_barcode", params: { ean: "123" }
       expect(json).to include("name" => "Zelda", "summary" => "Un jeu", "platforms" => "Switch",
                               "release_date" => 2017, "cover_url" => "https://img/t_cover_big/x.jpg")
@@ -125,9 +125,9 @@ RSpec.describe "API de recherche", type: :request do
         case url
         when %r{search/movie}
           expect(params[:query]).to eq("Inception")
-          fake_response(200, { results: [{ id: 27205, title: "Inception", release_date: "2010-07-16" }] })
-        when /credits/ then fake_response(200, { crew: [{ job: "Director", name: "Christopher Nolan" }] })
-        else fake_response(200, { production_companies: [{ name: "Warner" }] })
+          fake_response(200, { results: [ { id: 27205, title: "Inception", release_date: "2010-07-16" } ] })
+        when /credits/ then fake_response(200, { crew: [ { job: "Director", name: "Christopher Nolan" } ] })
+        else fake_response(200, { production_companies: [ { name: "Warner" } ] })
         end
       end
       get "/api/search/movie_barcode", params: { ean: "123" }
@@ -138,7 +138,6 @@ RSpec.describe "API de recherche", type: :request do
   describe "GET /api/search/search_game" do
     it "retire les guillemets de la requête IGDB et oublie un token expiré" do
       allow(IgdbService).to receive(:access_token).and_return("tok")
-      allow(Rails.application.credentials).to receive(:igdb).and_return({ client_id: "id" })
       expect(HTTParty).to receive(:post) { |_, options|
         expect(options[:body]).to include('search "Zelda trick; fields *"')
         double(code: 401)

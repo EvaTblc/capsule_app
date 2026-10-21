@@ -20,9 +20,9 @@ RSpec.describe "Collections", type: :request do
     before { sign_in owner }
 
     it "trie les collections dans l'ordre naturel (accents, majuscules, nombres)" do
-      ["Tome 10", "Tome 2", "Élan", "arbre", "Zelda"].each { |title| collection_for(owner, title: title) }
+      [ "Tome 10", "Tome 2", "Élan", "arbre", "Zelda" ].each { |title| collection_for(owner, title: title) }
       get collections_path
-      expect(assigns(:collections).map(&:title)).to eq(["arbre", "Élan", "Tome 2", "Tome 10", "Zelda"])
+      expect(assigns(:collections).map(&:title)).to eq([ "arbre", "Élan", "Tome 2", "Tome 10", "Zelda" ])
     end
 
     it "n'affiche que les 6 items les plus récents, et le bon nombre d'items par collection" do

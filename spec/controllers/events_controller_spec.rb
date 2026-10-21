@@ -58,7 +58,7 @@ RSpec.describe EventsController, type: :controller do
       it "crée les events en base" do
         user.update(address: "Nantes")
         allow(Geocoder).to receive(:search).and_return(
-          [double(postal_code: "44000", latitude: 47.21, longitude: -1.55, coordinates: [47.21, -1.55])]
+          [ double(postal_code: "44000", latitude: 47.21, longitude: -1.55, coordinates: [ 47.21, -1.55 ]) ]
         )
         allow(Scraper).to receive(:call).and_return([
           {

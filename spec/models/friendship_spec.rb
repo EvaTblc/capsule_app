@@ -47,7 +47,7 @@ RSpec.describe Friendship, type: :model do
 
     it "est garantie par la base, même sans passer par les validations" do
       expect {
-        Friendship.insert_all!([{ requester_id: ami.id, receiver_id: eva.id, status: "pending", created_at: Time.current, updated_at: Time.current }])
+        Friendship.insert_all!([ { requester_id: ami.id, receiver_id: eva.id, status: "pending", created_at: Time.current, updated_at: Time.current } ])
       }.to raise_error(ActiveRecord::RecordNotUnique)
     end
 

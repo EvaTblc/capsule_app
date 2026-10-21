@@ -27,7 +27,7 @@ end
 
   describe "condition" do
     it "accepte les valeurs valides" do
-      ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"].each do |condition|
+      [ "Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état" ].each do |condition|
         item = build(:item, condition: condition)
         expect(item).to be_valid
       end

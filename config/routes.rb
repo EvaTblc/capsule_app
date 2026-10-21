@@ -36,18 +36,18 @@ Rails.application.routes.draw do
     get "search/movie_barcode", to: "search#movie_barcode"
   end
 
-  resources :notes, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
+  resources :notes, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
     member do
       post :share
     end
   end
-  resources :events, only: [:show, :new, :create, :edit, :update, :destroy] do
+  resources :events, only: [ :show, :new, :create, :edit, :update, :destroy ] do
       member do
       post :share
     end
   end
 
-  resources :friendships, only: [:create, :destroy] do
+  resources :friendships, only: [ :create, :destroy ] do
     member do
       patch :accept
       patch :reject

@@ -1,7 +1,7 @@
 class FriendshipsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_friendship, only: [:destroy]
-  before_action :set_received_friendship, only: [:accept, :reject]
+  before_action :set_friendship, only: [ :destroy ]
+  before_action :set_received_friendship, only: [ :accept, :reject ]
 
   def create
     receiver = User.find_by(email: params[:receiver_email])

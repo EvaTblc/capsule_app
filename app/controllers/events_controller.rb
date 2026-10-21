@@ -1,6 +1,6 @@
 class EventsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_event, only: [:show, :edit, :update, :destroy, :share]
+  before_action :set_event, only: [ :show, :edit, :update, :destroy, :share ]
   def show
   end
 
@@ -12,7 +12,7 @@ class EventsController < ApplicationController
       {
         lat: event.latitude.to_f,
         lng: event.longitude.to_f,
-        info_window_html: render_to_string(partial: "notes/info_window", locals: { event: event }, formats: [:html])
+        info_window_html: render_to_string(partial: "notes/info_window", locals: { event: event }, formats: [ :html ])
       }
     end
 
@@ -95,7 +95,7 @@ class EventsController < ApplicationController
     return "La recherche de brocantes n'est disponible qu'en France métropolitaine pour le moment." if department.nil?
 
     # Brocabrac n'est scrapé qu'une fois par heure et par département, quel que soit le nombre d'utilisateurs
-    infos = Rails.cache.fetch(["brocabrac", department], expires_in: 1.hour) { Scraper.call(department) }
+    infos = Rails.cache.fetch([ "brocabrac", department ], expires_in: 1.hour) { Scraper.call(department) }
 
     infos.select { |info| info[:date].present? && info[:date].between?(Date.today, 7.days.from_now.to_date) }.each do |info|
       Event.find_or_create_by(url: info[:url], user: current_user) do |e|
@@ -114,7 +114,7 @@ class EventsController < ApplicationController
 
   # Le code postal ne change qu'avec l'adresse : on le met en cache pour éviter un appel Mapbox à chaque clic
   def user_postal_code
-    Rails.cache.fetch(["user_postal_code", current_user.address], expires_in: 30.days, skip_nil: true) do
+    Rails.cache.fetch([ "user_postal_code", current_user.address ], expires_in: 30.days, skip_nil: true) do
       Geocoder.search(current_user.address).first&.postal_code
     end
   end

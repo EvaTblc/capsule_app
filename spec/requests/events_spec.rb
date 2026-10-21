@@ -32,12 +32,12 @@ RSpec.describe "Événements", type: :request do
       before { user.update_columns(address: "Nantes", latitude: 47.2, longitude: -1.5) }
 
       def with_postal_code(code)
-        allow(Geocoder).to receive(:search).and_return([double(postal_code: code, coordinates: [47.2, -1.5])])
+        allow(Geocoder).to receive(:search).and_return([ double(postal_code: code, coordinates: [ 47.2, -1.5 ]) ])
       end
 
       it "importe les brocantes avec les coordonnées du scraper, sans les regéocoder" do
         with_postal_code("44000")
-        allow(Scraper).to receive(:call).with("44").and_return([brocante])
+        allow(Scraper).to receive(:call).with("44").and_return([ brocante ])
         expect { list_events }.to change(Event, :count).by(1)
         expect(Geocoder).to have_received(:search).once # seulement pour trouver le département
         expect(Event.last.latitude.to_f).to eq(47.21)

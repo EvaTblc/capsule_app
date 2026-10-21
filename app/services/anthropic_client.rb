@@ -26,7 +26,7 @@ class AnthropicClient
       model: MODEL,
       max_tokens: max_tokens,
       output_config: { effort: EFFORT },
-      messages: [{ role: "user", content: content }]
+      messages: [ { role: "user", content: content } ]
     )
 
     # Refus des filtres de sécurité : réponse HTTP 200 sans contenu utile (pas de modèle de repli sur Haiku 5.5)

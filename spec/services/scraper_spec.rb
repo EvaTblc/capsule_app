@@ -25,7 +25,7 @@ RSpec.describe Scraper do
       it "lève une ParseError" do
         allow(URI).to receive(:open).and_return(StringIO.new("<html></html>"))
         empty_doc = Nokogiri::HTML("<html></html>")
-        
+
         allow(Nokogiri::HTML).to receive(:parse).and_return(empty_doc)
         expect { Scraper.call("44") }.to raise_error(Scraper::ParseError)
       end

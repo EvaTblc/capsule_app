@@ -79,7 +79,7 @@ RSpec.describe User, type: :model do
     end
 
     it "transmet une collection partagée au plus ancien membre" do
-      collection = collection_owned_by(eva, members: [bob, alice])
+      collection = collection_owned_by(eva, members: [ bob, alice ])
       item = create(:item, collection: collection)
       eva.destroy!
       expect(collection.reload.user_collections.find_by(user: bob).role).to eq("owner")
@@ -88,16 +88,16 @@ RSpec.describe User, type: :model do
     end
 
     it "ne promeut personne s'il reste un autre propriétaire" do
-      collection = collection_owned_by(eva, members: [alice])
+      collection = collection_owned_by(eva, members: [ alice ])
       UserCollection.create!(user: bob, collection: collection, role: "owner")
       eva.destroy!
       expect(collection.reload.user_collections.find_by(user: alice).role).to eq("member")
     end
 
     it "ne touche pas aux collections dont il n'est que membre" do
-      collection = collection_owned_by(bob, members: [eva])
+      collection = collection_owned_by(bob, members: [ eva ])
       eva.destroy!
-      expect(collection.reload.user_collections.pluck(:user_id)).to eq([bob.id])
+      expect(collection.reload.user_collections.pluck(:user_id)).to eq([ bob.id ])
     end
   end
 end

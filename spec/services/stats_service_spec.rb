@@ -1,7 +1,6 @@
 require "rails_helper"
 
 RSpec.describe StatsService do
-
   describe ".call" do
     context "stats communces - condition" do
       it "retourne le % par condition" do
