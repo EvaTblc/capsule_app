@@ -13,6 +13,30 @@ RSpec.describe "Événements", type: :request do
     end
   end
 
+  describe "POST /events/:id/share" do
+    let(:friend) { create(:user) }
+    before { create(:friendship, requester: user, receiver: friend, status: "accepted") }
+
+    it "copie l'événement chez l'ami" do
+      event = create(:event, user: user, url: "https://brocabrac.fr/1")
+      expect { post share_event_path(event), params: { friend_id: friend.id } }.to change(friend.events, :count).by(1)
+      expect(friend.events.last.sender).to eq(user)
+    end
+
+    it "ne duplique pas une brocante que l'ami a déjà (et ne plante pas)" do
+      event = create(:event, user: user, url: "https://brocabrac.fr/1")
+      create(:event, user: friend, url: "https://brocabrac.fr/1")
+      expect { post share_event_path(event), params: { friend_id: friend.id } }.not_to change(Event, :count)
+      expect(response).to redirect_to(event_path(event))
+    end
+
+    it "partage toujours un événement saisi à la main (sans lien)" do
+      event = create(:event, user: user, url: nil)
+      create(:event, user: friend, url: nil)
+      expect { post share_event_path(event), params: { friend_id: friend.id } }.to change(friend.events, :count).by(1)
+    end
+  end
+
   describe "POST /events/list (brocantes autour de chez soi)" do
     let(:brocante) do
       { title: "Vide grenier", date: Date.today + 2, address: "Place", city: "Nantes",

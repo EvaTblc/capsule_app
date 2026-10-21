@@ -14,7 +14,8 @@ class InvitesController < ApplicationController
       return
     end
 
-    UserCollection.create(user: current_user, collection: @collection, role: "member")
+    # create_or_find_by s'appuie sur l'index unique : un double clic ne crée pas deux adhésions
+    UserCollection.create_or_find_by(user: current_user, collection: @collection) { |membership| membership.role = "member" }
     redirect_to @collection, notice: "Tu as rejoint la collection #{@collection.title} !"
   end
 end

@@ -30,17 +30,21 @@ class EventsController < ApplicationController
   def share
     friend = current_user.accepted_friends.find(params[:friend_id])
 
-    Event.create!(
-      user: friend,
+    copy_attributes = {
       sender: current_user,
       title: @event.title,
       date: @event.date,
       address: @event.address,
       latitude: @event.latitude,
       longitude: @event.longitude,
-      url: @event.url,
       reminder: @event.reminder
-    )
+    }
+    if @event.url.present?
+      # L'ami a peut-être déjà cette brocante (un seul événement par lien et par utilisateur) : on ne la duplique pas
+      Event.create_or_find_by!(user: friend, url: @event.url) { |copy| copy.assign_attributes(copy_attributes) }
+    else
+      Event.create!(user: friend, **copy_attributes)
+    end
 
     respond_to do |format|
       format.turbo_stream do
@@ -98,13 +102,16 @@ class EventsController < ApplicationController
     infos = Rails.cache.fetch([ "brocabrac", department ], expires_in: 1.hour) { Scraper.call(department) }
 
     infos.select { |info| info[:date].present? && info[:date].between?(Date.today, 7.days.from_now.to_date) }.each do |info|
-      Event.find_or_create_by(url: info[:url], user: current_user) do |e|
-        e.title = info[:title]
-        e.date = info[:date]
-        e.address = "#{info[:address]}, #{info[:city]}"
-        e.latitude = info[:latitude]
-        e.longitude = info[:longitude]
-      end
+      # find_by d'abord (cas courant : brocante déjà importée), puis create_or_find_by,
+      # qui s'appuie sur l'index unique pour ne pas créer de doublon si deux imports tournent en même temps
+      Event.find_by(url: info[:url], user: current_user) ||
+        Event.create_or_find_by(url: info[:url], user: current_user) do |e|
+          e.title = info[:title]
+          e.date = info[:date]
+          e.address = "#{info[:address]}, #{info[:city]}"
+          e.latitude = info[:latitude]
+          e.longitude = info[:longitude]
+        end
     end
     nil
   rescue Scraper::NetworkError, Scraper::ParseError => e
