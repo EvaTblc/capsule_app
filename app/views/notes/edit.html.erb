@@ -8,6 +8,7 @@
   <%# Form Note %>
   <div data-carnet-toggle-target="noteForm">
     <%= form_with model: @note, class: "flex flex-col gap-4" do |f| %>
+      <%= render "shared/form_errors", record: @note %>
       <div>
         <%= f.text_field :title,
             placeholder: "Titre",

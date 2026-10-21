@@ -35,7 +35,18 @@ fr:
               blank: "Le titre ne peut pas être vide"
             condition:
               blank: "L'état ne peut pas être vide"
+              inclusion: "Cet état n'est pas valide"
         collection:
+          attributes:
+            title:
+              blank: "Le titre ne peut pas être vide"
+        note:
+          attributes:
+            title:
+              blank: "Le titre ne peut pas être vide"
+            collection:
+              invalid: "Cette collection n'est pas accessible"
+        event:
           attributes:
             title:
               blank: "Le titre ne peut pas être vide"

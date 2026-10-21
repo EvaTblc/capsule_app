@@ -3,11 +3,7 @@ class NotesController < ApplicationController
   before_action :set_notes, only: [:show, :edit, :update, :destroy, :share]
   def index
     @notes = current_user.notes
-    @events = if current_user.address.present?
-      Event.where(user: current_user).near(current_user.address, 50)
-    else
-      Event.where(user: current_user)
-    end
+    @events = Event.nearby_for(current_user)
 
     @markers = @events.geocoded.map do |event|
       {
@@ -19,7 +15,7 @@ class NotesController < ApplicationController
   end
 
   def share
-    friend = User.find(params[:friend_id])
+    friend = current_user.accepted_friends.find(params[:friend_id])
 
     Note.create!(
       user: friend,
@@ -33,7 +29,7 @@ class NotesController < ApplicationController
       format.turbo_stream do
         render turbo_stream: turbo_stream.replace(
           "share-note-#{@note.id}",
-          html: '<p class="text-xs text-green-500 font-semibold">Envoyé !</p>'
+          html: helpers.tag.p("Envoyé !", class: "text-xs text-green-500 font-semibold")
         )
       end
       format.html { redirect_to note_path(@note), notice: "Note partagée !" }
@@ -51,9 +47,11 @@ class NotesController < ApplicationController
   def create
     @note = Note.new(notes_params)
     @note.user = current_user
-    if @note.save!
+    if @note.save
       redirect_to note_path(@note)
     else
+      # notes/new affiche aussi le formulaire d'événement
+      @event = Event.new
       render :new, status: :unprocessable_entity
     end
   end
@@ -81,6 +79,6 @@ class NotesController < ApplicationController
   end
 
   def set_notes
-    @note = Note.find(params[:id])
+    @note = current_user.notes.find(params[:id])
   end
 end
