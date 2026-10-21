@@ -1,17 +1,22 @@
 class CollectionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_collection, only: [:show, :edit, :update, :destroy]
+  before_action :set_collection, only: [:edit, :update, :destroy]
+  before_action :set_visible_collection, only: [:show]
   before_action :check_owner!, only: [:edit, :update, :destroy]
 
   def index
-    @collections = current_user.collections.includes(:cover_image_attachment).with_attached_cover_image.sort_by(&:title)
+    @collections = current_user.collections.with_attached_cover_image.sort_by { |c| NaturalSort.key(c.title) }
+    # Un seul COUNT groupé au lieu d'un par collection
+    @item_counts = Item.where(collection: @collections).group(:collection_id).count
+    # Seulement les 6 derniers items, au lieu de charger tous ceux de toutes les collections
+    @recent_items = current_user.items.includes(collection: { cover_image_attachment: :blob }).with_attached_images.order(created_at: :desc).limit(6)
   end
 
   def show
-    @items = @collection.items.includes(:item_detailable).sort_by { |i|
-      i.title.gsub(/(\d+)/) { $1.rjust(10, '0') }
-    }
+    @items = @collection.items.includes(:item_detailable).sort_by { |i| NaturalSort.key(i.title) }
     @members = @collection.user_collections.includes(:user)
+    # Visiteur d'une collection publique : lecture seule (pas d'édition, d'invitation, d'ajout ni de notes)
+    @member = @collection.member?(current_user)
   end
 
   def new
@@ -46,7 +51,11 @@ class CollectionsController < ApplicationController
   private
 
   def set_collection
-    @collection = Collection.find(params[:id])
+    @collection = current_user.collections.find(params[:id])
+  end
+
+  def set_visible_collection
+    @collection = Collection.visible_to(current_user).find(params[:id])
   end
 
   def check_owner!

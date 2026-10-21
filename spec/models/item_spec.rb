@@ -29,8 +29,31 @@ end
     it "accepte les valeurs valides" do
       ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"].each do |condition|
         item = build(:item, condition: condition)
-        expect(item.condition).to eq(condition)
+        expect(item).to be_valid
       end
+    end
+
+    it "refuse une valeur hors liste" do
+      expect(build(:item, condition: "Bidon")).not_to be_valid
+    end
+
+    it "reste facultative (l'ajout rapide de jeux n'en demande pas)" do
+      expect(build(:item, condition: nil)).to be_valid
+    end
+  end
+
+  describe "title" do
+    it "est obligatoire" do
+      expect(build(:item, title: "")).not_to be_valid
+    end
+  end
+
+  describe "suppression" do
+    it "supprime aussi son détail" do
+      item = create(:item)
+      detail = item.item_detailable
+      item.destroy
+      expect(BookDetail.exists?(detail.id)).to be false
     end
   end
 
