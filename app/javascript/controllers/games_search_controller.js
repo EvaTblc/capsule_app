@@ -107,6 +107,8 @@ export default class extends Controller {
     this.queryTarget.value = ean
     fetch(`/api/search/game_barcode?ean=${encodeURIComponent(ean)}`)
       .then(res => res.json())
+      // Réseau coupé ou réponse non JSON (ex : 429 du rate limit) : même traitement qu'un jeu non trouvé
+      .catch(() => ({ error: true }))
       .then(data => {
         if (data.error) {
           this.queryTarget.value = ""

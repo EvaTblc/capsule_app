@@ -1,4 +1,7 @@
 <%= turbo_frame_tag "events-section" do %>
+  <% if local_assigns[:alert].present? %>
+    <p class="bg-orange-50 text-orange-600 rounded-xl px-4 py-3 text-sm mb-4"><%= alert %></p>
+  <% end %>
   <% if events.nil? || events.empty? %>
     <div class="flex flex-col items-center justify-center gap-3 text-center bg-gray-50 rounded-2xl py-12 mb-6">
       <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm">

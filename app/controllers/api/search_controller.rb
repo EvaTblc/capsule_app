@@ -1,179 +1,61 @@
 class Api::SearchController < ApplicationController
-  def game
-    query = params[:query]
-    api_key = Rails.application.credentials.dig(:rawg, :api_key)
+  class ExternalApiError < StandardError; end
 
-    url = "https://api.rawg.io/api/games?key=#{api_key}&search=#{CGI.escape(query)}&page_size=5"
-    response = Net::HTTP.get(URI(url))
-    data = JSON.parse(response)
+  before_action :authenticate_user!
+  before_action :require_numeric_id, only: [:movie_detail, :music_detail]
+  rate_limit to: 20, within: 1.minute, only: [:game_barcode, :search_game]
 
-    results = data["results"]&.map do |game|
-      {
-        id: game["id"],
-        title: game["name"],
-        platform: game["platforms"]&.map { |p| p["platform"]["name"] }&.join(", "),
-        genre: game["genres"]&.map { |g| g["name"] }&.join(", "),
-        release_date: game["released"]
-      }
-    end
-
-    render json: results
-  end
-
-  def game_detail
-    api_key = Rails.application.credentials.dig(:rawg, :api_key)
-    url = "https://api.rawg.io/api/games/#{params[:id]}?key=#{api_key}"
-    response = Net::HTTP.get(URI(url))
-    data = JSON.parse(response)
-
-    render json: {
-      description: ActionView::Base.full_sanitizer.sanitize(data["description"] || ""),
-      developer: data["developers"]&.first&.dig("name")
-    }
-  end
+  # Filet de sécurité commun à toutes les actions : le détail part dans les logs,
+  # le navigateur ne reçoit qu'un message générique
+  rescue_from StandardError, with: :render_api_error
 
   def game_barcode
     ean = params[:ean].to_s.strip
     return render json: { error: "Barcode manquant" }, status: :unprocessable_entity if ean.blank?
 
-    token = IgdbService.access_token
-    return render json: { error: "Token IGDB indisponible" }, status: :service_unavailable unless token
+    # Étape 1 : UPCitemdb pour récupérer le nom du produit
+    product_title = upc_product_title(ean)
+    return render json: { error: "Jeu non trouvé", fallback: true }, status: :not_found unless product_title
 
-    # Étape 1 : UPCitemdb pour récupérer le nom
-    upc_response = HTTP.get(
-      "https://api.upcitemdb.com/prod/trial/lookup",
-      params: { upc: ean }
-    )
-    upc_data = JSON.parse(upc_response.body.to_s)
-    product = upc_data.dig('items', 0)
-
-    return render json: { error: "Jeu non trouvé" }, status: :not_found unless product
-
-    game_name = clean_game_title(product['title'])
-    Rails.logger.info("[game_barcode] UPCitemdb: #{product['title']} → #{game_name}")
+    game_name = clean_game_title(product_title)
+    Rails.logger.info("[game_barcode] UPCitemdb: #{product_title} → #{game_name}")
 
     # Étape 2 : IGDB par nom
-    igdb_response = HTTParty.post(
-      "https://api.igdb.com/v4/games",
-      headers: {
-        'Client-ID' => Rails.application.credentials.igdb[:client_id],
-        'Authorization' => "Bearer #{token}"
-      },
-      body: "fields name,cover.url,platforms.name,summary,genres.name,first_release_date; search \"#{game_name}\"; limit 1;"
-    )
+    games = igdb_search(game_name, limit: 1)
+    return render json: { error: "IGDB indisponible" }, status: :service_unavailable if games.nil?
 
-    if product
-      game_name = clean_game_title(product['title'])
-      Rails.logger.info("[game_barcode] UPCitemdb: #{product['title']} → #{game_name}")
-    else
-      # Fallback : recherche IGDB directe avec l'EAN
-      Rails.logger.info("[game_barcode] UPCitemdb vide, fallback IGDB direct")
-      game_name = nil
+    game = games.first
+    return render json: { error: "Jeu non trouvé", fallback: true }, status: :not_found unless game
+
+    summary = begin
+      TranslationService.translate_batch([game['summary'].to_s]).first
+    rescue TranslationService::Error => e
+      Rails.logger.warn("[game_barcode] Traduction impossible, résumé laissé en anglais : #{e.message}")
+      game['summary']
     end
 
-    # Si pas de nom via UPCitemdb, on ne peut pas chercher sur IGDB
-    return render json: { error: "Jeu non trouvé", fallback: true }, status: :not_found unless game_name
-
-    game = igdb_response.parsed_response.first
-    cover_url = game.dig('cover', 'url') ? "https:#{game['cover']['url'].gsub('t_thumb', 't_cover_big')}" : nil
-    release_date = game['first_release_date'] ? Time.at(game['first_release_date']).to_date : nil
-    summary = TranslationService.translate_batch([game['summary'].to_s]).first
-
-    render json: {
-      id: game['id'],
-      name: game['name'],
-      cover_url: cover_url,
-      platforms: game['platforms']&.map { |p| p['name'] }&.join(', '),
-      release_date: game['first_release_date'] ? Time.at(game['first_release_date']).year : nil,
-      summary: summary,
-      genres: game['genres']&.map { |g| g['name'] }&.join(', '),
-      metadata: {
-        platforms: game['platforms']&.map { |p| p['name'] }&.join(', '),
-        summary: summary,
-        cover_url: cover_url,
-        genres: game['genres']&.map { |g| g['name'] }&.join(', '),
-        release_date: release_date&.to_s
-      }
-    }
-  rescue => e
-    Rails.logger.error("[game_barcode] Erreur: #{e.message}")
-    render json: { error: e.message }, status: :internal_server_error
+    render json: igdb_game_json(game, summary: summary)
   end
 
   def movie_barcode
     ean = params[:ean].to_s.strip
     return render json: { error: "Barcode manquant" }, status: :unprocessable_entity if ean.blank?
 
-    movie_name = nil
-    movie_year = nil
+    # Étape 1 : UPCitemdb pour récupérer le nom du produit
+    # (ni OMDb ni TMDB ne savent chercher par EAN : sans UPCitemdb, on passe en recherche manuelle)
+    product_title = upc_product_title(ean)
+    return render json: { error: "Film non trouvé", fallback: true }, status: :not_found unless product_title
 
-    # Étape 1 : UPCitemdb
-    upc_response = HTTP.get("https://api.upcitemdb.com/prod/trial/lookup", params: { upc: ean })
-    upc_data = JSON.parse(upc_response.body.to_s)
-    product = upc_data.dig('items', 0)
+    movie_name = clean_movie_title(product_title)
+    Rails.logger.info("[movie_barcode] UPCitemdb: #{product_title} → #{movie_name}")
 
-    if product
-      movie_name = clean_movie_title(product['title'])
-      Rails.logger.info("[movie_barcode] UPCitemdb: #{product['title']} → #{movie_name}")
-    end
-
-    # Étape 2 : OMDb fallback si UPCitemdb vide
-    if movie_name.blank?
-      Rails.logger.info("[movie_barcode] UPCitemdb vide, fallback OMDb")
-      omdb_response = HTTP.get("http://www.omdbapi.com/", params: {
-        apikey: Rails.application.credentials.dig(:omdb, :api_key),
-        i: ean
-      })
-      omdb_data = JSON.parse(omdb_response.body.to_s)
-      Rails.logger.info("[movie_barcode] OMDb response: #{omdb_data.to_json}")
-
-      if omdb_data["Response"] == "True"
-        movie_name = omdb_data["Title"]
-        movie_year = omdb_data["Year"]
-        Rails.logger.info("[movie_barcode] OMDb trouvé: #{movie_name}")
-      end
-    end
-
-    # Étape 3 : TMDB par titre
-    api_key = Rails.application.credentials.dig(:tmdb, :api_key)
-
-
-    # Étape 3 : TMDB find par EAN (si movie_name toujours vide)
-    movie = nil
-    if movie_name.blank?
-      Rails.logger.info("[movie_barcode] Tentative TMDB find par EAN")
-      tmdb_find = Net::HTTP.get(URI(
-        "https://api.themoviedb.org/3/find/#{ean}?api_key=#{api_key}&external_source=ean_13"
-      ))
-      tmdb_find_data = JSON.parse(tmdb_find)
-      movie = tmdb_find_data["movie_results"]&.first
-      Rails.logger.info("[movie_barcode] TMDB find: #{tmdb_find_data.to_json}")
-    end
-
-    return render json: { error: "Film non trouvé", fallback: true }, status: :not_found if movie_name.blank? && movie.nil?
-
-    # Étape 4 : TMDB par titre (si on a un titre mais pas encore de movie)
-    if movie.nil? && movie_name.present?
-      tmdb_response = Net::HTTP.get(URI(
-        "https://api.themoviedb.org/3/search/movie?api_key=#{api_key}&query=#{CGI.escape(movie_name)}&language=fr-FR#{movie_year ? "&year=#{movie_year}" : ""}"
-      ))
-      tmdb_data = JSON.parse(tmdb_response)
-      movie = tmdb_data["results"]&.first
-    end
-
+    # Étape 2 : TMDB par titre
+    movie = tmdb_get("search/movie", query: movie_name, language: "fr-FR")["results"]&.first
     return render json: { error: "Film non trouvé", fallback: true }, status: :not_found unless movie
 
-    # Étape 5 : Détails + réalisateur
-
-    # Étape 4 : Détails + réalisateur
-    detail_response = Net::HTTP.get(URI(
-      "https://api.themoviedb.org/3/movie/#{movie['id']}?api_key=#{api_key}&language=fr-FR"
-    ))
-    credits_response = Net::HTTP.get(URI(
-      "https://api.themoviedb.org/3/movie/#{movie['id']}/credits?api_key=#{api_key}"
-    ))
-    detail_data = JSON.parse(detail_response)
-    credits_data = JSON.parse(credits_response)
+    # Étape 3 : Détails + réalisateur
+    detail_data = tmdb_get("movie/#{movie['id']}", language: "fr-FR")
+    credits_data = tmdb_get("movie/#{movie['id']}/credits")
 
     director = credits_data["crew"]&.find { |p| p["job"] == "Director" }&.dig("name")
     studio = detail_data["production_companies"]&.map { |c| c["name"] }&.join(", ")
@@ -188,75 +70,31 @@ class Api::SearchController < ApplicationController
       studio: studio,
       poster_url: poster_url
     }
-  rescue => e
-    Rails.logger.error("[movie_barcode] Erreur: #{e.message}")
-    render json: { error: e.message }, status: :internal_server_error
   end
 
   def search_game
     query = params[:query].to_s.strip
     return render json: { error: "Query vide" }, status: :unprocessable_entity if query.blank?
 
-    token = IgdbService.access_token
-    return render json: { error: "Token IGDB indisponible" }, status: :service_unavailable unless token
+    games = igdb_search(query, limit: 10)
+    return render json: { error: "IGDB indisponible" }, status: :service_unavailable if games.nil?
 
-    response = HTTParty.post(
-      "https://api.igdb.com/v4/games",
-      headers: {
-        'Client-ID' => Rails.application.credentials.igdb[:client_id],
-        'Authorization' => "Bearer #{token}"
-      },
-      body: "fields name,cover.url,platforms.name,summary,genres.name,first_release_date; search \"#{query}\"; limit 10;"
-    )
-
-    return render json: { games: [] } unless response.code == 200 && response.parsed_response.any?
-
-    games = response.parsed_response
-
-    result = games.each_with_index.map do |game, i|
-      cover_url = game.dig('cover', 'url') ? "https:#{game['cover']['url'].gsub('t_thumb', 't_cover_big')}" : nil
-      release_date = game['first_release_date'] ? Time.at(game['first_release_date']).to_date : nil
-      summary = game['summary']
-
-      {
-        id: game['id'],
-        name: game['name'],
-        cover_url: cover_url,
-        platforms: game['platforms']&.map { |p| p['name'] }&.join(', '),
-        release_date: game['first_release_date'] ? Time.at(game['first_release_date']).year : nil,
-        summary: summary,
-        genres: game['genres']&.map { |g| g['name'] }&.join(', '),
-        metadata: {
-          platforms: game['platforms']&.map { |p| p['name'] }&.join(', '),
-          summary: summary,
-          cover_url: cover_url,
-          genres: game['genres']&.map { |g| g['name'] }&.join(', '),
-          release_date: release_date&.to_s
-        }
-      }
-    end
-
-    render json: { games: result }
-  rescue => e
-    Rails.logger.error("[search_game] Erreur: #{e.message}")
-    render json: { error: e.message }, status: :internal_server_error
-  end
-
-  def clean_movie_title(title)
-    title = title.gsub(/^[^-]+-/, '').strip
-    title = title.gsub(/\s*(dvd|blu-ray|blu ray|4k|uhd|region \d|uk import|fr import|\[.*?\]|\(.*?import.*?\))/i, '').strip
-    title
+    render json: { games: games.map { |game| igdb_game_json(game, summary: game['summary']) } }
   end
 
   def book
-    query = params[:query]
-    api_key = Rails.application.credentials.dig(:google, :books_api_key)
+    query = params[:query].to_s.strip
+    return render json: [] if query.blank?
 
     search_query = query.match?(/^\d{10,13}$/) ? "isbn:#{query}" : query
+    Rails.logger.info("[book] search_query: #{search_query}")
 
-    url = "https://www.googleapis.com/books/v1/volumes?q=#{CGI.escape(search_query)}&key=#{api_key}&maxResults=5&langRestrict=fr"
-    response = Net::HTTP.get(URI(url))
-    data = JSON.parse(response)
+    data = get_json("https://www.googleapis.com/books/v1/volumes", params: {
+      q: search_query,
+      key: Rails.application.credentials.dig(:google, :books_api_key),
+      maxResults: 5,
+      langRestrict: "fr"
+    })
 
     results = data["items"]&.map do |item|
       info = item["volumeInfo"]
@@ -271,18 +109,14 @@ class Api::SearchController < ApplicationController
         description: info["description"]
       }
     end
-    Rails.logger.info("[book] search_query: #{search_query}")
-    Rails.logger.info("[book] response: #{data}")
     render json: results || []
   end
 
   def movie
-    query = params[:query]
-    api_key = Rails.application.credentials.dig(:tmdb, :api_key)
+    query = params[:query].to_s.strip
+    return render json: [] if query.blank?
 
-    url = "https://api.themoviedb.org/3/search/movie?api_key=#{api_key}&query=#{CGI.escape(query)}&language=fr-FR"
-    response = Net::HTTP.get(URI(url))
-    data = JSON.parse(response)
+    data = tmdb_get("search/movie", query: query, language: "fr-FR")
 
     results = data["results"]&.first(5)&.map do |movie|
       {
@@ -297,17 +131,9 @@ class Api::SearchController < ApplicationController
   end
 
   def movie_detail
-    api_key = Rails.application.credentials.dig(:tmdb, :api_key)
-
-    # Détails du film
-    url = "https://api.themoviedb.org/3/movie/#{params[:id]}?api_key=#{api_key}&language=fr-FR"
-    response = Net::HTTP.get(URI(url))
-    data = JSON.parse(response)
-
+    data = tmdb_get("movie/#{params[:id]}", language: "fr-FR")
     # Crédits pour le réalisateur
-    credits_url = "https://api.themoviedb.org/3/movie/#{params[:id]}/credits?api_key=#{api_key}"
-    credits_response = Net::HTTP.get(URI(credits_url))
-    credits_data = JSON.parse(credits_response)
+    credits_data = tmdb_get("movie/#{params[:id]}/credits")
 
     director = credits_data["crew"]&.find { |p| p["job"] == "Director" }&.dig("name")
 
@@ -318,17 +144,10 @@ class Api::SearchController < ApplicationController
   end
 
   def music
-    query = params[:query]
-    token = Rails.application.credentials.dig(:discogs, :token)
+    query = params[:query].to_s.strip
+    return render json: [] if query.blank?
 
-    url = "https://api.discogs.com/database/search?q=#{CGI.escape(query)}&type=release&per_page=5&token=#{token}"
-
-    uri = URI(url)
-    request = Net::HTTP::Get.new(uri)
-    request["User-Agent"] = "CapsuleApp/1.0"
-
-    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(request) }
-    data = JSON.parse(response.body)
+    data = discogs_get("database/search", q: query, type: "release", per_page: 5)
 
     results = data["results"]&.map do |release|
       {
@@ -345,15 +164,7 @@ class Api::SearchController < ApplicationController
   end
 
   def music_detail
-    token = Rails.application.credentials.dig(:discogs, :token)
-    url = "https://api.discogs.com/releases/#{params[:id]}?token=#{token}"
-
-    uri = URI(url)
-    request = Net::HTTP::Get.new(uri)
-    request["User-Agent"] = "CapsuleApp/1.0"
-
-    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(request) }
-    data = JSON.parse(response.body)
+    data = discogs_get("releases/#{params[:id]}")
 
     render json: {
       artist: data["artists"]&.map { |a| a["name"] }&.join(", "),
@@ -362,6 +173,103 @@ class Api::SearchController < ApplicationController
   end
 
   private
+
+  # GET d'une API JSON externe, avec timeout.
+  # Lève ExternalApiError si l'API répond en erreur (clé invalide, quota, 500...)
+  def get_json(url, params: {}, headers: {})
+    response = HTTP.timeout(10).headers(headers).get(url, params: params)
+    raise ExternalApiError, "#{URI(url).host} a répondu #{response.status}" unless response.status.success?
+
+    JSON.parse(response.body.to_s)
+  end
+
+  def tmdb_get(path, **params)
+    get_json("https://api.themoviedb.org/3/#{path}",
+             params: params.merge(api_key: Rails.application.credentials.dig(:tmdb, :api_key)))
+  end
+
+  def discogs_get(path, **params)
+    get_json("https://api.discogs.com/#{path}",
+             params: params.merge(token: Rails.application.credentials.dig(:discogs, :token)),
+             headers: { "User-Agent" => "CapsuleApp/1.0" }) # Discogs refuse les requêtes sans User-Agent
+  end
+
+  # L'id est inséré dans l'URL de l'API externe : on n'accepte que des chiffres
+  def require_numeric_id
+    render json: { error: "Identifiant invalide" }, status: :bad_request unless params[:id].to_s.match?(/\A\d+\z/)
+  end
+
+  def render_api_error(error)
+    Rails.logger.error("[api/search##{action_name}] #{error.class}: #{error.message}")
+    # 502 = une API externe a échoué ; 500 = bug chez nous
+    external = error.is_a?(ExternalApiError) || error.is_a?(HTTP::Error) || error.is_a?(JSON::ParserError)
+    render json: { error: "Recherche indisponible" }, status: external ? :bad_gateway : :internal_server_error
+  end
+
+  # Titre du produit chez UPCitemdb, nil si inconnu ou quota d'essai (100/jour) dépassé
+  def upc_product_title(ean)
+    response = HTTP.timeout(10).get("https://api.upcitemdb.com/prod/trial/lookup", params: { upc: ean })
+    unless response.status.success?
+      Rails.logger.warn("[upcitemdb] #{response.status} pour #{ean}")
+      return nil
+    end
+    JSON.parse(response.body.to_s).dig("items", 0, "title")
+  end
+
+  # Liste de jeux IGDB ([] si aucun résultat), nil si IGDB est indisponible
+  def igdb_search(name, limit:)
+    token = IgdbService.access_token
+    return nil unless token
+
+    response = HTTParty.post(
+      "https://api.igdb.com/v4/games",
+      headers: {
+        'Client-ID' => Rails.application.credentials.igdb[:client_id],
+        'Authorization' => "Bearer #{token}"
+      },
+      # Les guillemets fermeraient la chaîne de la requête IGDB : on les retire
+      body: "fields name,cover.url,platforms.name,summary,genres.name,first_release_date; search \"#{name.delete('"\\')}\"; limit #{limit};",
+      timeout: 10
+    )
+    # Token expiré ou révoqué : on l'oublie pour qu'un nouveau soit demandé au prochain appel
+    Rails.cache.delete(IgdbService::CACHE_KEY) if response.code == 401
+    return nil unless response.code == 200
+
+    response.parsed_response
+  end
+
+  def igdb_game_json(game, summary:)
+    cover_url = game.dig('cover', 'url') ? "https:#{game['cover']['url'].gsub('t_thumb', 't_cover_big')}" : nil
+    release_date = game['first_release_date'] ? Time.at(game['first_release_date']).to_date : nil
+    platforms = game['platforms']&.map { |p| p['name'] }&.join(', ')
+    genres = game['genres']&.map { |g| g['name'] }&.join(', ')
+
+    {
+      id: game['id'],
+      name: game['name'],
+      cover_url: cover_url,
+      platforms: platforms,
+      release_date: release_date&.year,
+      summary: summary,
+      genres: genres,
+      metadata: {
+        platforms: platforms,
+        summary: summary,
+        cover_url: cover_url,
+        genres: genres,
+        release_date: release_date&.to_s
+      }
+    }
+  end
+
+  def clean_movie_title(title)
+    # D'abord le format (« - Blu-ray », « (DVD) »...), en mots entiers pour ne pas couper « Spider-Man »
+    title = title.gsub(/\s*[-(\[]?\s*\b(dvd|blu-ray|blu ray|4k|uhd|region \d|uk import|fr import)\b\s*[)\]]?/i, '')
+    title = title.gsub(/\s*(\[.*?\]|\(.*?import.*?\))/i, '')
+    # Puis un éventuel préfixe éditeur (« Warner - Inception »)
+    title = title.sub(/\A[^-]+\s+-\s+/, '') if title.include?(" - ")
+    title.strip
+  end
 
   def clean_game_title(title)
     platforms = [

@@ -30,5 +30,25 @@ RSpec.describe Scraper do
         expect { Scraper.call("44") }.to raise_error(Scraper::ParseError)
       end
     end
+
+    context "quand le site est trop lent" do
+      it "lève une NetworkError" do
+        allow(URI).to receive(:open).and_raise(Net::ReadTimeout)
+        expect { Scraper.call("44") }.to raise_error(Scraper::NetworkError)
+      end
+    end
+  end
+
+  describe ".department_for" do
+    {
+      "44000" => "44", "75011" => "75", "01000" => "01", " 44000 " => "44",
+      "20000" => "2a", "20167" => "2a", "20200" => "2b", "20600" => "2b", # Corse
+      "97110" => nil, "97400" => nil, "98000" => nil,                       # DOM-TOM : pas sur Brocabrac
+      "00000" => nil, "4400" => nil, nil => nil
+    }.each do |postal_code, department|
+      it "#{postal_code.inspect} → #{department.inspect}" do
+        expect(Scraper.department_for(postal_code)).to eq(department)
+      end
+    end
   end
 end
