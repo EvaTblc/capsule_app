@@ -42,7 +42,7 @@
           class="rounded-2xl overflow-hidden mb-4"
           data-controller="map"
           data-map-markers-value="<%= markers.to_json %>"
-          data-map-api-key-value="<%= Rails.application.credentials.mapbox[:api_key] %>"
+          data-map-api-key-value="<%= Rails.application.credentials.dig(:mapbox, :api_key) %>"
           data-map-user-lat-value="<%= current_user.latitude.to_f %>"
           data-map-user-lng-value="<%= current_user.longitude.to_f %>">
       </div>

@@ -16,12 +16,12 @@ class IgdbService
     response = HTTP.post(
       "https://id.twitch.tv/oauth2/token",
       params: {
-        client_id: Rails.application.credentials.igdb[:client_id],
-        client_secret: Rails.application.credentials.igdb[:client_secret],
-        grant_type: 'client_credentials'
+        client_id: Rails.application.credentials.dig(:igdb, :client_id),
+        client_secret: Rails.application.credentials.dig(:igdb, :client_secret),
+        grant_type: "client_credentials"
       }
     )
-    JSON.parse(response.body.to_s)['access_token']
+    JSON.parse(response.body.to_s)["access_token"]
   rescue => e
     Rails.logger.error("IGDB token fetch failed: #{e.message}")
     nil
