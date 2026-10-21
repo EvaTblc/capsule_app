@@ -26,8 +26,6 @@ Rails.application.routes.draw do
     end
 
   namespace :api do
-    get "search/game", to: "search#game"
-    get "search/game_detail/:id", to: "search#game_detail"
     get "search/search_game"
     get "search/book", to: "search#book"
     get "search/movie", to: "search#movie"
