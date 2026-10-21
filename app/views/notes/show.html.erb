@@ -34,11 +34,11 @@
   </div>
 
   <%# Partager avec un ami %>
-  <% if current_user.all_friends.any? %>
+  <% if current_user.accepted_friends.any? %>
     <div id="share-note-<%= @note.id %>" class="mb-4">
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Partager avec</p>
       <div class="flex gap-2 flex-wrap">
-        <% current_user.all_friends.each do |friend| %>
+        <% current_user.accepted_friends.each do |friend| %>
           <%= button_to share_note_path(@note),
               params: { friend_id: friend.id },
               method: :post,

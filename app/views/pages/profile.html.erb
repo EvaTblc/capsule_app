@@ -61,7 +61,7 @@
               <p class="text-sm font-semibold text-gray-900 truncate"><%= friend.email.split("@").first %></p>
               <p class="text-xs text-gray-400 truncate"><%= friend.email %></p>
             </div>
-            <%= button_to friendship_path(current_user.sent_friendships.find_by(receiver: friend) || current_user.received_friendships.find_by(requester: friend)),
+            <%= button_to friendship_path(Friendship.between(current_user, friend).first),
                 method: :delete,
                 class: "text-xs text-red-400 font-semibold" do %>
               Retirer

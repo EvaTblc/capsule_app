@@ -31,4 +31,32 @@ RSpec.describe Friendship, type: :model do
       expect(friendship.requester).not_to eq(friendship.receiver)
     end
   end
+
+  describe "unicité par paire" do
+    let(:eva) { create(:user) }
+    let(:ami) { create(:user) }
+    before { create(:friendship, requester: eva, receiver: ami) }
+
+    it "refuse un doublon dans le même sens" do
+      expect(build(:friendship, requester: eva, receiver: ami)).not_to be_valid
+    end
+
+    it "refuse un doublon dans le sens inverse" do
+      expect(build(:friendship, requester: ami, receiver: eva)).not_to be_valid
+    end
+
+    it "est garantie par la base, même sans passer par les validations" do
+      expect {
+        Friendship.insert_all!([{ requester_id: ami.id, receiver_id: eva.id, status: "pending", created_at: Time.current, updated_at: Time.current }])
+      }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+
+    it "refuse l'amitié avec soi-même" do
+      expect(build(:friendship, requester: eva, receiver: eva)).not_to be_valid
+    end
+
+    it ".between trouve l'amitié dans les deux sens" do
+      expect(Friendship.between(ami, eva).count).to eq(1)
+    end
+  end
 end

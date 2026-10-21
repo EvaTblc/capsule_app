@@ -3,16 +3,20 @@ class User < ApplicationRecord
   :recoverable, :rememberable, :validatable,
   :omniauthable, omniauth_providers: [:google_oauth2]
 
+  # prepend : doit passer AVANT le dependent: :destroy ci-dessous, qui efface les rôles de propriétaire
+  before_destroy :hand_over_owned_collections, prepend: true
+
   has_many :user_collections, dependent: :destroy
   has_many :collections, through: :user_collections
-  has_many :notes
-  has_many :events
+  has_many :items, through: :collections
+  has_many :notes, dependent: :destroy
+  has_many :events, dependent: :destroy
+  # Notes/events partagés à des amis : on les garde chez l'ami, sans expéditeur
+  has_many :sent_notes, class_name: "Note", foreign_key: :sender_id, dependent: :nullify
+  has_many :sent_events, class_name: "Event", foreign_key: :sender_id, dependent: :nullify
 
-  has_many :sent_friendships, class_name: "Friendship", foreign_key: :requester_id
-  has_many :received_friendships, class_name: "Friendship", foreign_key: :receiver_id
-
-  has_many :friends, through: :sent_friendships, source: :receiver
-  has_many :pending_requests, through: :received_friendships, source: :requester
+  has_many :sent_friendships, class_name: "Friendship", foreign_key: :requester_id, dependent: :destroy
+  has_many :received_friendships, class_name: "Friendship", foreign_key: :receiver_id, dependent: :destroy
 
   geocoded_by :address
   after_validation :geocode, if: :will_save_change_to_address?
@@ -25,9 +29,24 @@ class User < ApplicationRecord
     end
   end
 
-  def all_friends
-    sent = Friendship.where(requester: self, status: "accepted").map(&:receiver)
-    received = Friendship.where(receiver: self, status: "accepted").map(&:requester)
-    sent + received
+  # Amis acceptés, dans les deux sens. Relation (et non tableau) : on peut chaîner .find, .where...
+  def accepted_friends
+    User.where(id: Friendship.accepted.where(requester: self).select(:receiver_id))
+        .or(User.where(id: Friendship.accepted.where(receiver: self).select(:requester_id)))
+  end
+
+  private
+
+  # À la suppression du compte, chaque collection dont il est propriétaire est transmise
+  # au plus ancien autre membre ; sans autre membre, elle est supprimée (avec ses items)
+  def hand_over_owned_collections
+    user_collections.where(role: "owner").includes(:collection).find_each do |membership|
+      collection = membership.collection
+      others = collection.user_collections.where.not(user_id: id)
+      next if others.where(role: "owner").exists? # un autre propriétaire existe déjà
+
+      successor = others.order(:created_at).first
+      successor ? successor.update!(role: "owner") : collection.destroy!
+    end
   end
 end

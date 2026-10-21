@@ -17,7 +17,7 @@ class PagesController < ApplicationController
       .includes(collection: [:items, :cover_image_attachment])
       .map(&:collection)
 
-    @friends = current_user.all_friends
+    @friends = current_user.accepted_friends
     @pending_friendships = current_user.received_friendships.where(status: "pending")
     @sent_friendships = current_user.sent_friendships.where(status: "pending").includes(:receiver)
   end
