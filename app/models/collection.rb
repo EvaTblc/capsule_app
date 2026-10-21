@@ -1,5 +1,5 @@
 class Collection < ApplicationRecord
-  has_many :items
+  has_many :items, dependent: :destroy
   has_many :user_collections, dependent: :destroy
   has_many :users, through: :user_collections
   has_many :notes, dependent: :destroy
@@ -23,6 +23,14 @@ class Collection < ApplicationRecord
 
   validates :title, presence: true
   validates :category, inclusion: { in: CATEGORIES }
+
+  # Ce que user peut consulter : ses collections, plus les collections publiques (en lecture seule)
+  scope :visible_to, ->(user) { where(public: true).or(where(id: user.collections.select(:id))) }
+
+  # Seuls les membres peuvent modifier la collection et ses items
+  def member?(user)
+    user_collections.exists?(user: user)
+  end
 
 
   private

@@ -6,13 +6,25 @@ require "json"
   class NetworkError < StandardError; end
   class ParseError < StandardError; end
 
+  # Code département au format des URL Brocabrac, nil si non couvert.
+  # Brocabrac ne couvre que la métropole : 01 à 95, avec 2a/2b pour la Corse (pas de DOM).
+  def self.department_for(postal_code)
+    code = postal_code.to_s.strip
+    return nil unless code.match?(/\A\d{5}\z/)
+    # Corse : 200xx-201xx = Corse-du-Sud, 202xx-206xx = Haute-Corse
+    return code < "20200" ? "2a" : "2b" if code.start_with?("20")
+
+    department = code.first(2)
+    department.to_i.between?(1, 95) ? department : nil
+  end
+
   def self.call(department)
     raise ArgumentError, "Department manquant" if department.blank?
 
     url = "https://brocabrac.fr/#{department}/"
     html = begin
-      URI.open(url, "User-Agent" => "Mozilla/5.0")
-    rescue SocketError, Errno::ECONNREFUSED => e
+      URI.open(url, "User-Agent" => "Mozilla/5.0", open_timeout: 5, read_timeout: 10)
+    rescue SocketError, SystemCallError, Timeout::Error, OpenURI::HTTPError => e
       raise NetworkError, "Connexion impossible : #{e.message}"
     end
     doc = Nokogiri::HTML.parse(html)

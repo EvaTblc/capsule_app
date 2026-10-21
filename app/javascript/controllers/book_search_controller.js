@@ -61,9 +61,10 @@ export default class extends Controller {
     this.queryTarget.value = isbn
     fetch(`/api/search/book?query=${encodeURIComponent(isbn)}`)
       .then(res => res.json())
+      // API en panne ({ error }) ou réponse non JSON : traité comme « aucun résultat »
+      .then(data => Array.isArray(data) ? data : [])
+      .catch(() => [])
       .then(data => {
-        console.log("data:", data)
-      console.log("data[0]:", data[0])
         if (data.length > 0) {
           this.fill(data[0])
         } else {
@@ -77,6 +78,9 @@ export default class extends Controller {
 
     fetch(`/api/search/book?query=${encodeURIComponent(query)}`)
       .then(res => res.json())
+      // API en panne ({ error }) ou réponse non JSON : traité comme « aucun résultat »
+      .then(data => Array.isArray(data) ? data : [])
+      .catch(() => [])
       .then(data => {
         this.resultsTarget.innerHTML = ""
         data.forEach(book => {

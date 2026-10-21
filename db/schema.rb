@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_14_132305) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -108,8 +108,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_132305) do
     t.bigint "requester_id", null: false
     t.string "status"
     t.datetime "updated_at", null: false
+    t.index "LEAST(requester_id, receiver_id), GREATEST(requester_id, receiver_id)", name: "index_friendships_on_user_pair", unique: true
     t.index ["receiver_id"], name: "index_friendships_on_receiver_id"
     t.index ["requester_id"], name: "index_friendships_on_requester_id"
+    t.check_constraint "requester_id <> receiver_id", name: "friendships_not_self"
   end
 
   create_table "items", force: :cascade do |t|

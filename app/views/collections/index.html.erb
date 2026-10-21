@@ -19,12 +19,11 @@
   <% else %>
 
     <%# Récemment ajouté %>
-    <% recent_items = @collections.flat_map(&:items).sort_by(&:created_at).last(6).reverse %>
-    <% if recent_items.any? %>
+    <% if @recent_items.any? %>
       <div class="mb-6">
         <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Récemment ajouté</h2>
         <div style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none;">
-          <% recent_items.each do |item| %>
+          <% @recent_items.each do |item| %>
             <%= link_to collection_item_path(item.collection, item), style: "flex-shrink: 0; width: 112px; text-decoration: none;" do %>
               <div style="width: 112px; height: 144px; border-radius: 16px; overflow: hidden; background: #f3f4f6; margin-bottom: 8px;">
                 <% if item.images.attached? %>
@@ -62,7 +61,7 @@
               </div>
               <div>
                 <h2 class="text-lg font-bold <%= collection.cover_image.attached? ? 'text-white' : '' %>"><%= collection.title %></h2>
-                <p class="text-xs <%= collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= collection.items.count %> items</p>
+                <p class="text-xs <%= collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @item_counts.fetch(collection.id, 0) %> items</p>
               </div>
             </div>
           </div>

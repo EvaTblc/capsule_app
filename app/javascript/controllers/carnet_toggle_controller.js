@@ -2,6 +2,11 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["noteForm", "eventForm", "noteBtn", "eventBtn", "noteTitle", "eventTitle"]
+  static values = { initial: { type: String, default: "note" } }
+
+  connect() {
+    if (this.initialValue === "event") this.showEvent()
+  }
 
   showNote() {
     this.noteFormTarget.classList.remove("hidden")

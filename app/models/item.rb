@@ -1,8 +1,14 @@
 class Item < ApplicationRecord
-  belongs_to :item_detailable, polymorphic: true
+  belongs_to :item_detailable, polymorphic: true, dependent: :destroy
   belongs_to :collection
 
   has_many_attached :images
+
+  CONDITIONS = ["Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état"].freeze
+
+  validates :title, presence: true
+  # L'état reste facultatif : l'ajout rapide de jeux n'en demande pas
+  validates :condition, inclusion: { in: CONDITIONS }, allow_blank: true
 
   ITEM_TYPE_STYLES = {
   "BookDetail"      => "bg-emerald-50 shadow-emerald-100",
@@ -23,15 +29,4 @@ class Item < ApplicationRecord
     "TcgDetail"       => "trading_cards",
     "BoardGameDetail" => "board_games"
   }
-
-  def estimation_prompt
-    attributes = detailable.attributes.except("id", "created_at", "updated_at", "synopsis", "description", "duration")
-    "Tu es un expert en estimation de valeur de produits d'occasion.
-    Donne une fourchette de prix réaliste en euros pour cet item
-    sur le marché français de l'occasion (Vinted, LeBonCoin...) :
-    Nom : #{title}
-    État : #{condition}
-    #{attributes.map { |k, v| "#{k} : #{v}" }.join("\n")}
-    Réponds uniquement avec la fourchette de prix et une phrase d'explication courte."
-  end
 end

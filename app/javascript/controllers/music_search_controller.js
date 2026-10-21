@@ -9,6 +9,9 @@ export default class extends Controller {
 
     fetch(`/api/search/music?query=${encodeURIComponent(query)}`)
       .then(res => res.json())
+      // API en panne ({ error }) ou réponse non JSON : traité comme « aucun résultat »
+      .then(data => Array.isArray(data) ? data : [])
+      .catch(() => [])
       .then(data => {
         this.resultsTarget.innerHTML = ""
         data.forEach(release => {

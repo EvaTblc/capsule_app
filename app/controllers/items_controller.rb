@@ -1,9 +1,14 @@
 class ItemsController < ApplicationController
+  DETAIL_TYPES = Item::ITEM_TYPE_STYLES.keys.freeze
+
   before_action :authenticate_user!
-  before_action :set_collection, except: [:estimate, :identify]
+  before_action :set_collection, except: [:show, :estimate, :identify]
+  before_action :set_visible_collection, only: [:show]
   before_action :set_item, only: [:show, :edit, :update, :destroy]
 
   def show
+    # Visiteur d'une collection publique : lecture seule
+    @member = @collection.member?(current_user)
   end
 
   def new
@@ -12,64 +17,48 @@ class ItemsController < ApplicationController
 
   def create
     item_type = params[:item][:item_type]
+    attrs = prepare_new_detail_attrs(item_type, permitted_detail_params(item_type))
 
-    detail_params = case item_type
-    when "VideoGameDetail"
-      p = params[:video_game_detail].permit!.to_h
-      p["summary_en"] = p.delete("description")
-      p
-    when "BookDetail"
-      p = params[:book_detail].permit!.to_h
-        if p["description"].blank?
-          p["description"] = BookDescriptionService.generate(
-            title: params[:item][:title],
-            author: p["author"],
-            isbn: p["isbn"]
-          )
-        end
-        p
-    when "MovieDetail"     then params[:movie_detail].permit!.to_h
-    when "MusicDetail"     then params[:music_detail].permit!.to_h
-    when "FigurineDetail"  then params[:figurine_detail].permit!.to_h
-    when "TcgDetail"       then params[:tcg_detail].permit!.to_h
-    when "BoardGameDetail" then params[:board_game_detail].permit!.to_h
-    end
-
-    detail = case item_type
-    when "BookDetail"      then BookDetail.new(detail_params)
-    when "VideoGameDetail" then VideoGameDetail.new(detail_params)
-    when "MovieDetail"     then MovieDetail.new(detail_params)
-    when "MusicDetail"     then MusicDetail.new(detail_params)
-    when "FigurineDetail"  then FigurineDetail.new(detail_params)
-    when "TcgDetail"       then TcgDetail.new(detail_params)
-    when "BoardGameDetail" then BoardGameDetail.new(detail_params)
-    end
-
-    detail.save!
-
+    detail = detail_class(item_type).new(attrs)
     @item = Item.new(item_params)
     @item.collection = @collection
     @item.item_detailable = detail
 
-    if @item.save
-      TranslationJob.perform_later(@item.id) if item_type == "VideoGameDetail"
+    # Le détail et l'item sont créés ensemble ou pas du tout
+    saved = Item.transaction do
+      raise ActiveRecord::Rollback unless detail.save && @item.save
+      true
+    end
+
+    if saved
+      enqueue_detail_jobs(translate: item_type == "VideoGameDetail")
 
       respond_to do |format|
         format.turbo_stream do
           render turbo_stream: [
             turbo_stream.prepend("quick-add-list",
-              "<div class='bg-purple-50 rounded-xl px-4 py-2 text-sm font-semibold text-purple-700'>✓ #{@item.title}</div>"
+              helpers.tag.div("✓ #{@item.title}",
+                class: "bg-purple-50 rounded-xl px-4 py-2 text-sm font-semibold text-purple-700")
             ),
             turbo_stream.replace("quick-add-form",
-              "<form id='quick-add-form'></form>"
+              helpers.tag.form(id: "quick-add-form")
             )
           ]
         end
         format.html { redirect_to collection_path(@collection), notice: "Item ajouté !" }
       end
     else
-      detail.destroy
-      render :new, status: :unprocessable_entity
+      collect_errors(detail)
+      respond_to do |format|
+        # Ajout rapide : le message s'affiche dans le panneau, le formulaire reste rempli
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.prepend("quick-add-list",
+            helpers.tag.div(@item.errors.map(&:message).join(" · "),
+              class: "bg-red-50 rounded-xl px-4 py-2 text-sm font-semibold text-red-600")
+          ), status: :unprocessable_entity
+        end
+        format.html { render :new, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -82,51 +71,41 @@ class ItemsController < ApplicationController
       redirect_to edit_collection_item_path(@collection, @item)
       return
     end
-    if params[:item].present? && params[:item][:images].present?
-      @item.images.attach(params[:item][:images])
-    end
-
     new_type = params[:item][:item_type]
+    attrs = permitted_detail_params(new_type)
 
+    old_detail = nil
+    needs_translation = false
     if new_type != @item.item_type
-      @item.item_detailable&.destroy
-      detail = case new_type
-              when "BookDetail"
-                then BookDetail.new(params[:book_detail].permit!)
-                p = params[:book_detail].permit!.to_h
-                if p["description"].blank?
-                  p["description"] = BookDescriptionService.generate(
-                    title: params[:item][:title],
-                    author: p["author"],
-                    isbn: p["isbn"]
-                  )
-                end
-                BookDetail.new(p)
-              when "VideoGameDetail"
-              p = params[:video_game_detail].permit!.to_h
-              p["description"] = TranslationService.translate_batch([p["description"]]).first if p["description"].present?
-              VideoGameDetail.new(p)
-              when "MovieDetail"     then MovieDetail.new(params[:movie_detail].permit!)
-              when "MusicDetail"     then MusicDetail.new(params[:music_detail].permit!)
-              when "FigurineDetail"  then FigurineDetail.new(params[:figurine_detail].permit!)
-              when "TcgDetail"       then TcgDetail.new(params[:tcg_detail].permit!)
-              when "BoardGameDetail" then BoardGameDetail.new(params[:board_game_detail].permit!)
-              end
-      detail.save!
-      @item.item_detailable = detail
-    else
-      detail_params = params[new_type.underscore.to_sym]
-
-      if detail_params && new_type == "VideoGameDetail" && detail_params["description"].present?
-        detail_params["description"] = TranslationService.translate_batch([detail_params["description"]]).first
+      old_detail = @item.item_detailable
+      @item.item_detailable = detail_class(new_type).new(prepare_new_detail_attrs(new_type, attrs))
+      needs_translation = new_type == "VideoGameDetail"
+    elsif attrs.any?
+      # On ne retraduit que si la description a changé (ex : nouveau jeu choisi via la recherche)
+      if new_type == "VideoGameDetail" && attrs["description"].present? && attrs["description"] != @item.item_detailable.description
+        attrs = prepare_new_detail_attrs(new_type, attrs).merge("description" => nil)
+        needs_translation = true
       end
-
-      @item.item_detailable.update(detail_params.permit!) if detail_params
+      @item.item_detailable.assign_attributes(attrs)
     end
 
-    if @item.update(item_params)
+    # Détail et item enregistrés ensemble ou pas du tout
+    # (images exclu : l'assigner remplacerait toutes les images existantes)
+    # Assigné avant : en cas d'échec, l'item reste cohérent avec son nouveau détail pour réafficher le formulaire
+    @item.assign_attributes(item_params.except(:images))
+    saved = Item.transaction do
+      raise ActiveRecord::Rollback unless @item.item_detailable.save && @item.save
+      true
+    end
+
+    if saved
+      @item.images.attach(params[:item][:images]) if params[:item][:images].present?
+      # L'ancien détail n'est supprimé qu'une fois l'item bien rattaché au nouveau
+      old_detail&.destroy
+      enqueue_detail_jobs(translate: needs_translation)
       redirect_to collection_item_path(@collection, @item), notice: "Item mis à jour !"
     else
+      collect_errors(@item.item_detailable)
       render :edit, status: :unprocessable_entity
     end
   end
@@ -137,7 +116,7 @@ class ItemsController < ApplicationController
   end
 
   def estimate
-    @item = Item.find(params[:id])
+    @item = current_user.items.find(params[:id])
     estimation = EstimationService.estimate(@item)
     render turbo_stream: turbo_stream.update("estimation",
       partial: "items/estimation",
@@ -157,11 +136,52 @@ class ItemsController < ApplicationController
   end
 
   def set_collection
-    @collection = Collection.find(params[:collection_id])
+    @collection = current_user.collections.find(params[:collection_id])
+  end
+
+  def set_visible_collection
+    @collection = Collection.visible_to(current_user).find(params[:collection_id])
   end
 
   def set_item
     @item = @collection.items.find(params[:id])
+  end
+
+  def detail_class(type)
+    raise ActionController::BadRequest unless DETAIL_TYPES.include?(type)
+    type.constantize
+  end
+
+  # Seules les vraies colonnes du modèle sont acceptées (pas id, created_at...)
+  def permitted_detail_params(type)
+    permitted = detail_class(type).column_names - %w[id created_at updated_at]
+    params.fetch(type.underscore, {}).permit(permitted).to_h
+  end
+
+  # Préparation commune à tout nouveau détail (création ou changement de type)
+  def prepare_new_detail_attrs(type, attrs)
+    case type
+    when "VideoGameDetail"
+      # Traduit plus tard par TranslationJob
+      attrs["summary_en"] = attrs.delete("description")
+    end
+    attrs
+  end
+
+  # Après un échec : réunit sur @item ses propres erreurs et celles du détail, pour les afficher ensemble.
+  # (si le détail a échoué en premier, l'item n'a pas encore été validé)
+  def collect_errors(detail)
+    @item.validate
+    detail.errors.each { |error| @item.errors.add(:base, error.full_message) }
+  end
+
+  # Complète le détail en arrière-plan, pour ne pas faire attendre l'utilisateur pendant l'appel à Claude :
+  # traduction du résumé (jeux) ou génération d'un résumé (livres sans description)
+  def enqueue_detail_jobs(translate:)
+    TranslationJob.perform_later(@item.id) if translate
+    if @item.item_detailable_type == "BookDetail" && @item.item_detailable.description.blank?
+      BookDescriptionJob.perform_later(@item.id)
+    end
   end
 
 end

@@ -9,6 +9,9 @@ export default class extends Controller {
 
     fetch(`/api/search/movie?query=${encodeURIComponent(query)}`)
       .then(res => res.json())
+      // API en panne ({ error }) ou réponse non JSON : traité comme « aucun résultat »
+      .then(data => Array.isArray(data) ? data : [])
+      .catch(() => [])
       .then(data => {
         this.resultsTarget.innerHTML = ""
         data.forEach(movie => {
@@ -77,6 +80,8 @@ export default class extends Controller {
     this.queryTarget.value = ean
     fetch(`/api/search/movie_barcode?ean=${encodeURIComponent(ean)}`)
       .then(res => res.json())
+      // Réseau coupé ou réponse non JSON (ex : 429 du rate limit) : même traitement qu'un film non trouvé
+      .catch(() => ({ error: true }))
       .then(data => {
         if (data.error) {
           this.queryTarget.value = ""
