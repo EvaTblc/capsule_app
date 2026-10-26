@@ -1,0 +1,11 @@
+<%# Messages flash (notice / alert) de toute l'appli : bulle flottante sous la barre du haut %>
+<% flash.each do |type, message| %>
+  <% next if message.blank? || !%w[notice alert].include?(type.to_s) %>
+  <div data-controller="flash" data-action="click->flash#dismiss" data-turbo-temporary
+       role="<%= type.to_s == "alert" ? "alert" : "status" %>"
+       class="fixed <%= user_signed_in? ? "top-16" : "top-4" %> left-4 right-4 z-50 mx-auto max-w-sm cursor-pointer
+              rounded-xl px-4 py-3 text-sm font-medium shadow-lg transition-opacity duration-300
+              <%= type.to_s == "alert" ? "bg-red-50 text-red-700 border border-red-100" : "bg-purple-50 text-purple-700 border border-purple-100" %>">
+    <%= message %>
+  </div>
+<% end %>

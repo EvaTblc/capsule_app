@@ -101,6 +101,8 @@
       </header>
     <% end %>
 
+    <%= render "shared/flash" %>
+
     <%= yield %>
 
     <% if user_signed_in? %>
