@@ -217,25 +217,57 @@ class Api::SearchController < ApplicationController
   end
 
   # Liste de jeux IGDB ([] si aucun résultat), nil si IGDB est indisponible
+  IGDB_GAME_FIELDS = %w[name cover.url platforms.name summary genres.name first_release_date
+                        alternative_names.name alternative_names.comment].freeze
+
+  # Jeux IGDB correspondant à name ([] si aucun), nil si IGDB est indisponible.
+  # Deux recherches en parallèle : celle d'IGDB, qui ignore les titres français,
+  # et une recherche dans les titres français officiels (« Pokémon Épée » → Pokémon Sword).
+  # Les correspondances françaises passent en premier, sans doublon.
   def igdb_search(name, limit:)
     token = IgdbService.access_token
     return nil unless token
 
+    # Les guillemets fermeraient la chaîne de la requête IGDB : on les retire
+    query = name.delete('"\\')
+    french_fields = IGDB_GAME_FIELDS.map { |field| "game.#{field}" }.join(",")
+
+    searches = [
+      Thread.new { igdb_post("games", "fields #{IGDB_GAME_FIELDS.join(',')}; search \"#{query}\"; limit #{limit};", token) },
+      Thread.new do
+        igdb_post("alternative_names",
+                  "fields #{french_fields}; where name ~ *\"#{query}\"* & comment = \"French title\"; limit #{limit};", token)
+      end
+    ]
+    games, french_matches = searches.map(&:value)
+    return nil if games.nil? # la recherche principale a échoué : IGDB indisponible
+
+    french_games = (french_matches || []).filter_map { |match| match["game"] }
+    (french_games + games).uniq { |game| game["id"] }.first(limit)
+  end
+
+  # Réponse JSON d'IGDB, ou nil en cas d'erreur
+  def igdb_post(endpoint, body, token)
     response = HTTParty.post(
-      "https://api.igdb.com/v4/games",
+      "https://api.igdb.com/v4/#{endpoint}",
       headers: {
         "Client-ID" => Rails.application.credentials.dig(:igdb, :client_id),
         "Authorization" => "Bearer #{token}"
       },
-      # Les guillemets fermeraient la chaîne de la requête IGDB : on les retire
-      body: "fields name,cover.url,platforms.name,summary,genres.name,first_release_date; search \"#{name.delete('"\\')}\"; limit #{limit};",
+      body: body,
       timeout: 10
     )
     # Token expiré ou révoqué : on l'oublie pour qu'un nouveau soit demandé au prochain appel
     Rails.cache.delete(IgdbService::CACHE_KEY) if response.code == 401
-    return nil unless response.code == 200
+    response.code == 200 ? response.parsed_response : nil
+  rescue HTTParty::Error, Timeout::Error, SocketError, SystemCallError => e
+    Rails.logger.warn("[igdb] #{endpoint} : #{e.class} #{e.message}")
+    nil
+  end
 
-    response.parsed_response
+  # Titre français officiel référencé par IGDB, s'il existe
+  def french_title(game)
+    game["alternative_names"]&.find { |alt| alt["comment"] == "French title" }&.dig("name")
   end
 
   def igdb_game_json(game, summary:)
@@ -243,10 +275,14 @@ class Api::SearchController < ApplicationController
     release_date = game["first_release_date"] ? Time.at(game["first_release_date"]).to_date : nil
     platforms = game["platforms"]&.map { |p| p["name"] }&.join(", ")
     genres = game["genres"]&.map { |g| g["name"] }&.join(", ")
+    french_name = french_title(game)
 
     {
       id: game["id"],
-      name: game["name"],
+      # Titre français officiel quand IGDB le connaît, sinon titre d'origine
+      name: french_name || game["name"],
+      # Titre d'origine, affiché en petit pour reconnaître le jeu (nil s'il est identique)
+      original_name: (game["name"] if french_name && french_name != game["name"]),
       cover_url: cover_url,
       platforms: platforms,
       release_date: release_date&.year,

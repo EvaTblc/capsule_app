@@ -41,6 +41,13 @@ export default class extends Controller {
             const div = document.createElement("div")
             div.className = "p-3 border-b border-gray-100 cursor-pointer hover:bg-purple-50 text-sm"
             div.textContent = game.name + (game.release_date ? ` — ${game.release_date}` : "")
+            // Titre d'origine en petit quand le titre affiché est le titre français
+            if (game.original_name) {
+              const original = document.createElement("p")
+              original.className = "text-xs text-gray-400"
+              original.textContent = game.original_name
+              div.appendChild(original)
+            }
             div.addEventListener("click", () => this.fill(game))
             this.resultsTarget.appendChild(div)
           })
