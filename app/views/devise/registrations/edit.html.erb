@@ -1,42 +1,81 @@
-<h2>Edit <%= resource_name.to_s.humanize %></h2>
+<div class="min-h-screen p-4 pt-20 pb-24">
 
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
-
-  <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
-  </div>
-
-  <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-    <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
+  <%= link_to profile_path, class: "flex items-center gap-1 text-xs text-gray-400 mb-3" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+    Profil
   <% end %>
 
-  <div class="field">
-    <p><%= f.label :password %> <i>(leave blank if you don't want to change it)</i></p>
-    <p><%= f.password_field :password, autocomplete: "new-password" %></p>
-    <% if @minimum_password_length %>
-      <p><em><%= @minimum_password_length %> characters minimum</em></p>
-    <% end %>
+  <h1 class="text-2xl font-black tracking-tight mb-6">Mon compte</h1>
+
+  <%= form_with(model: resource, as: resource_name, url: registration_path(resource_name), method: :put, local: true) do |f| %>
+    <%= render "shared/form_errors", record: resource %>
+
+    <div class="space-y-4">
+      <div>
+        <%= f.label :email, "Email", class: "block text-xs font-medium text-gray-700 mb-1.5" %>
+        <%= f.email_field :email,
+            autocomplete: "email",
+            class: "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow" %>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <%= f.label :password, "Nouveau mot de passe", class: "block text-xs font-medium text-gray-700" %>
+          <% if @minimum_password_length %>
+            <span class="text-xs text-gray-400"><%= @minimum_password_length %> caractères minimum</span>
+          <% end %>
+        </div>
+        <%= f.password_field :password,
+            autocomplete: "new-password",
+            placeholder: "Laisse vide pour le garder",
+            class: "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow" %>
+      </div>
+
+      <div>
+        <%= f.label :password_confirmation, "Confirme le nouveau mot de passe", class: "block text-xs font-medium text-gray-700 mb-1.5" %>
+        <%= f.password_field :password_confirmation,
+            autocomplete: "new-password",
+            placeholder: "••••••••",
+            class: "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow" %>
+      </div>
+
+      <div class="pt-2 border-t border-gray-100">
+        <%= f.label :current_password, "Mot de passe actuel", class: "block text-xs font-medium text-gray-700 mb-1.5 mt-2" %>
+        <%= f.password_field :current_password,
+            autocomplete: "current-password",
+            placeholder: "••••••••",
+            class: "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow" %>
+        <%# Le mot de passe actuel est exigé : une session volée ne suffit pas pour changer l'e-mail et s'emparer du compte %>
+        <p class="text-xs text-gray-400 mt-1.5">Nécessaire pour confirmer tes modifications.</p>
+        <% if resource.provider.present? %>
+          <%# Compte créé avec Google : son mot de passe a été généré au hasard, personne ne le connaît %>
+          <p class="text-xs text-gray-500 mt-2 bg-gray-50 rounded-xl px-3 py-2">
+            Ton compte est relié à Google, il n'a donc pas de mot de passe que tu connais.
+            <%= link_to "Choisis-en un via « Mot de passe oublié »", new_user_password_path, class: "text-purple-600 font-medium" %>,
+            puis reviens ici.
+          </p>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <%= f.submit "Enregistrer",
+          class: "w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm transition-colors cursor-pointer" %>
+    </div>
+  <% end %>
+
+  <%# Suppression du compte : voir User#hand_over_owned_collections pour le sort des collections %>
+  <div class="mt-10 bg-red-50 border border-red-100 rounded-2xl p-4">
+    <h2 class="text-sm font-semibold text-red-700 mb-1">Supprimer mon compte</h2>
+    <p class="text-xs text-red-600 mb-3">
+      Tes notes, événements et collections non partagées seront supprimés. Tes collections partagées seront transmises au plus ancien membre.
+    </p>
+    <%= button_to "Supprimer définitivement mon compte", registration_path(resource_name),
+        method: :delete,
+        form: { data: { turbo_confirm: "Supprimer définitivement ton compte Capsule ? Cette action est irréversible." } },
+        class: "w-full py-3 rounded-xl border border-red-200 bg-white text-red-500 font-semibold text-sm" %>
   </div>
 
-  <div class="field">
-    <p><%= f.label :password_confirmation %></p>
-    <p><%= f.password_field :password_confirmation, autocomplete: "new-password" %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :current_password %> <i>(we need your current password to confirm your changes)</i></p>
-    <p><%= f.password_field :current_password, autocomplete: "current-password" %></p>
-  </div>
-
-  <div class="actions">
-    <%= f.submit "Update" %>
-  </div>
-<% end %>
-
-<h3>Cancel my account</h3>
-
-<div>Unhappy? <%= button_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?", turbo_confirm: "Are you sure?" }, method: :delete %></div>
-
-<%= link_to "Back", :back %>
+</div>

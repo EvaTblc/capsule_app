@@ -30,7 +30,7 @@ RSpec.describe "Interface (navigateur)", type: :system do
       fill_in "Email", with: "eva@example.com"
       click_on "Recevoir le lien"
 
-      expect(page).to have_css("[data-controller='flash']", text: "tu vas recevoir")
+      expect(page).to have_css("[data-controller='flash']", text: "va arriver dans quelques minutes")
     end
   end
 end

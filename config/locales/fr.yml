@@ -54,7 +54,22 @@ fr:
           attributes:
             base:
               google_unverified: "Google n'a pas vérifié l'adresse e-mail de ce compte : connexion impossible."
-              google_other_account: "Cette adresse est déjà reliée à un autre compte Google. Connecte-toi avec ce compte-là, ou avec ton mot de passe."
+              google_other_account: "Cette adresse est déjà reliée à un autre compte Google. Connectez-vous avec ce compte-là, ou avec votre mot de passe."
+            # Phrases complètes et neutres (inscription en « vous », page Mon compte en « tu ») :
+            # le formulaire n'affiche que le message, sans le nom du champ
+            email:
+              blank: "L'adresse e-mail est obligatoire."
+              invalid: "Cette adresse e-mail n'est pas valide."
+              taken: "Cette adresse e-mail est déjà utilisée."
+            password:
+              blank: "Le mot de passe est obligatoire."
+              too_short: "Le mot de passe est trop court (%{count} caractères minimum)."
+              too_long: "Le mot de passe est trop long (%{count} caractères maximum)."
+            password_confirmation:
+              confirmation: "La confirmation ne correspond pas au mot de passe."
+            current_password:
+              blank: "Le mot de passe actuel est nécessaire pour enregistrer les modifications."
+              invalid: "Le mot de passe actuel est incorrect."
 
   items:
     form:

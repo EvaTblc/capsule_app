@@ -14,14 +14,14 @@ RSpec.describe "Mot de passe oublié", type: :request do
     mail = ActionMailer::Base.deliveries.last
     expect(mail.to).to eq([ "eva@example.com" ])
     expect(mail.from).to eq([ "noreply@capsule.click" ])
-    expect(mail.subject).to eq("Réinitialise ton mot de passe Capsule")
+    expect(mail.subject).to eq("Réinitialisation de votre mot de passe Capsule")
     expect(mail.body.encoded).to include("Choisir un nouveau mot de passe")
     expect(mail.body.encoded).to match(%r{/users/password/edit\?reset_password_token=\w+})
   end
 
   it "affiche un message en français (et non plus « Translation missing »)" do
     request_reset("eva@example.com")
-    expect(flash[:notice]).to include("tu vas recevoir")
+    expect(flash[:notice]).to include("va arriver dans quelques minutes")
     expect(flash[:notice]).not_to include("Translation missing")
   end
 
@@ -55,7 +55,7 @@ RSpec.describe "Pages du mot de passe oublié", type: :request do
     create(:user, email: "eva@example.com")
     post user_password_path, params: { user: { email: "eva@example.com" } }
     follow_redirect!
-    expect(response.body).to include("tu vas recevoir")
+    expect(response.body).to include("va arriver dans quelques minutes")
   end
 
   context "page de nouveau mot de passe" do
@@ -64,7 +64,7 @@ RSpec.describe "Pages du mot de passe oublié", type: :request do
 
     it "est en français" do
       get edit_user_password_path(reset_password_token: token)
-      expect(response.body).to include("Choisis ton nouveau mot de passe.", "Nouveau mot de passe", "6 caractères minimum")
+      expect(response.body).to include("Choisissez votre nouveau mot de passe.", "Nouveau mot de passe", "6 caractères minimum")
     end
 
     it "affiche les erreurs (mot de passe trop court, confirmation différente)" do
