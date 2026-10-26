@@ -87,9 +87,8 @@
             <img src="<%= current_user.avatar_url %>"
                 class="w-9 h-9 rounded-full object-cover"
                 data-avatar-target="img"
-                data-action="error->avatar#error"
-                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-            <div data-avatar-target="fallback" style="display:none" class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
+                data-action="error->avatar#error">
+            <div data-avatar-target="fallback" class="hidden w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
               <span class="text-purple-600 font-bold text-sm"><%= current_user.email[0].upcase %></span>
             </div>
           <% else %>
@@ -132,11 +131,12 @@
       </nav>
     <% end %>
 
-    <script>
+    <%# nonce : script en ligne autorisé par la CSP, car généré par le serveur pour cette page %>
+    <%= javascript_tag nonce: true do %>
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker')
       }
-    </script>
+    <% end %>
 
   </body>
 </html>

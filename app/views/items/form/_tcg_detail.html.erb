@@ -1,0 +1,31 @@
+<%# Champs spécifiques TcgDetail %>
+<div data-item-type-target="form" data-form="TcgDetail" class="hidden mb-4">
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
+    <%= f.text_field :title, placeholder: "Titre de l'item...", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">État</label>
+    <%= f.select :condition, Item::CONDITIONS, { include_blank: "Sélectionner..." }, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
+    <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Jeu</label>
+    <input name="tcg_detail[game]" placeholder="Jeu (Pokemon, Magic...)" value="<%= tcg_detail&.game %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Set</label>
+    <input name="tcg_detail[card_set]" placeholder="Set" value="<%= tcg_detail&.card_set %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Numéro de carte</label>
+    <input name="tcg_detail[card_number]" placeholder="Numéro de carte" value="<%= tcg_detail&.card_number %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Rareté</label>
+    <input name="tcg_detail[rarity]" placeholder="Rareté" value="<%= tcg_detail&.rarity %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+</div>

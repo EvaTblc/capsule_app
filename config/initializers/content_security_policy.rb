@@ -1,29 +1,41 @@
 # Be sure to restart your server when you modify this file.
 
-# Define an application-wide content security policy.
+# Content Security Policy : liste des sources autorisées pour les scripts, styles, images...
+# Si une faille XSS laissait passer un script injecté, le navigateur refuserait de l'exécuter.
 # See the Securing Rails Applications Guide for more information:
 # https://guides.rubyonrails.org/security.html#content-security-policy-header
 
-# Rails.application.configure do
-#   config.content_security_policy do |policy|
-#     policy.default_src :self, :https
-#     policy.font_src    :self, :https, :data
-#     policy.img_src     :self, :https, :data
-#     policy.object_src  :none
-#     policy.script_src  :self, :https
-#     policy.style_src   :self, :https
-#     # Specify URI for violation reports
-#     # policy.report_uri "/csp-violation-report-endpoint"
-#   end
-#
-#   # Generate session nonces for permitted importmap, inline scripts, and inline styles.
-#   config.content_security_policy_nonce_generator = ->(request) { request.session.id.to_s }
-#   config.content_security_policy_nonce_directives = %w(script-src style-src)
-#
-#   # Automatically add `nonce` to `javascript_tag`, `javascript_include_tag`, and `stylesheet_link_tag`
-#   # if the corresponding directives are specified in `content_security_policy_nonce_directives`.
-#   # config.content_security_policy_nonce_auto = true
-#
-#   # Report violations without enforcing the policy.
-#   # config.content_security_policy_report_only = true
-# end
+Rails.application.configure do
+  config.content_security_policy do |policy|
+    policy.default_src :self
+    # Scripts : l'appli (importmap + nonce pour les scripts en ligne), Mapbox GL, Lottie (version figée + SRI)
+    policy.script_src :self, "https://api.mapbox.com", "https://unpkg.com"
+    # Styles : unsafe-inline nécessaire pour les attributs style= et les styles injectés par Turbo et Mapbox
+    policy.style_src :self, :unsafe_inline, "https://api.mapbox.com"
+    # Images : couvertures (Cloudinary, IGDB, TMDB), avatars Google, aperçus locaux (data:, blob:)
+    policy.img_src :self, :https, :data, :blob
+    policy.font_src :self, :data
+    # Requêtes JS : l'appli, et Mapbox (tuiles, itinéraires, statistiques)
+    policy.connect_src :self, "https://api.mapbox.com", "https://events.mapbox.com"
+    # Mapbox GL dessine la carte dans des workers créés en blob:
+    policy.worker_src :self, :blob
+    policy.child_src :self, :blob
+    policy.object_src :none
+    policy.base_uri :self
+    # La connexion Google part d'un formulaire de l'appli puis redirige vers Google
+    policy.form_action :self, "https://accounts.google.com"
+    # Personne ne peut afficher l'appli dans une iframe (protection contre le clickjacking)
+    policy.frame_ancestors :none
+    # Violations envoyées à l'appli, qui les logue (voir CspReportsController)
+    policy.report_uri "/csp-violations"
+  end
+
+  # Nonce pour les scripts en ligne (importmap, enregistrement du service worker) : seuls ceux
+  # générés par le serveur pour cette page portent le bon nonce
+  config.content_security_policy_nonce_generator = ->(request) { SecureRandom.base64(16) }
+  config.content_security_policy_nonce_directives = %w[script-src]
+
+  # MODE RAPPORT : le navigateur ne bloque rien, il signale seulement les violations.
+  # Quand les logs ne montrent plus de « [CSP] » légitime, passer à false pour bloquer réellement.
+  config.content_security_policy_report_only = true
+end

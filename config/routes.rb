@@ -63,6 +63,8 @@ Rails.application.routes.draw do
   get "profile", to: "pages#profile"
   get "invite/:token", to: "invites#join", as: "invite"
   get "offline", to: "pages#offline"
+  # Violations de Content Security Policy signalées par les navigateurs
+  post "csp-violations", to: "csp_reports#create"
   post "/items/identify", to: "items#identify"
   get "profile/address/edit", to: "pages#edit_address", as: "edit_address"
   patch "profile/address", to: "pages#update_address", as: "update_address"

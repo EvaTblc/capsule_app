@@ -1,0 +1,47 @@
+<%# Champs spécifiques MusicDetail %>
+<div data-item-type-target="form" data-form="MusicDetail" class="hidden mb-4" data-controller="music-search">
+  <div class="relative mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Recherche</label>
+    <input data-music-search-target="query"
+          data-action="input->music-search#search"
+          placeholder="Rechercher un album..."
+          class="w-full border border-purple-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    <div data-music-search-target="results" class="hidden absolute z-20 w-full bg-white border border-gray-100 rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto"></div>
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
+    <input data-music-search-target="title" name="item[title]" placeholder="Titre de l'item..." value="<%= @item.title %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">État</label>
+    <%= f.select :condition, Item::CONDITIONS, { include_blank: "Sélectionner..." }, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
+    <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Artiste</label>
+    <input data-music-search-target="artist" name="music_detail[artist]" placeholder="Artiste" value="<%= music_detail&.artist %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Album</label>
+    <input name="music_detail[album]" placeholder="Album" value="<%= music_detail&.album %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Année</label>
+    <input data-music-search-target="year" name="music_detail[year]" type="number" placeholder="Année" value="<%= music_detail&.year %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Label</label>
+    <input data-music-search-target="label" name="music_detail[label]" placeholder="Label" value="<%= music_detail&.label %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Format</label>
+    <input data-music-search-target="format" name="music_detail[format]" placeholder="Format (CD, Vinyl...)" value="<%= music_detail&.format %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Genre</label>
+    <input data-music-search-target="genre" name="music_detail[genre]" placeholder="Genre" value="<%= music_detail&.genre %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+</div>

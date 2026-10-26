@@ -99,9 +99,8 @@
       <div data-lightbox-target="modal" class="hidden fixed inset-0 z-50 bg-black flex items-center justify-center"
           data-action="click->lightbox#close">
 
-        <button data-action="click->lightbox#prev"
-                class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center z-10"
-                onclick="event.stopPropagation()">
+        <button data-action="click->lightbox#prev:stop"
+                class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center z-10">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
@@ -109,17 +108,15 @@
 
         <img data-lightbox-target="image" src="" class="max-w-full max-h-full object-contain">
 
-        <button data-action="click->lightbox#next"
-                class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center z-10"
-                onclick="event.stopPropagation()">
+        <button data-action="click->lightbox#next:stop"
+                class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center z-10">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
 
         <button class="absolute top-4 right-4 text-white text-2xl z-10"
-                data-action="click->lightbox#close"
-                onclick="event.stopPropagation()">✕</button>
+                data-action="click->lightbox#close:stop">✕</button>
       </div>
 
       <%# Photos %>

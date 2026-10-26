@@ -1,0 +1,37 @@
+<%# Champs spécifiques BoardGameDetail %>
+<div data-item-type-target="form" data-form="BoardGameDetail" class="hidden mb-4">
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
+    <%= f.text_field :title, placeholder: "Titre de l'item...", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">État</label>
+    <%= f.select :condition, Item::CONDITIONS, { include_blank: "Sélectionner..." }, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
+    <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Éditeur</label>
+    <input name="board_game_detail[publisher]" placeholder="Éditeur" value="<%= board_game_detail&.publisher %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Joueurs min</label>
+    <input name="board_game_detail[min_players]" type="number" placeholder="Joueurs min" value="<%= board_game_detail&.min_players %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Joueurs max</label>
+    <input name="board_game_detail[max_players]" type="number" placeholder="Joueurs max" value="<%= board_game_detail&.max_players %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Durée (minutes)</label>
+    <input name="board_game_detail[duration]" type="number" placeholder="Durée" value="<%= board_game_detail&.duration %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+</div>
+
+<div class="mb-6">
+  <label class="text-sm font-semibold text-gray-600 mb-1 block">Commentaire</label>
+  <textarea name="item[comment]" placeholder="Un commentaire sur cet item..." rows="2"
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200 resize-none"><%= @item.comment %></textarea>
+</div>
