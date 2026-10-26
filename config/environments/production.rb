@@ -57,17 +57,23 @@ Rails.application.configure do
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
-  # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
+  # Adresse du site dans les liens des e-mails (ex. lien « réinitialiser mon mot de passe »).
+  # www : c'est là qu'est l'appli (CNAME vers Heroku) ; capsule.click seul n'est qu'une redirection Gandi
+  config.action_mailer.default_url_options = { host: ENV.fetch("APP_HOST", "www.capsule.click"), protocol: "https" }
 
-  # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
-  # config.action_mailer.smtp_settings = {
-  #   user_name: Rails.application.credentials.dig(:smtp, :user_name),
-  #   password: Rails.application.credentials.dig(:smtp, :password),
-  #   address: "smtp.example.com",
-  #   port: 587,
-  #   authentication: :plain
-  # }
+  # Envoi des e-mails via le relais SMTP de Brevo (identifiants dans credentials, section smtp)
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    address: "smtp-relay.brevo.com",
+    port: 587,
+    user_name: Rails.application.credentials.dig(:smtp, :user_name),
+    password: Rails.application.credentials.dig(:smtp, :password),
+    authentication: :login,
+    enable_starttls_auto: true
+  }
+  # Les e-mails partent en tâche de fond (voir User#send_devise_notification) : une erreur d'envoi
+  # fait échouer le job, visible dans Solid Queue, au lieu de passer inaperçue
+  config.action_mailer.raise_delivery_errors = true
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).

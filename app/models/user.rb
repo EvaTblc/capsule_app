@@ -70,6 +70,12 @@ class User < ApplicationRecord
 
   private
 
+  # Les e-mails Devise (mot de passe oublié...) partent en tâche de fond via Solid Queue :
+  # la page répond tout de suite, et un échec d'envoi est réessayé au lieu de planter la requête
+  def send_devise_notification(notification, *args)
+    devise_mailer.send(notification, self, *args).deliver_later
+  end
+
   # À la suppression du compte, chaque collection dont il est propriétaire est transmise
   # au plus ancien autre membre ; sans autre membre, elle est supprimée (avec ses items)
   def hand_over_owned_collections
