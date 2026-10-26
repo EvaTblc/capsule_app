@@ -4,7 +4,12 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
     if @user.persisted?
       sign_in_and_redirect @user, remember_me: true
-      set_flash_message(:notice, :success, kind: "Google") if is_navigational_format?
+      if @user.just_linked_to_google
+        flash[:notice] = "Ton compte est maintenant relié à Google. Pour te reconnecter avec un mot de passe, " \
+                         "utilise « Mot de passe oublié »."
+      elsif is_navigational_format?
+        set_flash_message(:notice, :success, kind: "Google")
+      end
     else
       session["devise.google_data"] = request.env["omniauth.auth"].except("extra")
       redirect_to new_user_registration_url, alert: @user.errors.full_messages.join("\n")

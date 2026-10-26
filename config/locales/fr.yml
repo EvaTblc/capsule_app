@@ -50,6 +50,11 @@ fr:
           attributes:
             title:
               blank: "Le titre ne peut pas être vide"
+        user:
+          attributes:
+            base:
+              google_unverified: "Google n'a pas vérifié l'adresse e-mail de ce compte : connexion impossible."
+              google_other_account: "Cette adresse est déjà reliée à un autre compte Google. Connecte-toi avec ce compte-là, ou avec ton mot de passe."
 
   items:
     form:

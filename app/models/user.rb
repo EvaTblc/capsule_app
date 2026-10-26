@@ -21,12 +21,45 @@ class User < ApplicationRecord
   geocoded_by :address
   after_validation :geocode, if: :will_save_change_to_address?
 
+  # Vrai quand from_omniauth vient de relier Google à un compte e-mail existant (pour prévenir l'utilisatrice)
+  attr_accessor :just_linked_to_google
+
+  # Connexion Google :
+  # 1. compte déjà relié à ce compte Google → connexion
+  # 2. compte e-mail existant avec la même adresse, vérifiée par Google → on le relie
+  # 3. sinon → nouveau compte
+  # Renvoie un utilisateur non enregistré, avec une erreur, si la connexion doit être refusée.
   def self.from_omniauth(auth)
-    where(provider: auth.provider, uid: auth.uid).first_or_create do |user|
-      user.email = auth.info.email
-      user.password = Devise.friendly_token[0, 20]
-      user.avatar_url = auth.info.image
+    user = find_by(provider: auth.provider, uid: auth.uid)
+    return user if user
+
+    # La gem ne remplit info.email que si Google a vérifié l'adresse. On le revérifie explicitement :
+    # relier un compte sur une adresse non vérifiée permettrait à n'importe qui de s'en emparer.
+    email = auth.info.email.to_s.downcase.strip
+    unless email.present? && auth.info.email_verified
+      return new.tap { |refused| refused.errors.add(:base, :google_unverified) }
     end
+
+    user = find_by(email: email)
+    return create_from_google(auth, email) unless user
+
+    if user.uid.present?
+      # Déjà relié à un AUTRE compte Google : on ne remplace pas le lien en silence
+      return new.tap { |refused| refused.errors.add(:base, :google_other_account) }
+    end
+
+    # Le mot de passe est remplacé : quelqu'un a pu créer ce compte avec cette adresse avant sa vraie
+    # propriétaire, que Google vient d'authentifier (pré-détournement de compte). Changer le mot de passe
+    # ferme aussi toute session ouverte avec l'ancien (Devise lie les sessions au mot de passe).
+    user.update!(provider: auth.provider, uid: auth.uid, password: Devise.friendly_token[0, 20],
+                 avatar_url: user.avatar_url.presence || auth.info.image)
+    user.just_linked_to_google = true
+    user
+  end
+
+  def self.create_from_google(auth, email)
+    create(provider: auth.provider, uid: auth.uid, email: email,
+           password: Devise.friendly_token[0, 20], avatar_url: auth.info.image)
   end
 
   # Amis acceptés, dans les deux sens. Relation (et non tableau) : on peut chaîner .find, .where...
