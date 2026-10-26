@@ -61,7 +61,7 @@
   <% if @event.latitude.present? && @event.longitude.present? %>
     <div class="w-full h-48 rounded-2xl overflow-hidden mb-4"
          data-controller="map"
-         data-map-api-key-value="<%= Rails.application.credentials.dig(:mapbox, :api_key) %>"
+         data-map-api-key-value="<%= mapbox_public_token %>"
          data-map-markers-value="<%= [{ lat: @event.latitude, lng: @event.longitude, color: '#7c3aed', label: @event.title }].to_json %>"
          data-map-directions-value="<%= current_user.latitude.present? && current_user.longitude.present? %>"
          data-map-user-lat-value="<%= current_user.latitude %>"

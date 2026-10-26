@@ -6,7 +6,7 @@ RSpec.describe ItemSaver do
   let(:collection) { create(:collection, category: "video_games") }
 
   def save(item, type:, detail: {}, item_attributes: {}, images: nil)
-    described_class.new(item, item_attributes: { title: "Zelda", item_type: type }.merge(item_attributes),
+    described_class.new(item, item_attributes: { title: "Zelda" }.merge(item_attributes),
                               detail_type: type, detail_attributes: detail, images: images).save
   end
 
@@ -52,7 +52,7 @@ RSpec.describe ItemSaver do
 
   describe "modification" do
     let(:detail) { create(:video_game_detail, summary_en: "An epic game", description: "Un jeu épique") }
-    let(:item) { create(:item, collection: collection, item_detailable: detail, item_type: "VideoGameDetail", item_detailable_type: "VideoGameDetail") }
+    let(:item) { create(:item, collection: collection, item_detailable: detail, item_detailable_type: "VideoGameDetail") }
 
     it "ne retraduit pas quand la description n'a pas changé" do
       expect { save(item, type: "VideoGameDetail", detail: { "description" => "Un jeu épique", "platform" => "Switch" }) }

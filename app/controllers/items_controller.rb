@@ -6,7 +6,7 @@ class ItemsController < ApplicationController
   before_action :set_visible_collection, only: [ :show ]
   before_action :set_item, only: [ :show, :edit, :update, :destroy ]
 
-  # Type d'item inconnu (ex. item_type=User forgé) : requête invalide
+  # Type d'item inconnu (ex. item[item_type]=User forgé) : requête invalide
   rescue_from ItemSaver::UnknownDetailType, with: -> { head :bad_request }
 
   def show
@@ -97,7 +97,7 @@ class ItemsController < ApplicationController
   end
 
   def item_params
-    params.require(:item).permit(:title, :description, :acquired_at, :condition, :barcode, :item_type, :comment, images: [])
+    params.require(:item).permit(:title, :description, :acquired_at, :condition, :barcode, :comment, images: [])
   end
 
   # Turbo envoie les deux formulaires avec le même en-tête Accept (Turbo Stream accepté) :

@@ -4,7 +4,7 @@ RSpec.describe ItemsController, type: :controller do
   let(:user) { create(:user) }
   let(:collection) { create(:collection) }
   let(:book_detail) { create(:book_detail) }
-  let(:item) { create(:item, collection: collection, item_detailable: book_detail, item_detailable_type: "BookDetail", item_type: "BookDetail") }
+  let(:item) { create(:item, collection: collection, item_detailable: book_detail, item_detailable_type: "BookDetail") }
 
   before do
     sign_in user
@@ -54,7 +54,7 @@ RSpec.describe ItemsController, type: :controller do
   end
 
   describe "DELETE #destroy" do
-    let!(:item_to_destroy) { create(:item, collection: collection, item_detailable: create(:book_detail), item_detailable_type: "BookDetail", item_type: "BookDetail") }
+    let!(:item_to_destroy) { create(:item, collection: collection, item_detailable: create(:book_detail), item_detailable_type: "BookDetail") }
 
     it "supprime l'item" do
       expect {

@@ -4,7 +4,7 @@ RSpec.describe VideoGameDetail, type: :model do
   describe "associations" do
     it "peut avoir un item associé" do
       detail = create(:video_game_detail)
-      item = create(:item, item_detailable: detail, item_detailable_type: "VideoGameDetail", item_type: "VideoGameDetail")
+      item = create(:item, item_detailable: detail, item_detailable_type: "VideoGameDetail")
       expect(detail.item).to eq(item)
     end
   end

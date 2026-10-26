@@ -20,7 +20,7 @@ end
   describe "item_type" do
     it "correspond au type du détail" do
       book_detail = create(:book_detail)
-      item = create(:item, item_detailable: book_detail, item_type: "BookDetail", item_detailable_type: "BookDetail")
+      item = create(:item, item_detailable: book_detail, item_detailable_type: "BookDetail")
       expect(item.item_type).to eq("BookDetail")
     end
   end

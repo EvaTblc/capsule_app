@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -120,7 +120,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_090000) do
     t.string "title", null: false
     t.text "description"
     t.date "acquired_at"
-    t.string "item_type"
     t.string "item_detailable_type", null: false
     t.bigint "item_detailable_id", null: false
     t.bigint "collection_id", null: false
@@ -329,7 +328,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_090000) do
     t.datetime "updated_at", null: false
     t.index ["collection_id"], name: "index_user_collections_on_collection_id"
     t.index ["user_id", "collection_id"], name: "index_user_collections_on_user_id_and_collection_id", unique: true
-    t.check_constraint "role::text = ANY (ARRAY['owner'::character varying, 'member'::character varying]::text[])", name: "user_collections_role_valid"
+    t.check_constraint "role::text = ANY (ARRAY['owner'::character varying::text, 'member'::character varying::text])", name: "user_collections_role_valid"
   end
 
   create_table "users", force: :cascade do |t|

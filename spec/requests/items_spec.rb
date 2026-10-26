@@ -97,7 +97,7 @@ RSpec.describe "Items", type: :request do
     it "affiche la description française, jamais le résumé anglais interne" do
       games = collection_of("video_games")
       detail = create(:video_game_detail, summary_en: "An epic adventure", description: "Une aventure épique")
-      item = create(:item, collection: games, item_detailable: detail, item_detailable_type: "VideoGameDetail", item_type: "VideoGameDetail")
+      item = create(:item, collection: games, item_detailable: detail, item_detailable_type: "VideoGameDetail")
       get collection_item_path(games, item)
       expect(response.body).to include("Une aventure épique")
       expect(response.body).not_to include("An epic adventure")

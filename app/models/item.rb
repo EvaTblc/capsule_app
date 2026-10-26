@@ -7,6 +7,11 @@ class Item < ApplicationRecord
   CONDITIONS = [ "Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état" ].freeze
 
   validates :title, presence: true
+
+  # Type de l'item (« BookDetail », « VideoGameDetail »...) : celui de son détail, seule source de vérité
+  def item_type
+    item_detailable_type
+  end
   # L'état reste facultatif : l'ajout rapide de jeux n'en demande pas
   validates :condition, inclusion: { in: CONDITIONS }, allow_blank: true
 

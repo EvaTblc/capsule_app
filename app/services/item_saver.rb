@@ -52,7 +52,7 @@ class ItemSaver
     @replaced_detail = nil
     @translate = false
 
-    if item.new_record? || @detail_type != item.item_type
+    if item.new_record? || @detail_type != item.item_detailable_type
       # Nouveau détail : création, ou changement de type (l'ancien n'est supprimé qu'après succès)
       @replaced_detail = item.item_detailable
       item.item_detailable = self.class.detail_class(@detail_type).new(prepare_new_detail(@detail_attributes))
