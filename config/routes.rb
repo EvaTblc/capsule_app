@@ -17,6 +17,11 @@ Rails.application.routes.draw do
 
   resources :collections do
     resources :items
+    # Retirer un membre (propriétaire) ou quitter la collection (membre)
+    resources :memberships, only: :destroy
+    member do
+      patch :regenerate_invite
+    end
   end
 
     resources :items, only: [] do

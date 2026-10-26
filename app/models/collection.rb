@@ -32,10 +32,24 @@ class Collection < ApplicationRecord
     user_collections.exists?(user: user)
   end
 
+  # Seul le propriétaire partage le lien d'invitation et gère les membres
+  def owner?(user)
+    user_collections.exists?(user: user, role: "owner")
+  end
+
+  # Nouveau lien d'invitation : l'ancien cesse immédiatement de fonctionner
+  def regenerate_invite_token!
+    update!(invite_token: self.class.new_invite_token)
+  end
+
+  def self.new_invite_token
+    SecureRandom.urlsafe_base64(12)
+  end
+
 
   private
 
   def generate_invite_token
-    self.invite_token = SecureRandom.urlsafe_base64(12)
+    self.invite_token = self.class.new_invite_token
   end
 end
