@@ -8,8 +8,9 @@
 Rails.application.configure do
   config.content_security_policy do |policy|
     policy.default_src :self
-    # Scripts : l'appli (importmap + nonce pour les scripts en ligne), Mapbox GL, Lottie (version figée + SRI)
-    policy.script_src :self, "https://api.mapbox.com", "https://unpkg.com"
+    # Scripts : l'appli (importmap + nonce pour les scripts en ligne), Mapbox GL, Lottie (version figée + SRI),
+    # jspm (modules mapbox-gl et process pinnés dans config/importmap.rb)
+    policy.script_src :self, "https://api.mapbox.com", "https://unpkg.com", "https://ga.jspm.io"
     # Styles : unsafe-inline nécessaire pour les attributs style= et les styles injectés par Turbo et Mapbox
     policy.style_src :self, :unsafe_inline, "https://api.mapbox.com"
     # Images : couvertures (Cloudinary, IGDB, TMDB), avatars Google, aperçus locaux (data:, blob:)
