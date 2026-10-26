@@ -166,10 +166,6 @@ GEM
       llhttp (~> 0.6.1)
     http-cookie (1.1.6)
       domain_name (~> 0.5)
-    httparty (0.24.2)
-      csv
-      mini_mime (>= 1.0.0)
-      multi_xml (>= 0.5.2)
     i18n (1.15.2)
       concurrent-ruby (~> 1.0)
     image_processing (1.14.0)
@@ -521,7 +517,6 @@ DEPENDENCIES
   faker
   geocoder
   http
-  httparty
   image_processing (~> 1.2)
   importmap-rails
   kamal

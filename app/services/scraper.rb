@@ -1,8 +1,4 @@
 class Scraper
-require "open-uri"
-require "nokogiri"
-require "json"
-
   class NetworkError < StandardError; end
   class ParseError < StandardError; end
 
@@ -22,12 +18,18 @@ require "json"
     raise ArgumentError, "Department manquant" if department.blank?
 
     url = "https://brocabrac.fr/#{department}/"
-    html = begin
-      URI.open(url, "User-Agent" => "Mozilla/5.0", open_timeout: 5, read_timeout: 10)
-    rescue SocketError, SystemCallError, Timeout::Error, OpenURI::HTTPError => e
+    response = begin
+      # follow : suit les redirections (open-uri le faisait tout seul, pas la gem http)
+      HTTP.follow(max_hops: 3)
+          .timeout(connect: 5, read: 10)
+          .headers("User-Agent" => "Mozilla/5.0")
+          .get(url)
+    rescue HTTP::Error => e # connexion refusée, DNS, timeout, trop de redirections
       raise NetworkError, "Connexion impossible : #{e.message}"
     end
-    doc = Nokogiri::HTML.parse(html)
+    raise NetworkError, "Brocabrac a répondu #{response.status}" unless response.status.success?
+
+    doc = Nokogiri::HTML.parse(response.body.to_s)
     events = doc.search(".ev script[type='application/ld+json']")
     raise ParseError, "Structure HTML inattendue — le scraper doit être mis à jour" if events.empty?
 

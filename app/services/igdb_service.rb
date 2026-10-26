@@ -13,7 +13,7 @@ class IgdbService
   private
 
   def self.fetch_new_token
-    response = HTTP.post(
+    response = HTTP.timeout(10).post(
       "https://id.twitch.tv/oauth2/token",
       params: {
         client_id: Rails.application.credentials.dig(:igdb, :client_id),

@@ -46,7 +46,6 @@ gem "omniauth-google-oauth2"
 gem "omniauth-rails_csrf_protection"
 gem "cloudinary"
 gem "http"
-gem "httparty"
 gem "rails-i18n"
 # gem 'i18n'
 gem "geocoder"

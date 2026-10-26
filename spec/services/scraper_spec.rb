@@ -14,27 +14,62 @@ RSpec.describe Scraper do
       end
     end
 
-    context "quand le site est inaccessible" do
-      it "lève une NetworkError" do
-        allow(URI).to receive(:open).and_raise(SocketError)
-        expect { Scraper.call("44") }.to raise_error(Scraper::NetworkError)
+    # Client HTTP simulé : renvoie la page donnée, ou lève l'erreur donnée
+    def stub_brocabrac(status: 200, html: "", error: nil)
+      client = double("client HTTP")
+      allow(HTTP).to receive(:follow).with(max_hops: 3).and_return(client)
+      allow(client).to receive(:timeout).and_return(client)
+      allow(client).to receive(:headers).and_return(client)
+      if error
+        allow(client).to receive(:get).and_raise(error)
+      else
+        response = HTTP::Response.new(status: status, body: html, version: "1.1",
+                                      request: HTTP::Request.new(verb: :get, uri: "https://brocabrac.fr/44/"))
+        allow(client).to receive(:get).with("https://brocabrac.fr/44/").and_return(response)
       end
     end
 
-    context "quand la structure HTML a changé" do
-      it "lève une ParseError" do
-        allow(URI).to receive(:open).and_return(StringIO.new("<html></html>"))
-        empty_doc = Nokogiri::HTML("<html></html>")
+    context "quand la page contient des brocantes" do
+      it "renvoie les événements, sans ceux annulés" do
+        event = ->(name, status = "http://schema.org/EventScheduled") do
+          %(<div class="ev"><script type="application/ld+json">#{
+            { name: name, startDate: "2026-11-01", eventStatus: status, url: "https://brocabrac.fr/#{name}",
+              location: { address: { addressLocality: "Nantes", streetAddress: "Place" }, geo: { latitude: 47.2, longitude: -1.5 } } }.to_json
+          }</script></div>)
+        end
+        stub_brocabrac(html: "<html>#{event.("vide-grenier")}#{event.("annule", "http://schema.org/EventCancelled")}</html>")
 
-        allow(Nokogiri::HTML).to receive(:parse).and_return(empty_doc)
-        expect { Scraper.call("44") }.to raise_error(Scraper::ParseError)
+        events = Scraper.call("44")
+        expect(events.map { |e| e[:title] }).to eq([ "vide-grenier" ])
+        expect(events.first).to include(city: "Nantes", date: Date.new(2026, 11, 1), latitude: 47.2)
+      end
+    end
+
+    context "quand le site est inaccessible" do
+      it "lève une NetworkError" do
+        stub_brocabrac(error: HTTP::ConnectionError.new("failed to connect"))
+        expect { Scraper.call("44") }.to raise_error(Scraper::NetworkError)
       end
     end
 
     context "quand le site est trop lent" do
       it "lève une NetworkError" do
-        allow(URI).to receive(:open).and_raise(Net::ReadTimeout)
+        stub_brocabrac(error: HTTP::TimeoutError.new("Read timed out"))
         expect { Scraper.call("44") }.to raise_error(Scraper::NetworkError)
+      end
+    end
+
+    context "quand le site répond en erreur" do
+      it "lève une NetworkError (open-uri le faisait aussi)" do
+        stub_brocabrac(status: 404, html: "Not found")
+        expect { Scraper.call("44") }.to raise_error(Scraper::NetworkError, /404/)
+      end
+    end
+
+    context "quand la structure HTML a changé" do
+      it "lève une ParseError" do
+        stub_brocabrac(html: "<html></html>")
+        expect { Scraper.call("44") }.to raise_error(Scraper::ParseError)
       end
     end
   end

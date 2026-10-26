@@ -147,11 +147,14 @@ RSpec.describe "API de recherche", type: :request do
     let(:igdb_bodies) { {} }
     def stub_igdb(games:, alternative_names:)
       allow(IgdbService).to receive(:access_token).and_return("tok")
-      allow(HTTParty).to receive(:post) do |url, options|
+      igdb = double("client IGDB")
+      allow(HTTP).to receive(:timeout).with(10).and_return(igdb)
+      allow(igdb).to receive(:headers).and_return(igdb)
+      allow(igdb).to receive(:post) do |url, body:|
         endpoint = url.split("/").last
-        igdb_bodies[endpoint] = options[:body]
+        igdb_bodies[endpoint] = body
         result = { "games" => games, "alternative_names" => alternative_names }[endpoint]
-        result.is_a?(Integer) ? double(code: result) : double(code: 200, parsed_response: result)
+        result.is_a?(Integer) ? fake_response(result, {}) : fake_response(200, result)
       end
     end
 
@@ -203,8 +206,11 @@ RSpec.describe "API de recherche", type: :request do
 
     it "écarte les mods et privilégie le titre identique, puis le plus populaire" do
       allow(IgdbService).to receive(:access_token).and_return("tok")
-      allow(HTTParty).to receive(:post) do |url, _|
-        url.end_with?("/games") ? double(code: 200, parsed_response: [ fan_mod, obscure, real_game ]) : double(code: 200, parsed_response: [])
+      igdb = double("client IGDB")
+      allow(HTTP).to receive(:timeout).with(10).and_return(igdb)
+      allow(igdb).to receive(:headers).and_return(igdb)
+      allow(igdb).to receive(:post) do |url, body:|
+        fake_response(200, url.end_with?("/games") ? [ fan_mod, obscure, real_game ] : [])
       end
       get "/api/search/search_game", params: { query: "Super Mario: Odyssey" }
       expect(json["games"].map { |g| g["id"] }).to eq([ 11, 12 ])

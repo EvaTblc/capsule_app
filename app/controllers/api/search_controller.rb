@@ -270,19 +270,14 @@ class Api::SearchController < ApplicationController
 
   # Réponse JSON d'IGDB, ou nil en cas d'erreur
   def igdb_post(endpoint, body, token)
-    response = HTTParty.post(
-      "https://api.igdb.com/v4/#{endpoint}",
-      headers: {
-        "Client-ID" => Rails.application.credentials.dig(:igdb, :client_id),
-        "Authorization" => "Bearer #{token}"
-      },
-      body: body,
-      timeout: 10
-    )
+    response = HTTP.timeout(10)
+                   .headers("Client-ID" => Rails.application.credentials.dig(:igdb, :client_id),
+                            "Authorization" => "Bearer #{token}")
+                   .post("https://api.igdb.com/v4/#{endpoint}", body: body)
     # Token expiré ou révoqué : on l'oublie pour qu'un nouveau soit demandé au prochain appel
     Rails.cache.delete(IgdbService::CACHE_KEY) if response.code == 401
-    response.code == 200 ? response.parsed_response : nil
-  rescue HTTParty::Error, Timeout::Error, SocketError, SystemCallError => e
+    response.status.success? ? JSON.parse(response.body.to_s) : nil
+  rescue HTTP::Error, JSON::ParserError => e
     Rails.logger.warn("[igdb] #{endpoint} : #{e.class} #{e.message}")
     nil
   end
