@@ -162,8 +162,10 @@ class ItemsController < ApplicationController
   def prepare_new_detail_attrs(type, attrs)
     case type
     when "VideoGameDetail"
-      # Traduit plus tard par TranslationJob
-      attrs["summary_en"] = attrs.delete("description")
+      # Traduit plus tard par TranslationJob. Le formulaire complet envoie le résumé dans description,
+      # l'ajout rapide directement dans summary_en : on ne l'écrase pas quand description est absente
+      description = attrs.delete("description")
+      attrs["summary_en"] = description if description.present?
     end
     attrs
   end

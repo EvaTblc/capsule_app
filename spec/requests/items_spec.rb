@@ -58,6 +58,16 @@ RSpec.describe "Items", type: :request do
       expect(response.body).to include("Edition")
     end
 
+    it "ajout rapide : le résumé anglais envoyé dans summary_en est conservé et mis en traduction" do
+      expect {
+        post collection_items_path(games), headers: turbo_headers, params: {
+          quick_add: "1", item: { title: "Zelda", item_type: "VideoGameDetail" },
+          video_game_detail: { platform: "Switch", summary_en: "An epic adventure" }
+        }
+      }.to have_enqueued_job(TranslationJob)
+      expect(Item.last.item_detailable.summary_en).to eq("An epic adventure")
+    end
+
     it "jeu vidéo : la description part dans summary_en et la traduction est mise en file" do
       expect {
         post collection_items_path(games),
@@ -80,6 +90,17 @@ RSpec.describe "Items", type: :request do
         post collection_items_path(books),
              params: { item: { title: "Dune", item_type: "BookDetail" }, book_detail: { description: "Mon résumé" } }
       }.not_to have_enqueued_job(BookDescriptionJob)
+    end
+  end
+
+  describe "GET /collections/:id/items/:id" do
+    it "affiche la description française, jamais le résumé anglais interne" do
+      games = collection_of("video_games")
+      detail = create(:video_game_detail, summary_en: "An epic adventure", description: "Une aventure épique")
+      item = create(:item, collection: games, item_detailable: detail, item_detailable_type: "VideoGameDetail", item_type: "VideoGameDetail")
+      get collection_item_path(games, item)
+      expect(response.body).to include("Une aventure épique")
+      expect(response.body).not_to include("An epic adventure")
     end
   end
 

@@ -41,7 +41,8 @@
   <% end %>
 
   <div class="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3">
-    <% @item.item_detailable.attributes.except("id", "created_at", "updated_at").each do |key, value| %>
+    <%# summary_en : résumé anglais brut, interne (source de TranslationJob) — seule la description française s'affiche %>
+    <% @item.item_detailable.attributes.except("id", "created_at", "updated_at", "summary_en").each do |key, value| %>
       <% next if value.nil? || (value == "" ) %>
 
       <% if key == "description" %>
