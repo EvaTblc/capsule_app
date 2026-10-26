@@ -8,6 +8,10 @@
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <%# Même raison côté Turbo : pas de copie en mémoire des pages privées pour le retour arrière %>
+    <% if user_signed_in? %>
+      <meta name="turbo-cache-control" content="no-cache">
+    <% end %>
 
     <%= yield :head %>
 
