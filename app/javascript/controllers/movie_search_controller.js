@@ -78,6 +78,7 @@ export default class extends Controller {
 
   searchByBarcode(ean) {
     this.queryTarget.value = ean
+    this.showMessage(`Recherche du code-barres ${ean}…`)
     fetch(`/api/search/movie_barcode?ean=${encodeURIComponent(ean)}`)
       .then(res => res.json())
       // Réseau coupé ou réponse non JSON (ex : 429 du rate limit) : même traitement qu'un film non trouvé
@@ -85,12 +86,23 @@ export default class extends Controller {
       .then(data => {
         if (data.error) {
           this.queryTarget.value = ""
-          this.queryTarget.placeholder = "Film non trouvé, recherche manuelle..."
+          this.queryTarget.placeholder = "Tape le titre du film..."
+          this.showMessage(data.fallback ? "Film introuvable pour ce code-barres : tape son titre ci-dessus." : "Recherche indisponible pour le moment : tape le titre du film ci-dessus.", true)
           this.queryTarget.focus()
         } else {
           this.fill(data)
         }
       })
+  }
+
+  // Message dans la liste de résultats (textContent : aucun HTML interprété)
+  showMessage(text, isError = false) {
+    this.resultsTarget.innerHTML = ""
+    const message = document.createElement("div")
+    message.className = `p-3 text-sm ${isError ? "text-red-600" : "text-gray-500"}`
+    message.textContent = text
+    this.resultsTarget.appendChild(message)
+    this.resultsTarget.classList.remove("hidden")
   }
 
   fill(movie) {

@@ -112,6 +112,8 @@ export default class extends Controller {
 
   searchByBarcode(ean) {
     this.queryTarget.value = ean
+    // Code-barres → nom → IGDB → traduction : plusieurs secondes, on le montre
+    this.showMessage(`Recherche du code-barres ${ean}…`)
     fetch(`/api/search/game_barcode?ean=${encodeURIComponent(ean)}`)
       .then(res => res.json())
       // Réseau coupé ou réponse non JSON (ex : 429 du rate limit) : même traitement qu'un jeu non trouvé
@@ -119,12 +121,23 @@ export default class extends Controller {
       .then(data => {
         if (data.error) {
           this.queryTarget.value = ""
-          this.queryTarget.placeholder = "Jeu non trouvé, recherche manuelle..."
+          this.queryTarget.placeholder = "Tape le nom du jeu..."
+          this.showMessage(data.fallback ? "Jeu introuvable pour ce code-barres : tape son nom ci-dessus." : "Recherche indisponible pour le moment : tape le nom du jeu ci-dessus.", true)
           this.queryTarget.focus()
         } else {
           this.fill(data)
         }
       })
+  }
+
+  // Message dans la liste de résultats (textContent : aucun HTML interprété)
+  showMessage(text, isError = false) {
+    this.resultsTarget.innerHTML = ""
+    const message = document.createElement("div")
+    message.className = `p-3 text-sm ${isError ? "text-red-600" : "text-gray-500"}`
+    message.textContent = text
+    this.resultsTarget.appendChild(message)
+    this.resultsTarget.classList.remove("hidden")
   }
 
   selectPlatform(event) {

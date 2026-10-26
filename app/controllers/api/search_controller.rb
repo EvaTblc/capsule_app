@@ -218,7 +218,10 @@ class Api::SearchController < ApplicationController
 
   # Liste de jeux IGDB ([] si aucun résultat), nil si IGDB est indisponible
   IGDB_GAME_FIELDS = %w[name cover.url platforms.name summary genres.name first_release_date
-                        alternative_names.name alternative_names.comment].freeze
+                        alternative_names.name alternative_names.comment game_type total_rating_count].freeze
+
+  # Types IGDB qui ne sont pas des jeux qu'on range dans une collection : DLC, mod, mise à jour, épisode, saison, fork, pack
+  IGDB_EXCLUDED_GAME_TYPES = [ 1, 5, 6, 7, 12, 13, 14 ].freeze
 
   # Jeux IGDB correspondant à name ([] si aucun), nil si IGDB est indisponible.
   # Deux recherches en parallèle : celle d'IGDB, qui ignore les titres français,
@@ -232,18 +235,37 @@ class Api::SearchController < ApplicationController
     query = name.delete('"\\')
     french_fields = IGDB_GAME_FIELDS.map { |field| "game.#{field}" }.join(",")
 
+    # On demande plus de résultats que nécessaire : une partie est écartée (mods, mises à jour...)
+    fetch_limit = [ limit * 3, 15 ].max
     searches = [
-      Thread.new { igdb_post("games", "fields #{IGDB_GAME_FIELDS.join(',')}; search \"#{query}\"; limit #{limit};", token) },
+      Thread.new { igdb_post("games", "fields #{IGDB_GAME_FIELDS.join(',')}; search \"#{query}\"; limit #{fetch_limit};", token) },
       Thread.new do
         igdb_post("alternative_names",
-                  "fields #{french_fields}; where name ~ *\"#{query}\"* & comment = \"French title\"; limit #{limit};", token)
+                  "fields #{french_fields}; where name ~ *\"#{query}\"* & comment = \"French title\"; limit #{fetch_limit};", token)
       end
     ]
     games, french_matches = searches.map(&:value)
     return nil if games.nil? # la recherche principale a échoué : IGDB indisponible
 
     french_games = (french_matches || []).filter_map { |match| match["game"] }
-    (french_games + games).uniq { |game| game["id"] }.first(limit)
+    rank_igdb_games(french_games + games, query).first(limit)
+  end
+
+  # Écarte les mods & co, puis classe : titre identique à la recherche d'abord, puis les plus populaires.
+  # Sans ça, « Super Mario Odyssey » renvoyait en premier un mod de fan (« Super Mario Odyssey F.L.U.D.D. »)
+  def rank_igdb_games(games, query)
+    wanted = normalize_game_title(query)
+    games.uniq { |game| game["id"] }
+         .reject { |game| IGDB_EXCLUDED_GAME_TYPES.include?(game["game_type"]) }
+         .sort_by do |game|
+           titles = [ game["name"], french_title(game) ].compact.map { |title| normalize_game_title(title) }
+           [ titles.include?(wanted) ? 0 : 1, -(game["total_rating_count"] || 0) ]
+         end
+  end
+
+  # « Super Mario: Odyssey » et « Super Mario Odyssey » doivent être considérés comme identiques
+  def normalize_game_title(title)
+    I18n.transliterate(title.to_s).downcase.gsub(/[^a-z0-9]+/, " ").strip
   end
 
   # Réponse JSON d'IGDB, ou nil en cas d'erreur
@@ -307,17 +329,22 @@ class Api::SearchController < ApplicationController
     title.strip
   end
 
+  # « Switch » seul n'y figure pas : il fait partie de titres (« Switch Sports »)
+  GAME_PLATFORMS = [
+    "Nintendo Switch 2", "Nintendo Switch", "PlayStation 5", "PlayStation 4", "PS5", "PS4",
+    "Xbox Series X", "Xbox Series S", "Xbox One", "PC", "Steam", "Nintendo 3DS", "Wii U"
+  ].freeze
+
+  # Titre UPCitemdb → nom de jeu cherchable sur IGDB, ex. :
+  # « Mario Kart 8 Deluxe - Nintendo Switch Video Game - European Version (International Version) » → « Mario Kart 8 Deluxe »
   def clean_game_title(title)
-    platforms = [
-      "Nintendo Switch", "PlayStation 5", "PS5", "PlayStation 4", "PS4",
-      "Xbox Series X", "Xbox One", "PC", "Steam", "Nintendo 3DS", "Wii U"
-    ]
-    clean = title
-    platforms.each do |platform|
-      clean = clean.gsub(/\s*-\s*#{platform}/i, "")
-      clean = clean.gsub(/\s*\(#{platform}\)/i, "")
-      clean = clean.gsub(/\s*\[#{platform}\]/i, "")
+    clean = title.gsub(/\(.*?\)|\[.*?\]/, " ")           # (International Version), [Import]...
+    clean = clean.split(/\s+[-–:|]\s+/).first.to_s         # ce qui suit un séparateur espacé : console, édition, région
+    GAME_PLATFORMS.each do |platform|
+      # Jamais en début de titre : « Nintendo Switch Sports » doit rester intact
+      clean = clean.gsub(/(?<=\S)\s+#{Regexp.escape(platform)}(?![\w-])/i, " ")
     end
-    clean.strip
+    clean = clean.gsub(/\b(video game|import region free)\b/i, " ")
+    clean.gsub(/(\w) s (?=\w)/, "\\1's ").squeeze(" ").strip # « Luigi s Mansion » → « Luigi's Mansion »
   end
 end

@@ -196,6 +196,36 @@ RSpec.describe "API de recherche", type: :request do
     end
   end
 
+  describe "classement des jeux IGDB" do
+    let(:fan_mod) { { "id" => 10, "name" => "Super Mario Odyssey F.L.U.D.D.", "game_type" => 5 } }
+    let(:real_game) { { "id" => 11, "name" => "Super Mario Odyssey", "game_type" => 0, "total_rating_count" => 1902 } }
+    let(:obscure) { { "id" => 12, "name" => "Super Mario Bros: Odyssey - Chapter 1", "game_type" => 0 } }
+
+    it "écarte les mods et privilégie le titre identique, puis le plus populaire" do
+      allow(IgdbService).to receive(:access_token).and_return("tok")
+      allow(HTTParty).to receive(:post) do |url, _|
+        url.end_with?("/games") ? double(code: 200, parsed_response: [ fan_mod, obscure, real_game ]) : double(code: 200, parsed_response: [])
+      end
+      get "/api/search/search_game", params: { query: "Super Mario: Odyssey" }
+      expect(json["games"].map { |g| g["id"] }).to eq([ 11, 12 ])
+    end
+  end
+
+  describe "nettoyage des titres de jeux (UPCitemdb)" do
+    {
+      "Mario Kart 8 Deluxe - Nintendo Switch Video Game - European Version (International Version)" => "Mario Kart 8 Deluxe",
+      "Luigi s Mansion 3 : Video Game for Nintendo Switch - Import Region Free" => "Luigi's Mansion 3",
+      "Super Mario: Odyssey - Nintendo Switch" => "Super Mario: Odyssey",
+      "Spider-Man PS4" => "Spider-Man",
+      "Astro Bot PS5 - Standard Edition" => "Astro Bot",
+      "Switch Sports" => "Switch Sports",
+      "Nintendo Switch Sports - Nintendo Switch" => "Nintendo Switch Sports",
+      "PC Building Simulator" => "PC Building Simulator"
+    }.each do |raw, clean|
+      it("#{raw} → #{clean}") { expect(controller_class.new.send(:clean_game_title, raw)).to eq(clean) }
+    end
+  end
+
   describe "nettoyage des titres de films" do
     {
       "Spider-Man: No Way Home DVD" => "Spider-Man: No Way Home",
