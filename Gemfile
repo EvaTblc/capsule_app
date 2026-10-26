@@ -56,6 +56,9 @@ group :test do
   gem "faker"
   gem "shoulda-matchers"
   gem "rails-controller-testing"
+  # Tests système : un vrai Chrome sans interface clique dans l'appli (seul moyen de tester le JS)
+  gem "capybara"
+  gem "cuprite"
 end
 
 group :development, :test do
