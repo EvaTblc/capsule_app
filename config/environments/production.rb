@@ -24,8 +24,9 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :cloudinary
 
-  # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  config.assume_ssl = true
+  # Pas d'assume_ssl sur Heroku : le routeur indique le protocole d'origine (X-Forwarded-Proto).
+  # assume_ssl ferait croire à Rails que tout arrive en HTTPS, et force_ssl ne redirigerait plus
+  # http://www.capsule.click vers https (page servie en clair, connexion impossible).
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   config.force_ssl = true
