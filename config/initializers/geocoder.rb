@@ -8,8 +8,8 @@ Geocoder.configure(
   # http_proxy: nil,            # HTTP proxy server (user:pass@host:port)
   # https_proxy: nil,           # HTTPS proxy server (user:pass@host:port)
   # Token réservé au serveur (jamais affiché dans une page) : sans restriction d'URL, car un appel serveur
-  # n'envoie pas d'adresse de site. Repli sur l'ancien token commun tant que mapbox.geocoding_token manque.
-  api_key: Rails.application.credentials.dig(:mapbox, :geocoding_token) || Rails.application.credentials.dig(:mapbox, :api_key),
+  # n'envoie pas d'adresse de site
+  api_key: Rails.application.credentials.dig(:mapbox, :geocoding_token),
   # cache: nil,                 # cache object (must respond to #[], #[]=, and #del)
 
   # Exceptions that should not be rescued by default
