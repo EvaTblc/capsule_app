@@ -7,6 +7,36 @@ class FigurineIdentificationService
     "GIF89a".b => "image/gif"
   }.freeze
 
+  # Limite de l'API Claude par image ; le navigateur réduit la photo bien en dessous avant l'envoi
+  MAX_IMAGE_BYTES = 5.megabytes
+
+  # Résultat d'une identification : data (champs reconnus) ou error + status HTTP à renvoyer
+  Result = Struct.new(:data, :error, :status, keyword_init: true)
+
+  # Vérifie la photo envoyée par le navigateur (en base64), puis l'identifie.
+  # Une photo refusée (illisible, trop lourde, format inconnu) ne déclenche aucun appel payant.
+  def self.identify_upload(base64_image)
+    image = Base64.strict_decode64(base64_image.to_s) rescue nil
+    return Result.new(error: "Photo illisible, réessaie.", status: :unprocessable_entity) if image.blank?
+    if image.bytesize > MAX_IMAGE_BYTES
+      return Result.new(error: "Photo trop lourde, réessaie avec une photo plus petite.", status: 413)
+    end
+
+    # Le vrai format, lu dans le fichier : l'API Claude refuse une image déclarée sous un autre type
+    media_type = media_type_of(image)
+    unless media_type
+      return Result.new(error: "Format de photo non pris en charge (JPEG, PNG, WebP ou GIF).", status: :unprocessable_entity)
+    end
+
+    data = identify(base64_image, media_type: media_type)
+    # Échec de l'appel, ou réponse dont tous les champs sont null : rien de reconnu
+    unless data.is_a?(Hash) && data.values.any?(&:present?)
+      return Result.new(error: "Figurine non reconnue : remplis les champs à la main.", status: :unprocessable_entity)
+    end
+
+    Result.new(data: data)
+  end
+
   # Type réel d'une image d'après ses premiers octets (nil si format non pris en charge, ex. HEIC)
   def self.media_type_of(bytes)
     bytes = bytes.b
