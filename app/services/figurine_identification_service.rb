@@ -1,11 +1,27 @@
 class FigurineIdentificationService
-  def self.identify(base64_image)
+  # Signatures binaires des formats d'image acceptés par l'API Claude
+  IMAGE_SIGNATURES = {
+    "\xFF\xD8\xFF".b => "image/jpeg",
+    "\x89PNG\r\n\x1A\n".b => "image/png",
+    "GIF87a".b => "image/gif",
+    "GIF89a".b => "image/gif"
+  }.freeze
+
+  # Type réel d'une image d'après ses premiers octets (nil si format non pris en charge, ex. HEIC)
+  def self.media_type_of(bytes)
+    bytes = bytes.b
+    return "image/webp" if bytes[0, 4] == "RIFF" && bytes[8, 4] == "WEBP"
+
+    IMAGE_SIGNATURES.find { |signature, _| bytes.start_with?(signature) }&.last
+  end
+
+  def self.identify(base64_image, media_type: "image/jpeg")
     AnthropicClient.json([
       {
         type: "image",
         source: {
           type: "base64",
-          media_type: "image/jpeg",
+          media_type: media_type,
           data: base64_image
         }
       },

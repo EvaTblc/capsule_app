@@ -1,7 +1,11 @@
 class ItemsController < ApplicationController
   DETAIL_TYPES = Item::ITEM_TYPE_STYLES.keys.freeze
+  # Limite de l'API Claude par image ; le navigateur réduit la photo bien en dessous avant l'envoi
+  MAX_IDENTIFY_IMAGE_BYTES = 5.megabytes
 
   before_action :authenticate_user!
+  # Appels payants à Claude : pas plus de 10 par minute et par utilisateur
+  rate_limit to: 10, within: 1.minute, by: -> { current_user&.id || request.remote_ip }, only: [ :identify, :estimate ]
   before_action :set_collection, except: [ :show, :estimate, :identify ]
   before_action :set_visible_collection, only: [ :show ]
   before_action :set_item, only: [ :show, :edit, :update, :destroy ]
@@ -124,8 +128,22 @@ class ItemsController < ApplicationController
   end
 
   def identify
-    base64 = params[:image]
-    result = FigurineIdentificationService.identify(base64)
+    image = Base64.strict_decode64(params[:image].to_s) rescue nil
+    return render json: { error: "Photo illisible, réessaie." }, status: :unprocessable_entity if image.blank?
+    if image.bytesize > MAX_IDENTIFY_IMAGE_BYTES
+      return render json: { error: "Photo trop lourde, réessaie avec une photo plus petite." }, status: 413
+    end
+
+    # Le vrai format, lu dans le fichier : l'API Claude refuse une image déclarée sous un autre type
+    media_type = FigurineIdentificationService.media_type_of(image)
+    return render json: { error: "Format de photo non pris en charge (JPEG, PNG, WebP ou GIF)." }, status: :unprocessable_entity unless media_type
+
+    result = FigurineIdentificationService.identify(params[:image], media_type: media_type)
+    # Échec de l'appel, ou réponse dont tous les champs sont null : rien de reconnu
+    unless result.is_a?(Hash) && result.values.any?(&:present?)
+      return render json: { error: "Figurine non reconnue : remplis les champs à la main." }, status: :unprocessable_entity
+    end
+
     render json: result
   end
 
