@@ -74,6 +74,20 @@ RSpec.describe "Autorisations", type: :request do
     it("les événements demandent une connexion") { get event_path(event); expect(response).to redirect_to(new_user_session_path) }
     it("les amitiés demandent une connexion") { patch accept_friendship_path(1); expect(response).to redirect_to(new_user_session_path) }
 
+    # Ces pages plantaient (500) pour un visiteur non connecté : current_user était nil
+    it("le profil demande une connexion") { get profile_path; expect(response).to redirect_to(new_user_session_path) }
+    it("la page adresse demande une connexion") { get edit_address_path; expect(response).to redirect_to(new_user_session_path) }
+    it("l'enregistrement de l'adresse demande une connexion") do
+      patch update_address_path, params: { user: { address: "Paris" } }
+      expect(response).to redirect_to(new_user_session_path)
+    end
+    it("l'accueil et la page hors ligne restent publics") do
+      get root_path
+      expect(response).to have_http_status(200)
+      get offline_path
+      expect(response).to have_http_status(200)
+    end
+
     it "l'API de recherche est fermée" do
       get "/api/search/movie", params: { query: "x" }, headers: { "Accept" => "application/json" }
       expect(response).to have_http_status(401)
