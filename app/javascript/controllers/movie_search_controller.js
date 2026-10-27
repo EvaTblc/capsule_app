@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["query", "results", "title", "year", "description", "director", "studio", "scanner"]
+  static targets = ["query", "results", "title", "year", "description", "director", "studio", "format", "edition", "barcode", "scanner"]
 
   search() {
     const query = this.queryTarget.value
@@ -113,6 +113,10 @@ export default class extends Controller {
     this.titleTarget.value = movie.title || ""
     this.yearTarget.value = movie.year || ""
     this.descriptionTarget.value = movie.description || ""
+    // Lus sur la boîte au scan (absents d'une recherche par titre : on ne touche pas à la saisie)
+    if (movie.format) this.formatTarget.value = movie.format
+    if (movie.edition) this.editionTarget.value = movie.edition
+    if (this.hasBarcodeTarget && movie.barcode) this.barcodeTarget.value = movie.barcode
     this.resultsTarget.classList.add("hidden")
 
     // Si director/studio déjà dans la réponse (barcode), pas besoin du deuxième fetch

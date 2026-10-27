@@ -15,18 +15,22 @@ class Api::SearchController < ApplicationController
     ean = params[:ean].to_s.strip
     return render json: { error: "Barcode manquant" }, status: :unprocessable_entity if ean.blank?
 
-    # Étape 1 : UPCitemdb pour récupérer le nom du produit
-    product_title = upc_product_title(ean)
+    # Étape 1 : titre brut du produit (UPCitemdb, puis EAN-DB), étape 2 : nom du jeu extrait par Claude
+    product_title = BarcodeService.product_title(ean)
     return render json: { error: "Jeu non trouvé", fallback: true }, status: :not_found unless product_title
 
-    game_name = clean_game_title(product_title)
-    Rails.logger.info("[game_barcode] UPCitemdb: #{product_title} → #{game_name}")
+    details = scanned_details(product_title, :game)
+    Rails.logger.info("[game_barcode] #{product_title} → #{details.inspect}")
 
-    # Étape 2 : IGDB par nom
-    games = igdb_search(game_name, limit: 1)
-    return render json: { error: "IGDB indisponible" }, status: :service_unavailable if games.nil?
+    # Étape 3 : IGDB par nom (titre principal, puis titre français), en écartant les jeux dont le titre ne correspond pas
+    game = nil
+    details[:names].each do |name|
+      games = igdb_search(name, limit: 3)
+      return render json: { error: "IGDB indisponible" }, status: :service_unavailable if games.nil?
 
-    game = games.first
+      game = games.find { |candidate| matching_title?(name, igdb_titles(candidate)) }
+      break if game
+    end
     return render json: { error: "Jeu non trouvé", fallback: true }, status: :not_found unless game
 
     summary = begin
@@ -36,26 +40,33 @@ class Api::SearchController < ApplicationController
       game["summary"]
     end
 
-    render json: igdb_game_json(game, summary: summary)
+    # La boîte dit sur quelle plateforme est le jeu possédé, et son édition ; le code-barres est gardé avec l'item
+    json = igdb_game_json(game, summary: summary)
+    render json: json.merge(platform: details[:platform] || json[:platform], edition: details[:edition], barcode: ean)
   end
 
   def movie_barcode
     ean = params[:ean].to_s.strip
     return render json: { error: "Barcode manquant" }, status: :unprocessable_entity if ean.blank?
 
-    # Étape 1 : UPCitemdb pour récupérer le nom du produit
-    # (ni OMDb ni TMDB ne savent chercher par EAN : sans UPCitemdb, on passe en recherche manuelle)
-    product_title = upc_product_title(ean)
+    # Étape 1 : titre brut du produit (UPCitemdb, puis EAN-DB), étape 2 : titre du film extrait par Claude
+    # (TMDB ne sait pas chercher par EAN : sans titre, on passe en recherche manuelle)
+    product_title = BarcodeService.product_title(ean)
     return render json: { error: "Film non trouvé", fallback: true }, status: :not_found unless product_title
 
-    movie_name = clean_movie_title(product_title)
-    Rails.logger.info("[movie_barcode] UPCitemdb: #{product_title} → #{movie_name}")
+    details = scanned_details(product_title, :movie)
+    Rails.logger.info("[movie_barcode] #{product_title} → #{details.inspect}")
 
-    # Étape 2 : TMDB par titre
-    movie = tmdb_get("search/movie", query: movie_name, language: "fr-FR")["results"]&.first
+    # Étape 3 : TMDB par titre (original, puis français), en écartant les films dont le titre ne correspond pas
+    movie = nil
+    details[:names].each do |name|
+      results = tmdb_get("search/movie", query: name, language: "fr-FR")["results"] || []
+      movie = results.first(3).find { |candidate| matching_title?(name, [ candidate["title"], candidate["original_title"] ]) }
+      break if movie
+    end
     return render json: { error: "Film non trouvé", fallback: true }, status: :not_found unless movie
 
-    # Étape 3 : Détails + réalisateur
+    # Étape 4 : Détails + réalisateur
     detail_data = tmdb_get("movie/#{movie['id']}", language: "fr-FR")
     credits_data = tmdb_get("movie/#{movie['id']}/credits")
 
@@ -70,7 +81,10 @@ class Api::SearchController < ApplicationController
       description: movie["overview"],
       director: director,
       studio: studio,
-      poster_url: poster_url
+      poster_url: poster_url,
+      format: details[:format],
+      edition: details[:edition],
+      barcode: ean
     }
   end
 
@@ -208,19 +222,38 @@ class Api::SearchController < ApplicationController
     render json: { error: "Recherche indisponible" }, status: external ? :bad_gateway : :internal_server_error
   end
 
-  # Titre du produit chez UPCitemdb, nil si inconnu ou quota d'essai (100/jour) dépassé
-  def upc_product_title(ean)
-    response = HTTP.timeout(10).get("https://api.upcitemdb.com/prod/trial/lookup", params: { upc: ean })
-    unless response.status.success?
-      Rails.logger.warn("[upcitemdb] #{response.status} pour #{ean}")
-      return nil
-    end
-    JSON.parse(response.body.to_s).dig("items", 0, "title")
+  # Noms à chercher, plateforme ou format, édition : extraits du titre brut par Claude.
+  # S'il ne répond pas : nom nettoyé par règles (moins fiable, mais mieux que rien), et rien d'autre
+  def scanned_details(product_title, kind)
+    BarcodeService.product_details(product_title, kind: kind)
+  rescue BarcodeService::Error => e
+    Rails.logger.warn("[#{kind}_barcode] Claude indisponible, nettoyage par règles : #{e.message}")
+    { names: [ kind == :game ? clean_game_title(product_title) : clean_movie_title(product_title) ] }
+  end
+
+  # Mots qui ne distinguent pas un titre d'un autre
+  TITLE_FILLER_WORDS = %w[the a an of and version edition le la les l de du des et].freeze
+
+  # Garde-fou des scans : tous les mots significatifs du nom cherché doivent figurer dans l'un des titres trouvés.
+  # « Pokemon Diamond » refuse « Pokémon White Version 2 » : mieux vaut « introuvable » qu'un mauvais jeu ajouté en silence
+  def matching_title?(wanted, titles)
+    wanted_words = significant_words(wanted)
+    titles.compact.any? { |title| wanted_words.subset?(significant_words(title)) }
+  end
+
+  def significant_words(title)
+    normalize_game_title(title).split.to_set - TITLE_FILLER_WORDS
+  end
+
+  # Titre d'origine et titres alternatifs (français, européen...) d'un jeu IGDB
+  def igdb_titles(game)
+    [ game["name"], *game["alternative_names"]&.map { |alt| alt["name"] } ]
   end
 
   # Liste de jeux IGDB ([] si aucun résultat), nil si IGDB est indisponible
   IGDB_GAME_FIELDS = %w[name cover.url platforms.name summary genres.name first_release_date
-                        alternative_names.name alternative_names.comment game_type total_rating_count].freeze
+                        alternative_names.name alternative_names.comment game_type total_rating_count
+                        involved_companies.company.name involved_companies.developer].freeze
 
   # Types IGDB qui ne sont pas des jeux qu'on range dans une collection : DLC, mod, mise à jour, épisode, saison, fork, pack
   IGDB_EXCLUDED_GAME_TYPES = [ 1, 5, 6, 7, 12, 13, 14 ].freeze
@@ -295,6 +328,9 @@ class Api::SearchController < ApplicationController
     platforms = game["platforms"]&.map { |p| p["name"] }&.join(", ")
     genres = game["genres"]&.map { |g| g["name"] }&.join(", ")
     french_name = french_title(game)
+    developers = game["involved_companies"]&.select { |company| company["developer"] }&.filter_map { |company| company.dig("company", "name") }
+    # Plateforme de l'appli, seulement si le jeu n'existe que sur une seule : sinon c'est à l'utilisateur de choisir
+    app_platforms = game["platforms"]&.filter_map { |p| VideoGameDetail::IGDB_PLATFORMS[p["name"]] }&.uniq || []
 
     {
       id: game["id"],
@@ -304,6 +340,8 @@ class Api::SearchController < ApplicationController
       original_name: (game["name"] if french_name && french_name != game["name"]),
       cover_url: cover_url,
       platforms: platforms,
+      platform: (app_platforms.first if app_platforms.one?),
+      developer: developers.presence&.join(", "),
       release_date: release_date&.year,
       summary: summary,
       genres: genres,
@@ -332,7 +370,7 @@ class Api::SearchController < ApplicationController
     "Xbox Series X", "Xbox Series S", "Xbox One", "PC", "Steam", "Nintendo 3DS", "Wii U"
   ].freeze
 
-  # Titre UPCitemdb → nom de jeu cherchable sur IGDB, ex. :
+  # Repli quand Claude ne répond pas. Titre UPCitemdb → nom de jeu cherchable sur IGDB, ex. :
   # « Mario Kart 8 Deluxe - Nintendo Switch Video Game - European Version (International Version) » → « Mario Kart 8 Deluxe »
   def clean_game_title(title)
     clean = title.gsub(/\(.*?\)|\[.*?\]/, " ")           # (International Version), [Import]...

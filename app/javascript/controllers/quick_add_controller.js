@@ -28,8 +28,9 @@ export default class extends Controller {
       if (results) results.classList.add("hidden")
 
       // Reset pills plateforme
+      // Mêmes classes que games-search#choosePlatform
       this.element.querySelectorAll("[data-platform]").forEach(btn => {
-        btn.classList.remove("bg-purple-600", "text-white", "border-purple-600")
+        btn.classList.remove("bg-purple-100", "border-purple-400", "text-purple-600")
         btn.classList.add("border-gray-200", "text-gray-500", "bg-white")
       })
     }

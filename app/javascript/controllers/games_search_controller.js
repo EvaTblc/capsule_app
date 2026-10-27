@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["query", "results", "platform", "genre", "releaseDate", "description", "scanner", "title"]
+  static targets = ["query", "results", "platform", "genre", "releaseDate", "developer", "edition", "barcode", "description", "scanner", "title"]
 
   connect() {
     this.closeResults = (e) => {
@@ -145,10 +145,13 @@ export default class extends Controller {
   }
 
   selectPlatform(event) {
-    const selected = event.currentTarget.dataset.platform
+    this.choosePlatform(event.currentTarget.dataset.platform)
+  }
+
+  // Plateforme choisie : valeur du champ caché et bouton mis en avant
+  choosePlatform(selected) {
     this.platformTarget.value = selected
-    const buttons = event.currentTarget.closest('.flex').querySelectorAll('button')
-    buttons.forEach(btn => {
+    this.element.querySelectorAll("[data-platform]").forEach(btn => {
       if (btn.dataset.platform === selected) {
         btn.classList.add('bg-purple-100', 'border-purple-400', 'text-purple-600')
         btn.classList.remove('bg-white', 'border-gray-200', 'text-gray-500')
@@ -161,7 +164,12 @@ export default class extends Controller {
 
   fill(game) {
     if (this.hasTitleTarget) this.titleTarget.value = game.name || ""
-    if (this.hasPlatformTarget) this.platformTarget.value = game.platforms || ""
+    // Plateforme seulement quand on la connaît (boîte scannée, ou jeu sorti sur une seule) :
+    // sinon on garde le choix de l'utilisateur, au lieu d'écrire la liste de toutes les plateformes du jeu
+    if (this.hasPlatformTarget && game.platform) this.choosePlatform(game.platform)
+    if (this.hasDeveloperTarget) this.developerTarget.value = game.developer || ""
+    if (this.hasEditionTarget) this.editionTarget.value = game.edition || ""
+    if (this.hasBarcodeTarget && game.barcode) this.barcodeTarget.value = game.barcode
     if (this.hasGenreTarget) this.genreTarget.value = game.genres || ""
     if (this.hasReleaseDateTarget) this.releaseDateTarget.value = game.release_date || ""
     if (this.hasDescriptionTarget) this.descriptionTarget.value = game.summary || ""

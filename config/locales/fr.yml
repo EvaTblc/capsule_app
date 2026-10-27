@@ -147,6 +147,7 @@ fr:
       description: "Description"
       completed: "Jeu complet"
       finish: "Jeu terminé"
+      edition: "Édition"
     book_detail:
       author: "Auteur"
       isbn: "ISBN"
@@ -159,6 +160,7 @@ fr:
       year: "Année"
       studio: "Studio"
       format: "Format"
+      edition: "Édition"
       description: "Description"
     music_detail:
       artist: "Artiste"

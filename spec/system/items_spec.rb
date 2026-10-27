@@ -60,6 +60,50 @@ RSpec.describe "Items (navigateur)", type: :system do
       expect(page).to have_css("#quick-add-list", text: "✓ The Legend of Zelda")
       expect(page).to have_current_path(collection_path(games))
       expect(games.items.last.title).to eq("The Legend of Zelda")
+      # Jeu sorti sur une seule plateforme : elle est choisie (avant : « Nintendo Switch », hors liste)
+      expect(games.items.last.item_detailable.platform).to eq("Switch")
+    end
+
+    it "jeu multiplateforme : la plateforme choisie par l'utilisateur n'est pas écrasée par le choix du jeu" do
+      multi = zelda.merge("platforms" => [ { "name" => "PlayStation 4" }, { "name" => "Xbox One" } ])
+      allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([ multi ])
+      visit collection_path(games)
+      find("[data-action='click->quick-add#open']").click
+
+      click_on "PS4"
+      fill_in placeholder: "Rechercher un jeu...", with: "Zelda"
+      find("[data-games-search-target='results'] div", text: "The Legend of Zelda").click
+      click_on "Ajouter →"
+
+      expect(page).to have_css("#quick-add-list", text: "✓ The Legend of Zelda")
+      expect(games.items.last.item_detailable.platform).to eq("PS4")
+    end
+  end
+
+  describe "formulaire complet : pré-remplissage par la recherche de jeu" do
+    it "plateforme, genre, développeur et année remplis ; l'édition se saisit et s'enregistre" do
+      botw = { "id" => 7, "name" => "The Legend of Zelda: Breath of the Wild", "first_release_date" => 1488499200,
+               "platforms" => [ { "name" => "Nintendo Switch" } ], "genres" => [ { "name" => "Adventure" } ],
+               "involved_companies" => [ { "developer" => true, "company" => { "name" => "Nintendo EPD" } } ] }
+      allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([ botw ])
+      games = collection_of("video_games")
+
+      visit new_collection_item_path(games)
+      find("[data-type='VideoGameDetail']").click
+      within("[data-form='VideoGameDetail']") do
+        fill_in placeholder: "Rechercher un jeu...", with: "Zelda"
+        find("[data-games-search-target='results'] div", text: "Breath of the Wild").click
+
+        expect(page).to have_field(placeholder: "Développeur", with: "Nintendo EPD")
+        expect(page).to have_field(placeholder: "Genre", with: "Adventure")
+        expect(find("[data-games-search-target='releaseDate']").value).to eq("2017")
+        expect(page).to have_css("button.bg-purple-100[data-platform='Switch']")
+        fill_in placeholder: "Standard, Collector, Steelbook...", with: "Collector"
+      end
+      click_on "Valider"
+
+      expect(page).to have_content("Item ajouté !")
+      expect(Item.last.item_detailable).to have_attributes(platform: "Switch", developer: "Nintendo EPD", release_date: 2017, edition: "Collector")
     end
   end
 

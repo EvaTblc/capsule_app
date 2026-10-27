@@ -66,7 +66,7 @@ RSpec.describe "API de recherche", type: :request do
     end
 
     it "bug interne : 500 générique" do
-      allow_any_instance_of(controller_class).to receive(:upc_product_title).and_raise(RuntimeError, "secret interne")
+      allow(BarcodeService).to receive(:product_title).and_raise(RuntimeError, "secret interne")
       get "/api/search/game_barcode", params: { ean: "123" }
       expect(response).to have_http_status(500)
       expect(response.body).not_to include("secret")
@@ -92,36 +92,87 @@ RSpec.describe "API de recherche", type: :request do
     end
   end
 
+  # Les deux services de code-barres et Claude sont simulés : titres bruts réels, relevés le 2026-10-27
   describe "GET /api/search/game_barcode" do
     let(:game) do
       { "id" => 1, "name" => "Zelda", "summary" => "A game", "cover" => { "url" => "//img/t_thumb/x.jpg" },
         "platforms" => [ { "name" => "Switch" } ], "genres" => [ { "name" => "RPG" } ], "first_release_date" => 1488499200 }
     end
+    let(:diamond) do
+      { "id" => 2, "name" => "Pokémon Diamond Version", "summary" => "Catch them",
+        "alternative_names" => [ { "name" => "Pokémon Diamant", "comment" => "French title" } ] }
+    end
+    let(:white_2) { { "id" => 3, "name" => "Pokémon White Version 2", "summary" => "Catch them" } }
+    let(:layton) do
+      { "id" => 4, "name" => "Professor Layton and the Last Specter", "summary" => "Puzzles",
+        "alternative_names" => [ { "name" => "Professeur Layton et l'Appel du Spectre", "comment" => "French title" } ] }
+    end
 
-    it "code-barres inconnu : 404 avec fallback" do
-      allow_any_instance_of(controller_class).to receive(:upc_product_title).and_return(nil)
+    def scan(raw_title, names, **details)
+      allow(BarcodeService).to receive(:product_title).with("123").and_return(raw_title)
+      allow(BarcodeService).to receive(:product_details).with(raw_title, kind: :game).and_return(names: names, **details)
+      allow(TranslationService).to receive(:translate_batch) { |texts| texts }
+      get "/api/search/game_barcode", params: { ean: "123" }
+    end
+
+    it "code-barres inconnu des deux services : 404 avec fallback, sans appel à Claude" do
+      allow(BarcodeService).to receive(:product_title).and_return(nil)
+      expect(BarcodeService).not_to receive(:product_details)
       get "/api/search/game_barcode", params: { ean: "123" }
       expect(response).to have_http_status(404)
       expect(json["fallback"]).to be true
     end
 
-    it "jeu absent d'IGDB : 404 (et non plus un crash)" do
-      allow_any_instance_of(controller_class).to receive(:upc_product_title).and_return("Zelda")
-      allow_any_instance_of(controller_class).to receive(:igdb_search).and_return([])
-      get "/api/search/game_barcode", params: { ean: "123" }
+    it "produit qui n'est pas un jeu (console, accessoire...) : 404 avec fallback" do
+      scan("Nintendo DS Lite Black Pokemon Limited Edition", [])
       expect(response).to have_http_status(404)
+      expect(json["fallback"]).to be true
+    end
+
+    it "annonce en vrac : le nom extrait par Claude trouve le bon jeu, en français" do
+      expect_any_instance_of(controller_class).to receive(:igdb_search).with("Pokémon Diamond Version", limit: 3).and_return([ diamond ])
+      scan("Game: Pokemon Diamant Edition for Nintendo DS + LITE + DSi + XL + 3DS 2DS", [ "Pokémon Diamond Version", "Pokémon Diamant" ])
+      expect(json).to include("name" => "Pokémon Diamant", "original_name" => "Pokémon Diamond Version")
+    end
+
+    it "ce que dit la boîte : plateforme, édition, et le code-barres à garder avec l'item" do
+      allow_any_instance_of(controller_class).to receive(:igdb_search).and_return([ diamond ])
+      scan("Pokemon Diamant Edition Collector Nintendo DS", [ "Pokémon Diamond Version" ], platform: "Nintendo DS", edition: "Collector")
+      expect(json).to include("platform" => "Nintendo DS", "edition" => "Collector", "barcode" => "123")
+    end
+
+    it "garde-fou : un jeu mieux classé mais au titre différent est écarté" do
+      allow_any_instance_of(controller_class).to receive(:igdb_search).and_return([ white_2, diamond ])
+      scan("Pokemon - Diamant Edition (nintendo Ds)", [ "Pokémon Diamond Version" ])
+      expect(json["name"]).to eq("Pokémon Diamant")
+    end
+
+    it "garde-fou : aucun titre ne correspond, 404 plutôt qu'un mauvais jeu" do
+      allow_any_instance_of(controller_class).to receive(:igdb_search).and_return([ white_2 ])
+      scan("Pokemon - Diamant Edition (nintendo Ds)", [ "Pokémon Diamond Version", "Pokémon Diamant" ])
+      expect(response).to have_http_status(404)
+      expect(json["fallback"]).to be true
+    end
+
+    it "titre principal introuvable sur IGDB : le titre français prend le relais" do
+      allow_any_instance_of(controller_class).to receive(:igdb_search) do |_controller, name, limit:|
+        name == "Professeur Layton et l'Appel du Spectre" ? [ layton ] : []
+      end
+      scan("Nintendo Professeur Layton Et L'appel Du Spectre [ds], Good Nintendo Ds Video Ga",
+           [ "Professor Layton and the Spectre's Call", "Professeur Layton et l'Appel du Spectre" ])
+      expect(json["name"]).to eq("Professeur Layton et l'Appel du Spectre")
     end
 
     it "IGDB indisponible : 503" do
-      allow_any_instance_of(controller_class).to receive(:upc_product_title).and_return("Zelda")
       allow_any_instance_of(controller_class).to receive(:igdb_search).and_return(nil)
-      get "/api/search/game_barcode", params: { ean: "123" }
+      scan("Zelda - Nintendo Switch", [ "Zelda" ])
       expect(response).to have_http_status(503)
     end
 
-    it "jeu trouvé : titre nettoyé, résumé traduit, même JSON qu'avant" do
-      allow_any_instance_of(controller_class).to receive(:upc_product_title).and_return("Zelda - Nintendo Switch")
-      expect_any_instance_of(controller_class).to receive(:igdb_search).with("Zelda", limit: 1).and_return([ game ])
+    it "Claude indisponible : repli sur le nettoyage par règles, même JSON qu'avant" do
+      allow(BarcodeService).to receive(:product_title).and_return("Zelda - Nintendo Switch")
+      allow(BarcodeService).to receive(:product_details).and_raise(BarcodeService::Error, "API surchargée")
+      expect_any_instance_of(controller_class).to receive(:igdb_search).with("Zelda", limit: 3).and_return([ game ])
       allow(TranslationService).to receive(:translate_batch).and_return([ "Un jeu" ])
       get "/api/search/game_barcode", params: { ean: "123" }
       expect(json).to include("name" => "Zelda", "summary" => "Un jeu", "platforms" => "Switch",
@@ -131,15 +182,17 @@ RSpec.describe "API de recherche", type: :request do
   end
 
   describe "GET /api/search/movie_barcode" do
-    it "code-barres inconnu : 404 directement, sans appels inutiles à OMDb / TMDB" do
-      allow_any_instance_of(controller_class).to receive(:upc_product_title).and_return(nil)
+    it "code-barres inconnu : 404 directement, sans appels inutiles à TMDB" do
+      allow(BarcodeService).to receive(:product_title).and_return(nil)
       expect(HTTP).not_to receive(:timeout)
       get "/api/search/movie_barcode", params: { ean: "123" }
       expect(response).to have_http_status(404)
     end
 
-    it "film trouvé : titre nettoyé puis détails et réalisateur" do
-      allow_any_instance_of(controller_class).to receive(:upc_product_title).and_return("Inception (DVD)")
+    it "film trouvé : titre extrait par Claude, puis détails et réalisateur" do
+      allow(BarcodeService).to receive(:product_title).and_return("Inception (DVD)")
+      allow(BarcodeService).to receive(:product_details).with("Inception (DVD)", kind: :movie)
+                                                       .and_return(names: [ "Inception" ], format: "Blu-ray", edition: "Steelbook")
       stub_http do |url, params|
         case url
         when %r{search/movie}
@@ -150,7 +203,16 @@ RSpec.describe "API de recherche", type: :request do
         end
       end
       get "/api/search/movie_barcode", params: { ean: "123" }
-      expect(json).to include("title" => "Inception", "year" => 2010, "director" => "Christopher Nolan", "studio" => "Warner")
+      expect(json).to include("title" => "Inception", "year" => 2010, "director" => "Christopher Nolan", "studio" => "Warner",
+                              "format" => "Blu-ray", "edition" => "Steelbook", "barcode" => "123")
+    end
+
+    it "garde-fou : aucun film au titre correspondant, 404 plutôt qu'un mauvais film" do
+      allow(BarcodeService).to receive(:product_title).and_return("Amelie [DVD]")
+      allow(BarcodeService).to receive(:product_details).and_return(names: [ "Le Fabuleux Destin d'Amélie Poulain" ])
+      stub_http { fake_response(200, { results: [ { id: 1, title: "Les Misérables", original_title: "Les Misérables" } ] }) }
+      get "/api/search/movie_barcode", params: { ean: "123" }
+      expect(response).to have_http_status(404)
     end
   end
 
@@ -175,6 +237,18 @@ RSpec.describe "API de recherche", type: :request do
         result = { "games" => games, "alternative_names" => alternative_names }[endpoint]
         result.is_a?(Integer) ? fake_response(result, {}) : fake_response(200, result)
       end
+    end
+
+    it "développeur, et plateforme de l'appli seulement si le jeu n'existe que sur une seule" do
+      one_platform = sword.merge("platforms" => [ { "name" => "Nintendo Switch" } ],
+                                 "involved_companies" => [ { "developer" => true, "company" => { "name" => "Game Freak" } },
+                                                           { "developer" => false, "company" => { "name" => "Nintendo" } } ])
+      several = sword.merge("id" => 9, "platforms" => [ { "name" => "PlayStation 4" }, { "name" => "Xbox One" } ])
+      stub_igdb(games: [ one_platform, several ], alternative_names: [])
+      get "/api/search/search_game", params: { query: "pokemon" }
+      games = json["games"].index_by { |game| game["id"] }
+      expect(games[1]).to include("platform" => "Switch", "developer" => "Game Freak")
+      expect(games[9]["platform"]).to be_nil
     end
 
     it "affiche le titre français officiel, avec le titre d'origine en petit" do
@@ -236,7 +310,7 @@ RSpec.describe "API de recherche", type: :request do
     end
   end
 
-  describe "nettoyage des titres de jeux (UPCitemdb)" do
+  describe "nettoyage des titres de jeux (repli quand Claude ne répond pas)" do
     {
       "Mario Kart 8 Deluxe - Nintendo Switch Video Game - European Version (International Version)" => "Mario Kart 8 Deluxe",
       "Luigi s Mansion 3 : Video Game for Nintendo Switch - Import Region Free" => "Luigi's Mansion 3",
@@ -251,7 +325,7 @@ RSpec.describe "API de recherche", type: :request do
     end
   end
 
-  describe "nettoyage des titres de films" do
+  describe "nettoyage des titres de films (repli quand Claude ne répond pas)" do
     {
       "Spider-Man: No Way Home DVD" => "Spider-Man: No Way Home",
       "Inception - Blu-ray" => "Inception",

@@ -1,5 +1,7 @@
 <%# Champs spécifiques MovieDetail %>
 <div data-item-type-target="form" data-form="MovieDetail" class="hidden mb-4" data-controller="movie-search">
+  <%# Code-barres scanné, gardé avec l'item %>
+  <%= f.hidden_field :barcode, data: { "movie-search-target": "barcode" } %>
   <div class="relative mb-4">
     <label class="text-sm font-semibold text-gray-600 mb-1 block">Recherche</label>
     <div class="flex gap-2">
@@ -73,6 +75,10 @@
   </div>
   <div class="mb-4">
     <label class="text-sm font-semibold text-gray-600 mb-1 block">Format</label>
-    <input name="movie_detail[format]" placeholder="Format (DVD, Blu-ray...)" value="<%= movie_detail&.format %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    <input data-movie-search-target="format" name="movie_detail[format]" placeholder="Format (DVD, Blu-ray...)" value="<%= movie_detail&.format %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Édition</label>
+    <input data-movie-search-target="edition" name="movie_detail[edition]" placeholder="Standard, Collector, Steelbook..." value="<%= movie_detail&.edition %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
   </div>
 </div>

@@ -85,6 +85,16 @@ RSpec.describe "Items", type: :request do
       expect(response).to redirect_to(collection_item_path(books, Item.last))
     end
 
+    it "film scanné : code-barres, format et édition enregistrés" do
+      movies = collection_of("movies")
+      post collection_items_path(movies), params: {
+        item: { title: "Inception", item_type: "MovieDetail", barcode: "5051889004601" },
+        movie_detail: { format: "Blu-ray", edition: "Steelbook" }
+      }
+      expect(Item.last).to have_attributes(barcode: "5051889004601")
+      expect(Item.last.item_detailable).to have_attributes(format: "Blu-ray", edition: "Steelbook")
+    end
+
     it "livre avec description : pas de génération" do
       expect {
         post collection_items_path(books),

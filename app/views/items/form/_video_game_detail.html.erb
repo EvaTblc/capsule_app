@@ -1,5 +1,7 @@
 <%# Champs spécifiques VideoGameDetail %>
 <div data-item-type-target="form" data-form="VideoGameDetail" class="hidden mb-4" data-controller="games-search">
+  <%# Code-barres scanné, gardé avec l'item %>
+  <%= f.hidden_field :barcode, data: { "games-search-target": "barcode" } %>
   <div class="relative mb-4">
     <label class="text-sm font-semibold text-gray-600 mb-1 block">Recherche</label>
     <div class="flex gap-2">
@@ -85,8 +87,12 @@
     <input data-games-search-target="developer" name="video_game_detail[developer]" placeholder="Développeur" value="<%= video_game_detail&.developer %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
   </div>
   <div class="mb-4">
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">Édition</label>
+    <input data-games-search-target="edition" name="video_game_detail[edition]" placeholder="Standard, Collector, Steelbook..." value="<%= video_game_detail&.edition %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+  </div>
+  <div class="mb-4">
     <label class="text-sm font-semibold text-gray-600 mb-1 block">Année de sortie</label>
-    <input data-games-search-target="release_date" name="video_game_detail[release_date]" type="number" value="<%= video_game_detail&.release_date %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    <input data-games-search-target="releaseDate" name="video_game_detail[release_date]" type="number" value="<%= video_game_detail&.release_date %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
   </div>
 
   <div class="mb-4 flex items-center gap-3">
