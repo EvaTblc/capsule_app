@@ -87,7 +87,11 @@ export default class extends Controller {
         if (data.error) {
           this.queryTarget.value = ""
           this.queryTarget.placeholder = "Tape le titre du film..."
-          this.showMessage(data.fallback ? "Film introuvable pour ce code-barres : tape son titre ci-dessus." : "Recherche indisponible pour le moment : tape le titre du film ci-dessus.", true)
+          // premium : compte free, le serveur refuse le scan (403)
+          const message = data.premium ? `${data.error} Tape le titre du film ci-dessus.`
+            : data.fallback ? "Film introuvable pour ce code-barres : tape son titre ci-dessus."
+            : "Recherche indisponible pour le moment : tape le titre du film ci-dessus."
+          this.showMessage(message, true)
           this.queryTarget.focus()
         } else {
           this.fill(data)

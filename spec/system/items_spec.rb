@@ -2,7 +2,7 @@ require "rails_helper"
 
 # Parcours réels dans Chrome : ce sont les contrôleurs Stimulus qui sont testés ici
 RSpec.describe "Items (navigateur)", type: :system do
-  let(:user) { create(:user) }
+  let(:user) { create(:user, :premium) } # premium : accès aux fonctions payantes (identification de figurine...)
   before { sign_in user }
 
   def collection_of(category)
@@ -103,6 +103,20 @@ RSpec.describe "Items (navigateur)", type: :system do
 
       expect(page).to have_css("[data-figurine-identify-target='loader']", text: "Figurine non reconnue")
       expect(page).not_to have_content("Identification en cours")
+    end
+  end
+
+  describe "compte free" do
+    it "estimer la valeur : le message Premium remplace le bouton (Turbo applique le stream malgré le 403)" do
+      user.free!
+      books = collection_of("books")
+      item = create(:item, collection: books)
+
+      visit collection_item_path(books, item)
+      click_on "Estimer la valeur"
+
+      expect(page).to have_css("#estimation", text: "Cette fonction est réservée aux comptes Premium.")
+      expect(page).not_to have_button("Estimer la valeur")
     end
   end
 end

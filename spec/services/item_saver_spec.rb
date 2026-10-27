@@ -5,8 +5,10 @@ RSpec.describe ItemSaver do
 
   let(:collection) { create(:collection, category: "video_games") }
 
-  def save(item, type:, detail: {}, item_attributes: {}, images: nil)
-    described_class.new(item, item_attributes: { title: "Zelda" }.merge(item_attributes),
+  let(:premium) { create(:user, :premium) }
+
+  def save(item, type:, detail: {}, item_attributes: {}, images: nil, user: premium)
+    described_class.new(item, user: user, item_attributes: { title: "Zelda" }.merge(item_attributes),
                               detail_type: type, detail_attributes: detail, images: images).save
   end
 
@@ -47,6 +49,28 @@ RSpec.describe ItemSaver do
         expect(save(item, type: "FigurineDetail", detail: { "edition" => "Bidon" }, item_attributes: { title: "" })).to be false
       }.not_to change(FigurineDetail, :count)
       expect(item.errors.full_messages).to include(a_string_including("titre"), a_string_including("Edition"))
+    end
+  end
+
+  describe "compte free : aucun appel payant" do
+    let(:item) { collection.items.new }
+    let(:free) { create(:user) }
+
+    it "jeu : pas de traduction, le résumé anglais est gardé" do
+      expect { save(item, type: "VideoGameDetail", detail: { "description" => "An epic game" }, user: free) }
+        .not_to have_enqueued_job(TranslationJob)
+      expect(item.item_detailable.summary_en).to eq("An epic game")
+    end
+
+    it "livre sans description : pas de résumé généré, mais l'item est bien créé" do
+      expect { save(item, type: "BookDetail", detail: { "author" => "Herbert" }, user: free) }
+        .not_to have_enqueued_job(BookDescriptionJob)
+      expect(item).to be_persisted
+    end
+
+    it "admin : les tâches payantes sont lancées" do
+      expect { save(item, type: "VideoGameDetail", detail: { "description" => "An epic game" }, user: create(:user, :admin)) }
+        .to have_enqueued_job(TranslationJob)
     end
   end
 

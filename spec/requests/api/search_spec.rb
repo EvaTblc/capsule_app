@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "API de recherche", type: :request do
-  before { sign_in create(:user) }
+  before { sign_in create(:user, :premium) }
 
   let(:controller_class) { Api::SearchController }
   def json = JSON.parse(response.body)
@@ -70,6 +70,25 @@ RSpec.describe "API de recherche", type: :request do
       get "/api/search/game_barcode", params: { ean: "123" }
       expect(response).to have_http_status(500)
       expect(response.body).not_to include("secret")
+    end
+  end
+
+  describe "compte free" do
+    before { sign_in create(:user) }
+
+    it "scans de jeux et de films : 403, sans appel à UPCitemdb" do
+      expect(HTTP).not_to receive(:timeout)
+      %w[game_barcode movie_barcode].each do |action|
+        get "/api/search/#{action}", params: { ean: "123" }
+        expect(response).to have_http_status(403)
+        expect(json).to include("premium" => true)
+      end
+    end
+
+    it "recherches gratuites (dont le scan de livre par ISBN) : accessibles" do
+      stub_http { fake_response(200, { items: [] }) }
+      get "/api/search/book", params: { query: "9782070360024" }
+      expect(response).to have_http_status(200)
     end
   end
 

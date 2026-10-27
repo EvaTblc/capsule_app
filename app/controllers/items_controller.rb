@@ -1,5 +1,6 @@
 class ItemsController < ApplicationController
   before_action :authenticate_user!
+  before_action :require_paid_features, only: [ :identify, :estimate ]
   # Appels payants à Claude : pas plus de 10 par minute et par utilisateur
   rate_limit to: 10, within: 1.minute, by: -> { current_user&.id || request.remote_ip }, only: [ :identify, :estimate ]
   before_action :set_collection, except: [ :show, :estimate, :identify ]
@@ -83,7 +84,7 @@ class ItemsController < ApplicationController
   def save_item
     type = params[:item][:item_type]
     detail_columns = ItemSaver.permitted_detail_columns(type) # lève UnknownDetailType si type inconnu
-    ItemSaver.new(@item,
+    ItemSaver.new(@item, user: current_user,
                   # images à part : les assigner remplacerait les photos existantes, ItemSaver les ajoute
                   item_attributes: item_params.except(:images),
                   detail_type: type,

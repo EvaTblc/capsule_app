@@ -3,6 +3,8 @@ class Api::SearchController < ApplicationController
 
   before_action :authenticate_user!
   before_action :require_numeric_id, only: [ :movie_detail, :music_detail ]
+  # Scans : UPCitemdb (et Claude pour les jeux). Le scan de livre passe par la recherche Google Books, gratuite
+  before_action :require_paid_features, only: [ :game_barcode, :movie_barcode ]
   rate_limit to: 20, within: 1.minute, only: [ :game_barcode, :search_game ]
 
   # Filet de sécurité commun à toutes les actions : le détail part dans les logs,

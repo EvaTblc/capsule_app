@@ -22,9 +22,11 @@ class ItemSaver
 
   attr_reader :item
 
+  # user : celui qui enregistre, c'est son rôle qui décide des tâches payantes
   # images : nouvelles photos, ajoutées aux existantes (jamais assignées : ça remplacerait les autres)
-  def initialize(item, item_attributes:, detail_type:, detail_attributes:, images: nil)
+  def initialize(item, user:, item_attributes:, detail_type:, detail_attributes:, images: nil)
     @item = item
+    @user = user
     @item_attributes = item_attributes
     @detail_type = detail_type
     @detail_attributes = detail_attributes
@@ -93,8 +95,11 @@ class ItemSaver
     enqueue_detail_jobs
   end
 
-  # Tâches de fond, pour ne pas faire attendre l'utilisateur pendant l'appel à Claude
+  # Tâches de fond, pour ne pas faire attendre l'utilisateur pendant l'appel à Claude.
+  # Compte free : pas d'appel payant, un jeu garde son résumé anglais (affiché tel quel sur la fiche)
   def enqueue_detail_jobs
+    return unless @user.paid_features?
+
     TranslationJob.perform_later(item.id) if @translate
     if item.item_detailable_type == "BookDetail" && item.item_detailable.description.blank?
       BookDescriptionJob.perform_later(item.id)

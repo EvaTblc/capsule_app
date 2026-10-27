@@ -3,7 +3,7 @@ require "rails_helper"
 # Un utilisateur ne doit jamais pouvoir lire ni modifier les données d'un autre en changeant un id dans l'URL
 RSpec.describe "Autorisations", type: :request do
   let(:eva) { create(:user) }
-  let(:intrus) { create(:user) }
+  let(:intrus) { create(:user, :premium) } # premium : c'est bien l'appartenance qui est testée, pas le rôle
   let(:collection) do
     Collection.create!(title: "Privée", category: "books").tap do |c|
       UserCollection.create!(user: eva, collection: c, role: "owner")

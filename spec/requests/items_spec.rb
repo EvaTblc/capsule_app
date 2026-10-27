@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Items", type: :request do
   include ActiveJob::TestHelper
 
-  let(:user) { create(:user) }
+  let(:user) { create(:user, :premium) }
   def collection_of(category)
     Collection.create!(title: "Collec", category: category).tap do |c|
       UserCollection.create!(user: user, collection: c, role: "owner")
@@ -94,6 +94,14 @@ RSpec.describe "Items", type: :request do
   end
 
   describe "GET /collections/:id/items/:id" do
+    it "sans description française (compte free, traduction échouée) : affiche le résumé anglais, signalé comme tel" do
+      games = collection_of("video_games")
+      detail = create(:video_game_detail, summary_en: "An epic adventure", description: nil)
+      item = create(:item, collection: games, item_detailable: detail, item_detailable_type: "VideoGameDetail")
+      get collection_item_path(games, item)
+      expect(response.body).to include("An epic adventure", "Description (en anglais)")
+    end
+
     it "affiche la description française, jamais le résumé anglais interne" do
       games = collection_of("video_games")
       detail = create(:video_game_detail, summary_en: "An epic adventure", description: "Une aventure épique")
@@ -101,6 +109,27 @@ RSpec.describe "Items", type: :request do
       get collection_item_path(games, item)
       expect(response.body).to include("Une aventure épique")
       expect(response.body).not_to include("An epic adventure")
+    end
+  end
+
+  describe "POST /items/:id/estimate" do
+    let(:turbo_headers) { { "Accept" => "text/vnd.turbo-stream.html, text/html, application/xhtml+xml" } }
+    let!(:item) { create(:item, collection: collection_of("books")) }
+
+    it "compte free : 403, message à la place du bouton, sans appel à Claude" do
+      user.free!
+      expect(EstimationService).not_to receive(:estimate)
+      post estimate_item_path(item), headers: turbo_headers
+      expect(response).to have_http_status(403)
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      expect(response.body).to include("estimation", "réservée aux comptes Premium")
+    end
+
+    it "compte premium : estimation affichée" do
+      allow(EstimationService).to receive(:estimate).and_return("price" => "12 €", "explanation" => "Bon état")
+      post estimate_item_path(item), headers: turbo_headers
+      expect(response).to have_http_status(200)
+      expect(response.body).to include("12 €")
     end
   end
 

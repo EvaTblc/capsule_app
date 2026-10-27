@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Identification de figurine", type: :request do
-  before { sign_in create(:user) }
+  before { sign_in create(:user, :premium) }
 
   # Débuts de fichiers réels (signatures binaires) : seul le format compte pour ces tests
   let(:jpeg) { "\xFF\xD8\xFF\xE0".b + "x" * 100 }
@@ -10,6 +10,14 @@ RSpec.describe "Identification de figurine", type: :request do
 
   def identify(bytes) = post("/items/identify", params: { image: Base64.strict_encode64(bytes) }, as: :json)
   def json = JSON.parse(response.body)
+
+  it "compte free : 403, sans appel à Claude" do
+    sign_in create(:user)
+    expect(FigurineIdentificationService).not_to receive(:identify)
+    identify(jpeg)
+    expect(response).to have_http_status(403)
+    expect(json).to include("premium" => true, "error" => a_string_including("Premium"))
+  end
 
   it "photo reconnue : renvoie les champs" do
     allow(FigurineIdentificationService).to receive(:identify).and_return("name" => "Goku", "series" => "Dragon Ball")
