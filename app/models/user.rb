@@ -18,6 +18,8 @@ class User < ApplicationRecord
   has_many :sent_friendships, class_name: "Friendship", foreign_key: :requester_id, dependent: :destroy
   has_many :received_friendships, class_name: "Friendship", foreign_key: :receiver_id, dependent: :destroy
 
+  enum :role, { admin: "admin", premium: "premium", free: "free" }, validate: true
+
   geocoded_by :address
   after_validation :geocode, if: :will_save_change_to_address?
 
@@ -66,6 +68,11 @@ class User < ApplicationRecord
   def accepted_friends
     User.where(id: Friendship.accepted.where(requester: self).select(:receiver_id))
         .or(User.where(id: Friendship.accepted.where(receiver: self).select(:requester_id)))
+  end
+
+  # Vérifie le role pour les features payantes (IA/Scan)
+  def paid_features?
+    admin? || premium?
   end
 
   private

@@ -19,6 +19,14 @@ RSpec.describe "Contraintes de la base" do
     expect { membership.update_columns(role: "Owner") }.to raise_error(ActiveRecord::StatementInvalid, /user_collections_role_valid/)
   end
 
+  it "le rôle d'un utilisateur est forcément admin, premium ou free" do
+    expect { user.update_columns(role: "Premium") }.to raise_error(ActiveRecord::StatementInvalid, /users_role_valid/)
+  end
+
+  it "un utilisateur a forcément un rôle" do
+    expect { user.update_columns(role: nil) }.to raise_error(ActiveRecord::NotNullViolation)
+  end
+
   it "un seul événement par lien et par utilisateur, mais plusieurs événements sans lien" do
     create(:event, user: user, url: "https://brocabrac.fr/1")
     expect { create(:event, user: user, url: "https://brocabrac.fr/1") }.to raise_error(ActiveRecord::RecordNotUnique)

@@ -14,6 +14,34 @@ RSpec.describe User, type: :model do
     it { should validate_uniqueness_of(:email).case_insensitive }
   end
 
+  describe "rôle" do
+    it "est free par défaut" do
+      expect(create(:user)).to be_free
+    end
+
+    it "refuse un rôle inconnu ou absent, sans lever d'exception" do
+      [ "gold", nil ].each do |role|
+        user = build(:user, role: role)
+        expect(user).not_to be_valid
+        expect(user.errors[:role]).to be_present
+      end
+    end
+  end
+
+  describe "#paid_features?" do
+    it "est vrai pour un admin" do
+      expect(build(:user, :admin).paid_features?).to be true
+    end
+
+    it "est vrai pour un premium" do
+      expect(build(:user, :premium).paid_features?).to be true
+    end
+
+    it "est faux pour un free" do
+      expect(build(:user).paid_features?).to be false
+    end
+  end
+
   describe "#accepted_friends" do
     it "retourne les amis acceptés des deux côtés" do
       eva = create(:user)
