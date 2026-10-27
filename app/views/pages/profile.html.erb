@@ -12,6 +12,11 @@
     <div>
       <h1 class="text-2xl font-black tracking-tight"><%= current_user.email.split("@").first %></h1>
       <p class="text-sm text-gray-400"><%= current_user.email %></p>
+      <%# Type de compte : ce à quoi l'utilisateur a droit (Free : pas d'IA ni de scan payant) %>
+      <% role_style = { "admin" => "bg-gray-900 text-white", "premium" => "bg-purple-600 text-white", "free" => "bg-gray-100 text-gray-500" } %>
+      <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold <%= role_style[current_user.role] %>">
+        <%= current_user.role.capitalize %>
+      </span>
     </div>
   </div>
 

@@ -5,6 +5,7 @@
   <%# Bouton photo d'identification %>
   <div class="mb-4">
     <label class="text-sm font-semibold text-gray-600 mb-1 block">Identifier par photo</label>
+    <% if current_user.paid_features? %>
     <div class="flex gap-2">
       <input type="file" accept="image/*" capture="environment"
             class="hidden" id="figurine-identify-input"
@@ -19,6 +20,11 @@
         Identifier ma figurine
       </label>
     </div>
+    <% else %>
+      <%= render layout: "shared/premium_lock", locals: { button_class: "w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-300 text-sm font-medium text-gray-500" } do %>
+        🔒 Identifier ma figurine · Premium
+      <% end %>
+    <% end %>
     <div data-figurine-identify-target="loader" class="hidden mt-2 text-sm text-purple-500 text-center">
       ✨ Identification en cours...
     </div>

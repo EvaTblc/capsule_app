@@ -1,0 +1,14 @@
+<%# Bouton d'une fonction payante pour un compte free : grisé, cadenassé, sans action serveur.
+    S'utilise en layout : render layout: "shared/premium_lock", locals: { button_class: "..." } do (contenu du bouton) end
+    Le message s'affiche en bulle sous le bouton, pour ne pas décaler la mise en page autour %>
+<div data-controller="premium-lock" class="relative <%= local_assigns[:wrapper_class] %>">
+  <%# title (et non aria-label) : nomme le bouton icône seule sans masquer le texte des autres %>
+  <button type="button" data-action="premium-lock#explain" title="Fonction Premium"
+          class="<%= button_class %> opacity-60 cursor-not-allowed">
+    <%= yield %>
+  </button>
+  <p data-premium-lock-target="message" role="status"
+     class="hidden absolute right-0 top-full mt-1 z-30 w-60 bg-white border border-gray-100 rounded-xl shadow-lg p-3 text-xs text-gray-600">
+    🔒 <%= ApplicationController::PAID_FEATURE_MESSAGE %>
+  </p>
+</div>

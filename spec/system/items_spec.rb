@@ -106,17 +106,52 @@ RSpec.describe "Items (navigateur)", type: :system do
     end
   end
 
-  describe "compte free" do
-    it "estimer la valeur : le message Premium remplace le bouton (Turbo applique le stream malgré le 403)" do
-      user.free!
+  describe "compte free : fonctions payantes verrouillées" do
+    before { user.free! }
+
+    it "estimer la valeur : bouton cadenassé, le clic explique sans appeler le serveur" do
+      expect(EstimationService).not_to receive(:estimate)
       books = collection_of("books")
       item = create(:item, collection: books)
 
       visit collection_item_path(books, item)
-      click_on "Estimer la valeur"
+      expect(page).not_to have_text("Cette fonction est réservée aux comptes Premium.")
+      click_on "Estimer la valeur · Premium"
 
       expect(page).to have_css("#estimation", text: "Cette fonction est réservée aux comptes Premium.")
-      expect(page).not_to have_button("Estimer la valeur")
     end
+
+    it "scan d'un jeu : bouton cadenassé, la caméra ne s'ouvre pas" do
+      visit new_collection_item_path(collection_of("video_games"))
+      find("[data-type='VideoGameDetail']").click
+
+      within("[data-form='VideoGameDetail']") do
+        expect(page).not_to have_css("[data-action='click->games-search#startScan']")
+        click_on "Fonction Premium"
+        expect(page).to have_text("Cette fonction est réservée aux comptes Premium.")
+      end
+    end
+
+    it "identification de figurine : bouton cadenassé, pas de champ photo" do
+      visit new_collection_item_path(collection_of("figurines"))
+      find("[data-type='FigurineDetail']").click
+
+      within("[data-form='FigurineDetail']") do
+        expect(page).not_to have_css("#figurine-identify-input", visible: :all)
+        expect(page).to have_button("Identifier ma figurine · Premium")
+      end
+    end
+
+    it "scan d'un livre (gratuit) : reste disponible" do
+      visit new_collection_item_path(collection_of("books"))
+      find("[data-type='BookDetail']").click
+      expect(page).to have_css("[data-action='click->book-search#startScan']")
+    end
+  end
+
+  it "compte premium : scan d'un jeu disponible" do
+    visit new_collection_item_path(collection_of("video_games"))
+    find("[data-type='VideoGameDetail']").click
+    expect(page).to have_css("[data-action='click->games-search#startScan']")
   end
 end

@@ -134,11 +134,17 @@
 
     </div>
   <% end %>
-  <%# Estimation (appel payant à Claude) : membres uniquement, comme côté serveur %>
+  <%# Estimation (appel payant à Claude) : membres uniquement, comme côté serveur ; verrouillée pour un compte free %>
   <% if @member %>
   <div id="estimation">
-    <%= button_to "Estimer la valeur", estimate_item_path(@item),
-        class: "btn-estimate" %>
+    <% if current_user.paid_features? %>
+      <%= button_to "Estimer la valeur", estimate_item_path(@item),
+          class: "btn-estimate" %>
+    <% else %>
+      <%= render layout: "shared/premium_lock", locals: { button_class: "btn-estimate" } do %>
+        🔒 Estimer la valeur · Premium
+      <% end %>
+    <% end %>
   </div>
   <% end %>
 </div>

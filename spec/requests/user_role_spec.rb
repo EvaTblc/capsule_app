@@ -17,6 +17,12 @@ RSpec.describe "Rôle de l'utilisateur", type: :request do
     expect(user.reload).to be_free
   end
 
+  it "le profil affiche le type de compte" do
+    sign_in create(:user, :premium)
+    get profile_path
+    expect(response.body).to include("Premium")
+  end
+
   it "la page adresse ne permet pas de changer son rôle" do
     user = create(:user)
     sign_in user

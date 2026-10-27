@@ -1,4 +1,5 @@
 class PagesController < ApplicationController
+  before_action :authenticate_user!, only: [ :profile, :edit_address, :update_address ]
   def home
     if user_signed_in?
       redirect_to collections_path
