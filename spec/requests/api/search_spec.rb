@@ -251,6 +251,19 @@ RSpec.describe "API de recherche", type: :request do
       expect(games[9]["platform"]).to be_nil
     end
 
+    it "année de sortie européenne quand IGDB la connaît, sinon première sortie mondiale" do
+      diamond = sword.merge("first_release_date" => 1159401600, # 2006 au Japon
+                            "release_dates" => [ { "date" => 1159401600, "release_region" => 5 },
+                                                 { "date" => 1185494400, "release_region" => 1 } ]) # 2007 en Europe
+      japan_only = sword.merge("id" => 9, "first_release_date" => 1159401600, "release_dates" => [ { "date" => 1159401600, "release_region" => 5 } ])
+      stub_igdb(games: [ diamond, japan_only ], alternative_names: [])
+      get "/api/search/search_game", params: { query: "pokemon" }
+      games = json["games"].index_by { |game| game["id"] }
+      expect(games[1]).to include("release_date" => 2007)
+      expect(games[1]["metadata"]).to include("release_date" => "2007-07-27")
+      expect(games[9]).to include("release_date" => 2006)
+    end
+
     it "affiche le titre français officiel, avec le titre d'origine en petit" do
       stub_igdb(games: [ sword ], alternative_names: [])
       get "/api/search/search_game", params: { query: "Pokemon Sword" }

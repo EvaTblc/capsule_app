@@ -253,7 +253,8 @@ class Api::SearchController < ApplicationController
   # Liste de jeux IGDB ([] si aucun résultat), nil si IGDB est indisponible
   IGDB_GAME_FIELDS = %w[name cover.url platforms.name summary genres.name first_release_date
                         alternative_names.name alternative_names.comment game_type total_rating_count
-                        involved_companies.company.name involved_companies.developer].freeze
+                        involved_companies.company.name involved_companies.developer
+                        release_dates.date release_dates.release_region].freeze
 
   # Types IGDB qui ne sont pas des jeux qu'on range dans une collection : DLC, mod, mise à jour, épisode, saison, fork, pack
   IGDB_EXCLUDED_GAME_TYPES = [ 1, 5, 6, 7, 12, 13, 14 ].freeze
@@ -317,6 +318,16 @@ class Api::SearchController < ApplicationController
     nil
   end
 
+  IGDB_EUROPE_REGION = 1 # release_date_regions d'IGDB : 1 = europe
+
+  # Date de sortie européenne (la plus ancienne, toutes plateformes) : c'est celle des boîtes françaises.
+  # À défaut, première sortie mondiale, souvent japonaise ou nord-américaine (Pokémon Diamant : 2006 au Japon, 2007 en Europe)
+  def release_date_of(game)
+    european = game["release_dates"]&.select { |release| release["release_region"] == IGDB_EUROPE_REGION }
+    timestamp = european&.filter_map { |release| release["date"] }&.min || game["first_release_date"]
+    timestamp && Time.at(timestamp).utc.to_date
+  end
+
   # Titre français officiel référencé par IGDB, s'il existe
   def french_title(game)
     game["alternative_names"]&.find { |alt| alt["comment"] == "French title" }&.dig("name")
@@ -324,7 +335,7 @@ class Api::SearchController < ApplicationController
 
   def igdb_game_json(game, summary:)
     cover_url = game.dig("cover", "url") ? "https:#{game['cover']['url'].gsub('t_thumb', 't_cover_big')}" : nil
-    release_date = game["first_release_date"] ? Time.at(game["first_release_date"]).to_date : nil
+    release_date = release_date_of(game)
     platforms = game["platforms"]&.map { |p| p["name"] }&.join(", ")
     genres = game["genres"]&.map { |g| g["name"] }&.join(", ")
     french_name = french_title(game)
