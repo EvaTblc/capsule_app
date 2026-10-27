@@ -36,6 +36,10 @@ plugin :tmp_restart
 
 # Run the Solid Queue supervisor inside of Puma for single-server deployments.
 plugin :solid_queue if ENV["SOLID_QUEUE_IN_PUMA"]
+# Async : superviseur, dispatcher, scheduler et worker tournent en threads dans le processus Puma.
+# En fork (défaut), chacun est un processus Rails complet : 5 processus pour un dyno de 512 Mo (R14 en continu).
+# Les tâches attendent surtout des API (Claude) : les threads suffisent. Pools de connexions : voir database.yml
+solid_queue_mode :async if ENV["SOLID_QUEUE_IN_PUMA"]
 
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.

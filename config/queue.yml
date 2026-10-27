@@ -6,7 +6,8 @@ default: &default
     - queues: "*"
       threads: 3
       processes: <%= ENV.fetch("JOB_CONCURRENCY", 1) %>
-      polling_interval: 0.1
+      # Une requête par seconde suffit pour des tâches de fond (0.1 = 10 requêtes/s en continu sur la base)
+      polling_interval: 1
 
 development:
   <<: *default

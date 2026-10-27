@@ -85,15 +85,19 @@ test:
 # for a full overview on how database connection configuration can be specified.
 #
 production:
+  # Solid Queue tourne en threads dans Puma (solid_queue_mode :async, config/puma.rb) : ses threads
+  # partagent les pools du processus web. Connexions ouvertes à la demande ; plan Postgres : 20 max
   primary:
     <<: *default
     url: <%= ENV["DATABASE_URL"] %>
+    max_connections: 8 # 3 threads Puma + 3 threads de tâches + marge
   cache:
     <<: *default
     url: <%= ENV["DATABASE_URL"] %>
   queue:
     <<: *default
     url: <%= ENV["DATABASE_URL"] %>
+    max_connections: 10 # worker (3 threads + scrutation), dispatcher, scheduler, superviseur, mises en file du web
   cable:
     <<: *default
     url: <%= ENV["DATABASE_URL"] %>
