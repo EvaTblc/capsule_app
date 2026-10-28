@@ -111,4 +111,102 @@ RSpec.describe BarcodeService do
       expect { described_class.product_details("Zelda", kind: :game) }.to raise_error(BarcodeService::Error, /inattendue/)
     end
   end
+
+  # Les trois sources sont simulées : BnfService (testé à part), UPCitemdb et EAN-DB (testés plus haut)
+  describe ".lookup : boîte déjà connue, sinon BnF → UPCitemdb → EAN-DB, puis enregistrée" do
+    let(:pokemon) do
+      { kind: "game", bnf_ark: "ark:/12148/cb41198117k", title: "Pokémon", complement: "version diamant",
+        support: "1 cartouche Nintendo DS", publisher: "Nintendo France", release_year: 2007,
+        creators: { "635" => [ "Game freak" ] } }
+    end
+    let(:inception) do
+      { kind: "movie", bnf_ark: "ark:/12148/cb45330476n", title: "Inception", complement: "ultimate edition",
+        support: "2 BD vidéo (2 h 22 min)", publisher: "Warner home video", release_year: 2010, creators: {} }
+    end
+
+    def sources_return(bnf: nil, upcitemdb: nil, ean_db: nil)
+      allow(BnfService).to receive(:find_by_ean).and_return(bnf)
+      allow(described_class).to receive(:upcitemdb_title).and_return(upcitemdb)
+      allow(described_class).to receive(:ean_db_title).and_return(ean_db)
+    end
+
+    it "code qui n'est pas une suite de chiffres : nil, sans aucune recherche" do
+      expect(BnfService).not_to receive(:find_by_ean)
+      expect(described_class.lookup("../x", kind: :game)).to be_nil
+    end
+
+    it "boîte déjà connue : renvoyée sans appel externe, même lue sur 12 chiffres" do
+      box = create(:barcode_product, barcode: "0045496464851")
+      expect(BnfService).not_to receive(:find_by_ean)
+      expect(described_class.lookup("045496464851", kind: :game)).to eq(box)
+    end
+
+    describe "trouvée à la BnF" do
+      it "enregistrée avec la notice : titre complet, plateforme déduite du support, éditeur, année" do
+        sources_return(bnf: pokemon)
+        expect(described_class).not_to receive(:upcitemdb_title)
+        box = described_class.lookup("045496464851", kind: :game)
+        expect(box).to be_persisted
+        expect(box).to have_attributes(barcode: "0045496464851", kind: "game", source: "bnf", bnf_ark: "ark:/12148/cb41198117k",
+                                       raw_title: "Pokémon : version diamant", platform: "Nintendo DS", edition: nil,
+                                       publisher: "Nintendo France", release_year: 2007)
+        expect(box.details).to include("support" => "1 cartouche Nintendo DS", "creators" => { "635" => [ "Game freak" ] })
+      end
+
+      it "une fois enregistrée, le scan suivant ne rappelle pas la BnF" do
+        sources_return(bnf: pokemon)
+        described_class.lookup("045496464851", kind: :game)
+        expect(BnfService).not_to receive(:find_by_ean)
+        expect { described_class.lookup("0045496464851", kind: :game) }.not_to change(BarcodeProduct, :count)
+      end
+
+      it "film : format et édition déduits (« version diamant » n'est pas une édition, « ultimate edition » si)" do
+        sources_return(bnf: inception)
+        expect(described_class.lookup("5051889041535", kind: :movie)).to have_attributes(format: "Blu-ray", edition: "ultimate edition")
+      end
+
+      it "plateformes : la plus précise l'emporte (PS4 et non PS1, 3DS et non DS)" do
+        { "1 disque optique numérique (PlayStation 4)" => "PS4", "1 cartouche Nintendo 3DS" => "Nintendo 3DS" }.each_with_index do |(support, platform), i|
+          sources_return(bnf: pokemon.merge(support: support))
+          expect(described_class.lookup("004549646485#{i}", kind: :game).platform).to eq(platform)
+        end
+      end
+
+      it "code d'un autre type que le formulaire : la boîte est enregistrée pour ce qu'elle est vraiment" do
+        sources_return(bnf: inception)
+        box = described_class.lookup("5051889041535", kind: :game) # film scanné depuis le formulaire jeu
+        expect(box).to have_attributes(kind: "movie", format: "Blu-ray", platform: nil)
+      end
+
+      it "livre scanné depuis le formulaire jeu : enregistré comme livre, sans plateforme" do
+        sources_return(bnf: pokemon.merge(kind: "book", support: "1 vol. (non paginé [28] p.)"))
+        expect(described_class.lookup("1234567890123", kind: :game)).to have_attributes(kind: "book", platform: nil)
+      end
+
+      it "ni jeu, ni film, ni livre (CD, partition...) : rien d'enregistré, et pas de recherche ailleurs" do
+        sources_return(bnf: pokemon.merge(kind: nil))
+        expect(described_class).not_to receive(:upcitemdb_title)
+        expect { expect(described_class.lookup("0602475389637", kind: :game)).to be_nil }.not_to change(BarcodeProduct, :count)
+      end
+    end
+
+    describe "inconnue de la BnF" do
+      it "UPCitemdb prend le relais : titre brut enregistré, avec le type du formulaire, sans appel à EAN-DB (payant)" do
+        sources_return(upcitemdb: "Pokemon Diamond Version | Nintendo DS")
+        expect(described_class).not_to receive(:ean_db_title)
+        expect(described_class.lookup("0045496738495", kind: :game))
+          .to have_attributes(source: "upcitemdb", kind: "game", raw_title: "Pokemon Diamond Version | Nintendo DS", platform: nil)
+      end
+
+      it "puis EAN-DB" do
+        sources_return(ean_db: "Nintendo Mario Kart 8 Deluxe")
+        expect(described_class.lookup("0045496420253", kind: :game)).to have_attributes(source: "ean_db", raw_title: "Nintendo Mario Kart 8 Deluxe")
+      end
+
+      it "inconnue partout : nil, rien d'enregistré" do
+        sources_return
+        expect { expect(described_class.lookup("9999999999994", kind: :game)).to be_nil }.not_to change(BarcodeProduct, :count)
+      end
+    end
+  end
 end

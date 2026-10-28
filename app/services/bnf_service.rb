@@ -2,6 +2,9 @@ class BnfService
   URL = "https://catalogue.bnf.fr/api/SRU".freeze
   # Espace de noms des balises mxc: dans les réponses de la BnF
   NS = { "mxc" => "info:lc/xmlns/marcxchange-v2" }.freeze
+  # Type de notice (7e caractère de l'en-tête) → type de produit de l'appli ; les autres (musique, images...) ne nous concernent pas
+  KINDS = { "l" => "game", "g" => "movie", "a" => "book" }.freeze
+
 
   def self.find_by_ean(ean)
     ean = ean.to_s
@@ -27,6 +30,7 @@ class BnfService
     return nil unless record
 
     {
+      kind: KINDS[record.at_xpath("mxc:leader", NS)&.text.to_s[6]],
       bnf_ark: record[:id],
       title: subfield(record, "200", "a"),
       complement: subfield(record, "200", "e"),

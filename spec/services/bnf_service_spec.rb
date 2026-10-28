@@ -19,6 +19,7 @@ RSpec.describe BnfService do
     it "jeu : titre, complément, support, éditeur français, année et développeur" do
       bnf_returns("pokemon_diamant")
       expect(described_class.find_by_ean("0045496464851")).to eq(
+        kind: "game", # notice de type « ressource électronique »
         bnf_ark: "ark:/12148/cb41198117k",
         title: "Pokémon",
         complement: "version diamant",
@@ -32,7 +33,7 @@ RSpec.describe BnfService do
     it "film : édition, format, éditeur sans « [éd., distrib.] », et chaque contributeur sous chacun de ses rôles" do
       bnf_returns("inception_bluray")
       result = described_class.find_by_ean("5051889041535")
-      expect(result).to include(title: "Inception", complement: "ultimate edition", support: "2 BD vidéo (2 h 22 min)",
+      expect(result).to include(kind: "movie", title: "Inception", complement: "ultimate edition", support: "2 BD vidéo (2 h 22 min)",
                                 publisher: "Warner home video", release_year: 2010)
       expect(result[:creators]).to include("300" => [ "Christopher Nolan" ], "690" => [ "Christopher Nolan" ],
                                            "230" => [ "Hans Zimmer" ])
@@ -42,7 +43,7 @@ RSpec.describe BnfService do
     it "livre récent : éditeur et année en zone 214 (et non 210), auteur" do
       bnf_returns("veiller_sur_elle")
       expect(described_class.find_by_ean("9782378803759")).to include(
-        title: "Veiller sur elle", publisher: "l'Iconoclaste", release_year: 2023,
+        kind: "book", title: "Veiller sur elle", publisher: "l'Iconoclaste", release_year: 2023,
         support: "1 vol. (580 p.)", creators: { "070" => [ "Jean-Baptiste Andrea" ] }
       )
     end

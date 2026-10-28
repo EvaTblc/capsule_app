@@ -16,12 +16,68 @@ class BarcodeService
              support: "format", support_label: "son format", choices: MovieDetail::FORMATS }
   }.freeze
 
+  # Mots du support décrit par la BnF (zone 215) → plateforme de l'appli. Les plus précis d'abord :
+  # « Nintendo 3DS » avant « Nintendo DS », « PlayStation 4 » avant « PlayStation »
+  BNF_PLATFORMS = {
+    "Nintendo Switch 2" => "Switch 2", "Switch" => "Switch", "Nintendo 3DS" => "Nintendo 3DS", "Nintendo DS" => "Nintendo DS",
+    "Wii U" => "Wii U", "Wii" => "Wii", "GameCube" => "Gamecube",
+    "PlayStation 5" => "PS5", "PlayStation 4" => "PS4", "PlayStation 3" => "PS3", "PlayStation 2" => "PS2", "PlayStation" => "PS1",
+    "Xbox Series" => "Xbox Series", "Xbox One" => "Xbox One", "Xbox 360" => "Xbox 360", "Xbox" => "Xbox"
+  }.freeze
+
+  # Même chose pour le format d'un film
+  BNF_FORMATS = { "4K" => "4K UHD", "BD vidéo" => "Blu-ray", "DVD" => "DVD", "vidéocassette" => "VHS" }.freeze
+
+  # Première valeur dont le mot apparaît dans le texte, sans tenir compte des majuscules ; nil sinon
+  def self.match_in(table, text)
+    table.find { |word, _value| text.to_s.downcase.include?(word.downcase) }&.last
+  end
+
   # Titre brut du produit, nil si aucune des deux bases ne connaît le code.
   # Le code est inséré dans l'URL d'EAN-DB : on n'accepte que des chiffres (EAN-8 à GTIN-14)
   def self.product_title(ean)
     return nil unless ean.to_s.match?(/\A\d{8,14}\z/)
 
     upcitemdb_title(ean) || ean_db_title(ean)
+  end
+
+  def self.lookup(ean, kind:)
+    return nil unless ean.to_s.match?(/\A\d{8,14}\z/)
+    BarcodeProduct.find_by(barcode: ean) || find_and_save(ean, kind)
+  end
+
+  # Boîte inconnue : BnF (notice structurée), puis UPCitemdb et EAN-DB (titre brut seulement), et on l'enregistre
+  def self.find_and_save(ean, kind)
+    if (bnf = BnfService.find_by_ean(ean))
+      return nil unless bnf[:kind]
+      save_from_bnf(ean, bnf)
+    elsif (title = upcitemdb_title(ean))
+      save_from_title(ean, kind, "upcitemdb", title)
+    elsif (title = ean_db_title(ean))
+      save_from_title(ean, kind, "ean_db", title)
+    end
+  end
+
+  # La boîte est enregistrée pour ce qu'elle est vraiment (type de la notice), quel que soit le formulaire
+  def self.save_from_bnf(ean, bnf)
+    BarcodeProduct.create!(
+      barcode: ean,
+      kind: bnf[:kind],
+      source: "bnf",
+      raw_title: [ bnf[:title], bnf[:complement] ].compact.join(" : "),
+      platform: (match_in(BNF_PLATFORMS, bnf[:support]) if bnf[:kind] == "game"),
+      format: (match_in(BNF_FORMATS, bnf[:support]) if bnf[:kind] == "movie"),
+      edition: (bnf[:complement] if bnf[:complement].to_s.match?(/[ée]dition|collector|steelbook/i)),
+      bnf_ark: bnf[:bnf_ark],
+      publisher: bnf[:publisher],
+      release_year: bnf[:release_year],
+      details: { support: bnf[:support], creators: bnf[:creators] },
+      fetched_at: Time.current,
+    )
+  end
+
+  def self.save_from_title(ean, kind, source, title)
+    BarcodeProduct.create!(barcode: ean, kind: kind.to_s, source: source, raw_title: title, fetched_at: Time.current)
   end
 
   # Extrait du titre brut :
@@ -84,5 +140,6 @@ class BarcodeService
     Rails.logger.warn("[#{source}] #{reason} pour #{ean}")
     nil
   end
-  private_class_method :upcitemdb_title, :ean_db_title, :log_miss
+  private_class_method :upcitemdb_title, :ean_db_title, :log_miss, :find_and_save, :save_from_bnf, :save_from_title,
+  :match_in
 end
