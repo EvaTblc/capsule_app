@@ -91,7 +91,8 @@ class ItemsController < ApplicationController
                   detail_attributes: params.fetch(type.underscore, {}).permit(detail_columns).to_h,
                   images: params[:item][:images],
                   # Seul l'identifiant du jeu ou du film choisi vient du formulaire : l'œuvre est lue par le serveur
-                  igdb_id: params.dig(:product, :igdb_id), tmdb_id: params.dig(:product, :tmdb_id)).save
+                  igdb_id: params.dig(:product, :igdb_id), tmdb_id: params.dig(:product, :tmdb_id),
+                  wikidata_id: params.dig(:product, :wikidata_id)).save
   end
 
   def remove_image

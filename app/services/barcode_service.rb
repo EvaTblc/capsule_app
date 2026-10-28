@@ -35,10 +35,11 @@ class BarcodeService
   # Boîte correspondant au code-barres : déjà connue, sinon cherchée puis enregistrée ; nil si inconnue partout.
   # Peut être d'un autre type que kind (livre scanné depuis le formulaire jeu) : à l'appelant de le signaler.
   # Le code est inséré dans les URL de la BnF et d'EAN-DB : on n'accepte que des chiffres (EAN-8 à GTIN-14)
-  def self.lookup(ean, kind:)
+  # bnf_only : sans UPCitemdb ni EAN-DB (livres : la BnF les a tous, et EAN-DB est payant pour un scan gratuit)
+  def self.lookup(ean, kind:, bnf_only: false)
     return nil unless ean.to_s.match?(/\A\d{8,14}\z/)
 
-    BarcodeProduct.find_by(barcode: ean) || find_and_save(ean, kind)
+    BarcodeProduct.find_by(barcode: ean) || find_and_save(ean, kind, bnf_only)
   end
 
   # Noms à chercher sur IGDB / TMDB pour une boîte : extraits une seule fois par Claude, puis gardés avec elle
@@ -58,10 +59,12 @@ class BarcodeService
   end
 
   # Boîte inconnue : BnF (notice structurée), puis UPCitemdb et EAN-DB (titre brut seulement), et on l'enregistre
-  def self.find_and_save(ean, kind)
+  def self.find_and_save(ean, kind, bnf_only)
     if (bnf = BnfService.find_by_ean(ean))
       return nil unless bnf[:kind]
       save_from_bnf(ean, bnf)
+    elsif bnf_only
+      nil
     elsif (title = upcitemdb_title(ean))
       save_from_title(ean, kind, "upcitemdb", title)
     elsif (title = ean_db_title(ean))
@@ -82,7 +85,7 @@ class BarcodeService
       bnf_ark: bnf[:bnf_ark],
       publisher: bnf[:publisher],
       release_year: bnf[:release_year],
-      details: { support: bnf[:support], creators: bnf[:creators] },
+      details: { title: bnf[:title], complement: bnf[:complement], support: bnf[:support], creators: bnf[:creators] },
       fetched_at: Time.current,
     )
   end

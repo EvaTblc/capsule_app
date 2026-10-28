@@ -100,20 +100,40 @@ class Api::SearchController < ApplicationController
       langRestrict: "fr"
     })
 
+    # Affichage seulement (titre, auteur) : la fiche du livre choisi vient ensuite de la BnF par son ISBN (book_detail).
+    # Google interdit d'en garder des copies : rien de Google Books n'est enregistré
     results = data["items"]&.map do |item|
       info = item["volumeInfo"]
-      {
-        id: item["id"],
-        title: info["title"],
-        author: info["authors"]&.join(", "),
-        publisher: info["publisher"],
-        pages: info["pageCount"],
-        genre: info["categories"]&.join(", "),
-        isbn: info["industryIdentifiers"]&.find { |i| i["type"] == "ISBN_13" }&.dig("identifier"),
-        description: info["description"]
-      }
+      { id: item["id"], title: info["title"], author: info["authors"]&.join(", "),
+        isbn: info["industryIdentifiers"]&.find { |i| i["type"] == "ISBN_13" }&.dig("identifier") }
     end
     render json: results || []
+  end
+
+  # Fiche d'un livre par son ISBN (choisi dans la recherche ou scanné) : notice de la BnF (Licence Ouverte),
+  # œuvre et résumé de Wikidata / Wikipédia. Gratuit pour tous : ni UPCitemdb, ni EAN-DB (payant), ni Claude
+  def book_detail
+    box = BarcodeService.lookup(params[:isbn], kind: :book, bnf_only: true)
+    unless box
+      return render json: { error: "Livre introuvable à la BnF : complète la fiche à la main.", fallback: true }, status: :not_found
+    end
+    return render_other_kind(box, :book) unless box.book?
+
+    author = box.details.dig("creators", "070").to_a.first(3).join(", ").presence
+    work_id = WikimediaService.book_work_id(title: box.details["title"], author: author)
+    product = ProductCatalog.book(work_id) if work_id
+
+    render json: {
+      wikidata_id: product&.wikidata_id,
+      title: box.details["title"] || box.raw_title,
+      author: author,
+      publisher: box.publisher,
+      pages: box.details["support"].to_s[/(\d+)\s*p\b/, 1]&.to_i, # « 1 vol. (580 p.) », « 1 volume 191 p »
+      genre: product&.details&.dig("genres")&.first,
+      isbn: box.barcode,
+      description: product&.description,
+      barcode: box.barcode
+    }
   end
 
   def movie

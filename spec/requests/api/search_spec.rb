@@ -249,6 +249,60 @@ RSpec.describe "API de recherche", type: :request do
     end
   end
 
+  describe "livres : liste de Google Books (affichage), fiche de la BnF" do
+    it "la liste ne renvoie de Google que le titre, l'auteur et l'ISBN" do
+      stub_http do
+        fake_response(200, { items: [ { id: "g1", volumeInfo: { title: "Veiller sur elle", authors: [ "Jean-Baptiste Andrea" ], description: "Texte Google",
+                                                                 publisher: "L'Iconoclaste", pageCount: 580,
+                                                                 industryIdentifiers: [ { type: "ISBN_13", identifier: "9782378803759" } ] } } ] })
+      end
+      get "/api/search/book", params: { query: "veiller sur elle" }
+      expect(json).to eq([ { "id" => "g1", "title" => "Veiller sur elle", "author" => "Jean-Baptiste Andrea", "isbn" => "9782378803759" } ])
+    end
+
+    it "fiche par ISBN : notice de la BnF (gratuite pour tous, sans EAN-DB ni Claude), œuvre et résumé du catalogue" do
+      sign_in create(:user) # compte free
+      box = create(:barcode_product, barcode: "9782378803759", kind: "book", source: "bnf", publisher: "l'Iconoclaste",
+                                     details: { "title" => "Veiller sur elle", "support" => "1 vol. (580 p.)",
+                                                "creators" => { "070" => [ "Jean-Baptiste Andrea" ] } })
+      expect(BarcodeService).to receive(:lookup).with("9782378803759", kind: :book, bnf_only: true).and_return(box)
+      expect(WikimediaService).to receive(:book_work_id).with(title: "Veiller sur elle", author: "Jean-Baptiste Andrea").and_return("Q123360390")
+      veiller = create(:product, :book, wikidata_id: "Q123360390", description: "Roman (Wikipédia)", details: { "genres" => [ "roman" ] })
+      allow(ProductCatalog).to receive(:book).with("Q123360390").and_return(veiller)
+      get "/api/search/book_detail/9782378803759"
+      expect(json).to eq("wikidata_id" => "Q123360390", "title" => "Veiller sur elle", "author" => "Jean-Baptiste Andrea",
+                         "publisher" => "l'Iconoclaste", "pages" => 580, "genre" => "roman", "isbn" => "9782378803759",
+                         "description" => "Roman (Wikipédia)", "barcode" => "9782378803759")
+    end
+
+    it "œuvre introuvable sur Wikidata (tome de manga...) : la notice BnF suffit, sans œuvre ni résumé" do
+      box = create(:barcode_product, barcode: "9782723478991", kind: "book", source: "bnf",
+                                     details: { "title" => "One Piece", "creators" => { "070" => [ "Eiichirō Oda" ] } })
+      allow(BarcodeService).to receive(:lookup).and_return(box)
+      allow(WikimediaService).to receive(:book_work_id).and_return(nil)
+      get "/api/search/book_detail/9782723478991"
+      expect(json).to include("title" => "One Piece", "wikidata_id" => nil, "description" => nil)
+    end
+
+    it "nombre de pages lu aussi sans point (notices anciennes : « 1 volume 191 p »)" do
+      allow(BarcodeService).to receive(:lookup).and_return(
+        create(:barcode_product, barcode: "9782070360024", kind: "book", source: "bnf", details: { "title" => "L'Étranger", "support" => "1 volume 191 p" })
+      )
+      allow(WikimediaService).to receive(:book_work_id).and_return(nil)
+      get "/api/search/book_detail/9782070360024"
+      expect(json["pages"]).to eq(191)
+    end
+
+    it "inconnu de la BnF : 404 à compléter à la main ; code d'un jeu : 404 qui le dit" do
+      allow(BarcodeService).to receive(:lookup).and_return(nil)
+      get "/api/search/book_detail/9782378803759"
+      expect(response).to have_http_status(404)
+      allow(BarcodeService).to receive(:lookup).and_return(create(:barcode_product, kind: "game"))
+      get "/api/search/book_detail/0045496464851"
+      expect(json["error"]).to eq("Ce code-barres correspond à un jeu vidéo, pas à un livre.")
+    end
+  end
+
   describe "GET /api/search/movie_detail/:id" do
     it "fiche du film choisi : lue au catalogue (Wikidata, Wikipédia), sans aucun appel à TMDB" do
       expect(HTTP).not_to receive(:timeout)

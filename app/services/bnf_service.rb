@@ -11,7 +11,8 @@ class BnfService
     return nil unless ean.match?(/\A\d{8,14}\z/)
     # La BnF enregistre le code tel qu'imprimé : 12 chiffres (UPC) ou 13 (EAN), on cherche les deux
     ean13 = ean.rjust(13, "0")
-    codes = [ ean, ean13, ean13.delete_prefix("0") ].uniq.join(" ")
+    # Livres anciens (avant 2007) : catalogués sous leur ISBN à 10 chiffres, qu'on recalcule à partir de l'EAN
+    codes = [ ean, ean13, ean13.delete_prefix("0"), isbn10(ean13) ].compact.uniq.join(" ")
 
     response = HTTP.timeout(10).get(URL, params: {
       version: "1.2",
@@ -30,7 +31,7 @@ class BnfService
     return nil unless record
 
     {
-      kind: KINDS[record.at_xpath("mxc:leader", NS)&.text.to_s[6]],
+      kind: kind(record),
       bnf_ark: record[:id],
       title: subfield(record, "200", "a"),
       complement: subfield(record, "200", "e"),
@@ -43,6 +44,27 @@ class BnfService
     Rails.logger.warn("[bnf] #{e.class} pour #{ean}")
     nil
   end
+  # Désignation du support (200$b), quand l'en-tête ne suffit pas
+  DESIGNATIONS = { "Ressource électronique" => "game", "Images animées" => "movie", "Texte imprimé" => "book" }.freeze
+
+  # Type de produit : 7e caractère de l'en-tête. Notices anciennes à l'en-tête incomplet (« \s\s\s\s\sa\s\s\s\s22… ») :
+  # le type est décalé d'un caractère. En dernier recours, la désignation du support (200$b)
+  def self.kind(record)
+    leader = record.at_xpath("mxc:leader", NS)&.text.to_s
+    type = leader[6].to_s.strip.presence || leader[5].to_s.strip
+    KINDS[type] || DESIGNATIONS[subfield(record, "200", "b")]
+  end
+
+  # ISBN à 10 chiffres d'un EAN de livre en 978 (9782070360024 → 2070360024), nil sinon.
+  # Dernier chiffre : clé de contrôle modulo 11 (« X » pour 10)
+  def self.isbn10(ean13)
+    return nil unless ean13.start_with?("978")
+
+    digits = ean13[3, 9]
+    key = (11 - digits.chars.each_with_index.sum { |digit, i| digit.to_i * (10 - i) } % 11) % 11
+    digits + (key == 10 ? "X" : key.to_s)
+  end
+
   # Texte d'une sous-zone de la notice, ex. subfield(record, "200", "a") → le titre
   def self.subfield(record, tag, code)
     record.at_xpath("mxc:datafield[@tag='#{tag}']/mxc:subfield[@code='#{code}']", NS)&.text
@@ -67,5 +89,5 @@ class BnfService
     end
     result
   end
-  private_class_method :subfield, :subfields, :creators
+  private_class_method :kind, :isbn10, :subfield, :subfields, :creators
 end

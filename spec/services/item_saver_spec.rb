@@ -7,9 +7,10 @@ RSpec.describe ItemSaver do
 
   let(:premium) { create(:user, :premium) }
 
-  def save(item, type:, detail: {}, item_attributes: {}, images: nil, user: premium, igdb_id: nil, tmdb_id: nil)
+  def save(item, type:, detail: {}, item_attributes: {}, images: nil, user: premium, igdb_id: nil, tmdb_id: nil, wikidata_id: nil)
     described_class.new(item, user: user, item_attributes: { title: "Zelda" }.merge(item_attributes),
-                              detail_type: type, detail_attributes: detail, images: images, igdb_id: igdb_id, tmdb_id: tmdb_id).save
+                              detail_type: type, detail_attributes: detail, images: images,
+                              igdb_id: igdb_id, tmdb_id: tmdb_id, wikidata_id: wikidata_id).save
   end
 
   describe "liste blanche des types" do
@@ -99,6 +100,15 @@ RSpec.describe ItemSaver do
       expect(item.reload.product).to eq(intouchables)
       expect(item.item_detailable.description).to eq("Comédie dramatique de Toledano et Nakache")
       expect(box.reload.product).to eq(intouchables)
+    end
+
+    it "livre choisi (identifiant Wikidata de l'œuvre) : relié, résumé de l'œuvre repris sans génération par Claude" do
+      veiller = create(:product, :book, wikidata_id: "Q123360390", description: "Roman de Jean-Baptiste Andrea (Wikipédia)")
+      expect(ProductCatalog).to receive(:book).with("Q123360390").and_return(veiller)
+      expect { save(item, type: "BookDetail", detail: { "author" => "Jean-Baptiste Andrea" }, wikidata_id: "Q123360390") }
+        .not_to have_enqueued_job(BookDescriptionJob)
+      expect(item.reload.product).to eq(veiller)
+      expect(item.item_detailable.description).to eq("Roman de Jean-Baptiste Andrea (Wikipédia)")
     end
 
     it "sans jeu choisi, ou IGDB indisponible : l'item est enregistré, sans œuvre" do

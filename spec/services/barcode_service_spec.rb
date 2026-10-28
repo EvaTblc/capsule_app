@@ -209,6 +209,13 @@ RSpec.describe BarcodeService do
         expect(described_class.lookup("0045496420253", kind: :game)).to have_attributes(source: "ean_db", raw_title: "Nintendo Mario Kart 8 Deluxe")
       end
 
+      it "bnf_only (livres) : ni UPCitemdb ni EAN-DB (payant)" do
+        sources_return(upcitemdb: "Un titre", ean_db: "Un titre")
+        expect(described_class).not_to receive(:upcitemdb_title)
+        expect(described_class).not_to receive(:ean_db_title)
+        expect(described_class.lookup("9782378803759", kind: :book, bnf_only: true)).to be_nil
+      end
+
       it "inconnue partout : nil, rien d'enregistré" do
         sources_return
         expect { expect(described_class.lookup("9999999999994", kind: :game)).to be_nil }.not_to change(BarcodeProduct, :count)

@@ -1,5 +1,8 @@
 <%# Champs spécifiques BookDetail %>
 <div data-item-type-target="form" data-form="BookDetail" class="hidden mb-4" data-controller="book-search">
+  <%# ISBN scanné ou choisi, gardé comme code-barres de l'item ; œuvre choisie : seul son identifiant Wikidata part %>
+  <%= f.hidden_field :barcode, data: { "book-search-target": "barcode" } %>
+  <%= hidden_field_tag "product[wikidata_id]", f.object.product&.wikidata_id, id: nil, data: { "book-search-target": "wikidataId" } %>
   <div class="relative mb-4">
     <label class="text-sm font-semibold text-gray-600 mb-1 block">Recherche</label>
     <div class="flex gap-2">

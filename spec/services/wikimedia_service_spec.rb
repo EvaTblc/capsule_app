@@ -83,6 +83,50 @@ RSpec.describe WikimediaService do
     end
   end
 
+  describe ".book_work_id et .book : l'œuvre d'un livre" do
+    def entity(label, instance_of:, authors: [ "Q34660" ])
+      { "labels" => { "fr" => { "value" => label } },
+        "claims" => { "P31" => [ item_claim(instance_of) ], "P50" => authors.map { |id| item_claim(id) } } }
+    end
+
+    def wikidata_returns(search_ids, entities)
+      allow(http).to receive(:get) do |_url, params:|
+        if params[:action] == "query"
+          fake_response(200, { "query" => { "search" => search_ids.map { |id| { "title" => id } } } })
+        elsif params[:props] == "labels"
+          fake_response(200, { "entities" => { "Q34660" => { "labels" => { "fr" => { "value" => "J. K. Rowling" } } } } })
+        else
+          fake_response(200, { "entities" => entities.slice(*params[:ids].split("|")) })
+        end
+      end
+    end
+
+    it "écarte l'édition trouvée en premier et garde l'œuvre (même titre, auteur du même nom)" do
+      wikidata_returns(%w[Q58464836 Q43361],
+                       "Q58464836" => entity("Harry Potter à l'école des sorciers", instance_of: "Q3331189"), # une édition
+                       "Q43361" => entity("Harry Potter à l'école des sorciers", instance_of: "Q7725634"))
+      expect(described_class.book_work_id(title: "Harry Potter à l'école des sorciers", author: "J.K. Rowling")).to eq("Q43361")
+    end
+
+    it "écarte une série entière (sinon chaque tome serait relié à la série)" do
+      wikidata_returns(%w[Q28667972], "Q28667972" => entity("One Piece", instance_of: "Q21198342"))
+      expect(described_class.book_work_id(title: "One Piece", author: "Eiichiro Oda")).to be_nil
+    end
+
+    it "titre différent ou auteur différent : pas de correspondance" do
+      wikidata_returns(%w[Q1], "Q1" => entity("Harry Potter et la Chambre des secrets", instance_of: "Q7725634"))
+      expect(described_class.book_work_id(title: "Harry Potter à l'école des sorciers", author: "J.K. Rowling")).to be_nil
+      wikidata_returns(%w[Q2], "Q2" => entity("Harry Potter à l'école des sorciers", instance_of: "Q7725634"))
+      expect(described_class.book_work_id(title: "Harry Potter à l'école des sorciers", author: "Jean Dupont")).to be_nil
+    end
+
+    it ".book refuse un identifiant mal formé, une œuvre sans auteur ou une série" do
+      expect(http).not_to receive(:get)
+      expect(described_class.book("Q1|Q2")).to be_nil
+      expect(described_class.book("abc")).to be_nil
+    end
+  end
+
   describe ".summary" do
     it "introduction de l'article en français, et son adresse" do
       expect(http).to receive(:get).with("#{WikimediaService::WIKIPEDIA_SUMMARY}Intouchables_%28film%29", params: {}) # titre encodé dans l'adresse

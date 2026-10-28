@@ -12,7 +12,15 @@ class BookDescriptionJob < ApplicationJob
     detail = item.item_detailable
     return if detail.description.present?
 
+    # Résumé déjà connu pour cette œuvre (Wikipédia, ou généré pour quelqu'un d'autre entre-temps) : repris
+    product = item.product
+    return detail.update(description: product.description) if product&.description.present?
+
     description = BookDescriptionService.generate(title: item.title, author: detail.author, isbn: detail.isbn)
-    detail.update(description: description) if description.present?
+    return if description.blank?
+
+    detail.update(description: description)
+    # Généré une fois pour tout le monde : les prochains ajouts de ce livre le reprendront
+    product&.update(description: description, description_source: "claude_generated")
   end
 end

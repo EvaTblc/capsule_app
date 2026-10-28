@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["query", "results", "author", "publisher", "pages", "genre", "isbn", "description", "scanner", "title"]
+  static targets = ["query", "results", "author", "publisher", "pages", "genre", "isbn", "description", "scanner", "title", "barcode", "wikidataId"]
 
   async startScan() {
     this.scannerTarget.classList.remove("hidden")
@@ -57,20 +57,10 @@ export default class extends Controller {
     }
   }
 
+  // Livre scanné : fiche demandée au serveur par son ISBN (notice BnF, œuvre et résumé de Wikidata / Wikipédia)
   searchByIsbn(isbn) {
     this.queryTarget.value = isbn
-    fetch(`/api/search/book?query=${encodeURIComponent(isbn)}`)
-      .then(res => res.json())
-      // API en panne ({ error }) ou réponse non JSON : traité comme « aucun résultat »
-      .then(data => Array.isArray(data) ? data : [])
-      .catch(() => [])
-      .then(data => {
-        if (data.length > 0) {
-          this.fill(data[0])
-        } else {
-          alert("Aucun livre trouvé pour ce barcode")
-        }
-      })
+    this.loadDetail(isbn)
   }
   search() {
     const query = this.queryTarget.value
@@ -94,9 +84,22 @@ export default class extends Controller {
       })
   }
 
-
-
+  // Livre choisi dans la recherche : la liste vient de Google Books (affichage seulement), la fiche de la BnF.
+  // Rien de Google n'est enregistré : leurs conditions interdisent d'en garder des copies
   fill(book) {
+    this.resultsTarget.classList.add("hidden")
+    if (!book.isbn) return this.showMessage("Fiche indisponible pour ce livre (pas d'ISBN) : complète-la à la main.")
+    this.loadDetail(book.isbn)
+  }
+
+  loadDetail(isbn) {
+    fetch(`/api/search/book_detail/${encodeURIComponent(isbn)}`)
+      .then(res => res.json())
+      .catch(() => ({ error: "Fiche indisponible pour le moment : complète-la à la main." }))
+      .then(data => data.error ? this.showMessage(data.error) : this.fillFromCatalog(data))
+  }
+
+  fillFromCatalog(book) {
     const titleInput = this.element.querySelector("input[name='item[title]']")
     if (titleInput) titleInput.value = book.title || ""
     this.authorTarget.value = book.author || ""
@@ -105,6 +108,18 @@ export default class extends Controller {
     this.genreTarget.value = book.genre || ""
     this.isbnTarget.value = book.isbn || ""
     this.descriptionTarget.value = book.description || ""
+    if (this.hasBarcodeTarget) this.barcodeTarget.value = book.barcode || ""
+    if (this.hasWikidataIdTarget) this.wikidataIdTarget.value = book.wikidata_id || ""
     this.resultsTarget.classList.add("hidden")
+  }
+
+  // Message dans la liste de résultats (textContent : aucun HTML interprété)
+  showMessage(text) {
+    this.resultsTarget.innerHTML = ""
+    const message = document.createElement("div")
+    message.className = "p-3 text-sm text-red-600"
+    message.textContent = text
+    this.resultsTarget.appendChild(message)
+    this.resultsTarget.classList.remove("hidden")
   }
 }

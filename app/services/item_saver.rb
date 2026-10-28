@@ -25,8 +25,10 @@ class ItemSaver
 
   # user : celui qui enregistre, c'est son rôle qui décide des tâches payantes
   # images : nouvelles photos, ajoutées aux existantes (jamais assignées : ça remplacerait les autres)
-  # igdb_id / tmdb_id : jeu ou film choisi via la recherche ou le scan ; seul l'identifiant vient du navigateur
-  def initialize(item, user:, item_attributes:, detail_type:, detail_attributes:, images: nil, igdb_id: nil, tmdb_id: nil)
+  # igdb_id / tmdb_id / wikidata_id : jeu, film ou livre choisi via la recherche ou le scan ;
+  # seul l'identifiant vient du navigateur
+  def initialize(item, user:, item_attributes:, detail_type:, detail_attributes:, images: nil,
+                 igdb_id: nil, tmdb_id: nil, wikidata_id: nil)
     @item = item
     @user = user
     @item_attributes = item_attributes
@@ -35,6 +37,7 @@ class ItemSaver
     @images = images
     @igdb_id = igdb_id
     @tmdb_id = tmdb_id
+    @wikidata_id = wikidata_id
   end
 
   def save
@@ -122,6 +125,7 @@ class ItemSaver
     case @detail_type
     when "VideoGameDetail" then ProductCatalog.game(@igdb_id) if @igdb_id.present?
     when "MovieDetail" then ProductCatalog.movie(@tmdb_id) if @tmdb_id.present?
+    when "BookDetail" then ProductCatalog.book(@wikidata_id) if @wikidata_id.present?
     end
   end
 

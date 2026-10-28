@@ -7,6 +7,9 @@ class WikimediaService
   # Wikimedia demande un User-Agent qui identifie l'application
   HEADERS = { "User-Agent" => "CapsuleApp/1.0 (https://www.capsule.click)" }.freeze
   FRANCE = "Q142"
+  # Résultats à écarter pour un livre : une édition précise, ou une série entière (sinon chaque tome de One Piece
+  # serait relié à la série). Édition, série littéraire, série de BD, série de mangas, cycle de romans, série d'œuvres
+  NOT_A_BOOK_WORK = %w[Q3331189 Q277759 Q14406742 Q21198342 Q1667921 Q7725310].freeze
 
   # Film par son identifiant TMDB (propriété P4947 de Wikidata), nil s'il est inconnu ou si Wikidata ne répond pas
   def self.movie(tmdb_id)
@@ -29,6 +32,55 @@ class WikimediaService
       release_year: release_year(claims),
       directors: item_ids(claims, "P57").filter_map { |id| names[id] },
       studios: item_ids(claims, "P272").filter_map { |id| names[id] },
+      wikipedia_title: entity.dig("sitelinks", "frwiki", "title")
+    }
+  end
+
+  # Identifiant Wikidata de l'œuvre d'un livre, trouvée par son titre et son auteur (tels que lus à la BnF) ;
+  # nil si aucune œuvre ne correspond vraiment (même titre, et un auteur du même nom)
+  def self.book_work_id(title:, author:)
+    return nil if title.blank? || author.blank?
+
+    params = { action: "query", list: "search", srsearch: "\"#{title.delete('"')}\" haswbstatement:P50", srlimit: 5, format: "json" }
+    search = get_json(WIKIDATA_API, **params)
+    search = get_json(WIKIDATA_API, **params) unless search&.key?("query")
+    ids = search&.dig("query", "search").to_a.map { |result| result["title"] }
+    return nil if ids.empty?
+
+    candidates = entities(ids, props: "labels|claims") || {}
+    author_names = labels(candidates.values.flat_map { |entity| item_ids(entity["claims"], "P50") })
+    wanted_title = normalize(title)
+    wanted_author = normalize(author).split.last
+
+    ids.find do |id|
+      entity = candidates[id]
+      next false unless entity
+      next false if (item_ids(entity["claims"], "P31") & NOT_A_BOOK_WORK).any?
+
+      normalize(label(entity)) == wanted_title &&
+        item_ids(entity["claims"], "P50").any? { |author_id| normalize(author_names[author_id]).split.include?(wanted_author) }
+    end
+  end
+
+  # Œuvre littéraire par son identifiant Wikidata (il vient du navigateur : on vérifie que c'est bien une œuvre
+  # avec un auteur, et pas une édition ou une série) ; nil sinon
+  def self.book(wikidata_id)
+    return nil unless wikidata_id.to_s.match?(/\AQ\d+\z/)
+
+    entity = entities([ wikidata_id ], props: "labels|claims|sitelinks")&.dig(wikidata_id)
+    return nil unless entity
+
+    claims = entity["claims"]
+    return nil if item_ids(claims, "P50").empty? || (item_ids(claims, "P31") & NOT_A_BOOK_WORK).any?
+
+    names = labels(item_ids(claims, "P50") + item_ids(claims, "P136"))
+    {
+      wikidata_id: wikidata_id,
+      title: label(entity),
+      original_title: claims.dig("P1476", 0, "mainsnak", "datavalue", "value", "text"),
+      release_year: release_year(claims),
+      authors: item_ids(claims, "P50").filter_map { |id| names[id] },
+      genres: item_ids(claims, "P136").filter_map { |id| names[id] },
       wikipedia_title: entity.dig("sitelinks", "frwiki", "title")
     }
   end
@@ -76,6 +128,11 @@ class WikimediaService
     (dates.find { |date| date[:france] } || dates.min_by { |date| date[:year] })&.dig(:year)
   end
 
+  # Pour comparer des titres et des noms : sans accents, majuscules ni ponctuation
+  def self.normalize(text)
+    I18n.transliterate(text.to_s).downcase.gsub(/[^a-z0-9]+/, " ").strip
+  end
+
   def self.get_json(url, **params)
     response = HTTP.timeout(10).headers(HEADERS).get(url, params: params)
     return log_miss(url, response.status) unless response.status.success?
@@ -89,5 +146,5 @@ class WikimediaService
     Rails.logger.warn("[wikimedia] #{reason} pour #{url}")
     nil
   end
-  private_class_method :entities, :item_ids, :labels, :label, :release_year, :get_json, :log_miss
+  private_class_method :entities, :item_ids, :labels, :label, :release_year, :normalize, :get_json, :log_miss
 end

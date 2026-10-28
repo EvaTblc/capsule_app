@@ -96,4 +96,36 @@ RSpec.describe ProductCatalog do
       expect(product.reload).to have_attributes(description: "Résumé connu", description_source: "wikipedia")
     end
   end
+
+  describe ".book" do
+    let(:potter) do
+      { wikidata_id: "Q43361", title: "Harry Potter à l'école des sorciers", original_title: "Harry Potter and the Philosopher's Stone",
+        release_year: 1997, authors: [ "J. K. Rowling" ], genres: [ "fantasy" ], wikipedia_title: "Harry Potter à l'école des sorciers" }
+    end
+
+    it "œuvre lue chez Wikidata, avec le résumé de Wikipédia" do
+      allow(WikimediaService).to receive(:book).with("Q43361").and_return(potter)
+      allow(WikimediaService).to receive(:summary).and_return(text: "Premier tome de la saga…", url: "https://fr.wikipedia.org/wiki/Harry_Potter")
+      expect(described_class.book("Q43361")).to have_attributes(
+        kind: "book", wikidata_id: "Q43361", title: "Harry Potter à l'école des sorciers",
+        original_title: "Harry Potter and the Philosopher's Stone", release_year: 1997, creator: "J. K. Rowling",
+        description: "Premier tome de la saga…", description_source: "wikipedia"
+      )
+    end
+
+    it "sans article Wikipédia : le résumé généré par Claude, déjà gardé, n'est pas effacé au rafraîchissement" do
+      product = create(:product, :book, wikidata_id: "Q43361", description: "Résumé généré", description_source: "claude_generated",
+                                        fetched_at: 7.months.ago)
+      allow(WikimediaService).to receive(:book).and_return(potter.merge(wikipedia_title: nil))
+      allow(WikimediaService).to receive(:summary).and_return(nil)
+      described_class.book("Q43361")
+      expect(product.reload).to have_attributes(description: "Résumé généré", description_source: "claude_generated")
+    end
+
+    it "l'identifiant d'un film du catalogue ne renvoie pas ce film" do
+      create(:product, :movie, wikidata_id: "Q595")
+      allow(WikimediaService).to receive(:book).with("Q595").and_return(nil) # Intouchables n'a pas d'auteur (P50)
+      expect(described_class.book("Q595")).to be_nil
+    end
+  end
 end

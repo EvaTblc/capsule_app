@@ -38,6 +38,22 @@ class ProductCatalog
     Product.find_by(tmdb_id: tmdb_id)
   end
 
+  # Livre (l'œuvre, pas l'édition) par son identifiant Wikidata, retrouvé à partir du titre et de l'auteur lus à la BnF.
+  # Résumé de Wikipédia s'il existe ; sinon le résumé généré par Claude sera gardé ici (BookDescriptionJob).
+  # nil si Wikidata ne répond pas ou si ce n'est pas une œuvre littéraire (et qu'elle n'est pas déjà au catalogue)
+  def self.book(wikidata_id)
+    # kind : l'identifiant vient du navigateur, il ne doit pas pouvoir renvoyer un film du catalogue
+    product = Product.find_by(wikidata_id: wikidata_id.to_s, kind: "book")
+    return product if product && !product.stale?
+
+    book = WikimediaService.book(wikidata_id)
+    return product unless book
+
+    save_book(product || Product.new(kind: "book"), book)
+  rescue ActiveRecord::RecordNotUnique
+    Product.find_by(wikidata_id: wikidata_id.to_s, kind: "book")
+  end
+
   # Identifiant numérique strictement positif, nil sinon (il vient du navigateur)
   def self.positive_id(id)
     id = Integer(id.to_s, exception: false)
@@ -57,6 +73,24 @@ class ProductCatalog
       description: summary&.dig(:text) || product.description,
       description_source: summary ? "wikipedia" : product.description_source,
       details: product.details.merge("studios" => movie[:studios],
+                                     "wikipedia_url" => summary&.dig(:url) || product.details["wikipedia_url"]),
+      fetched_at: Time.current
+    )
+    product
+  end
+
+  def self.save_book(product, book)
+    summary = WikimediaService.summary(book[:wikipedia_title])
+    product.update!(
+      wikidata_id: book[:wikidata_id],
+      title: book[:title],
+      original_title: (book[:original_title] if book[:original_title] != book[:title]),
+      release_year: book[:release_year],
+      creator: book[:authors].join(", ").presence,
+      # Pas d'article Wikipédia : on garde le résumé déjà connu (Wikipédia muet, ou résumé généré par Claude)
+      description: summary&.dig(:text) || product.description,
+      description_source: summary ? "wikipedia" : product.description_source,
+      details: product.details.merge("genres" => book[:genres],
                                      "wikipedia_url" => summary&.dig(:url) || product.details["wikipedia_url"]),
       fetched_at: Time.current
     )
@@ -83,5 +117,5 @@ class ProductCatalog
     )
     product
   end
-  private_class_method :positive_id, :save_game, :save_movie
+  private_class_method :positive_id, :save_game, :save_movie, :save_book
 end

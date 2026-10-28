@@ -49,12 +49,26 @@ RSpec.describe BnfService do
     end
   end
 
+  it "notice ancienne à l'en-tête incomplet (L'Étranger, Folio 1971) : reconnue comme livre" do
+    bnf_returns("etranger_ancien")
+    expect(described_class.find_by_ean("9782070360024")).to include(kind: "book", title: "L'Étranger", publisher: "Gallimard",
+                                                                     creators: hash_including("070" => [ "Albert Camus" ]))
+  end
+
   describe "requête" do
     it "cherche le code sous ses deux formes (12 et 13 chiffres), en EAN et en ISBN" do
       expect(http).to receive(:get)
         .with(BnfService::URL, params: hash_including(query: 'bib.ean any "045496464851 0045496464851" or bib.isbn any "045496464851 0045496464851"'))
         .and_return(fake_response(200, file_fixture("bnf/pokemon_diamant.xml").read))
       described_class.find_by_ean("045496464851")
+    end
+
+    it "livre : cherche aussi l'ISBN à 10 chiffres (livres anciens catalogués avant 2007), clé « X » comprise" do
+      expect(http).to receive(:get)
+        .with(BnfService::URL, params: hash_including(query: 'bib.ean any "9782070360024 2070360024" or bib.isbn any "9782070360024 2070360024"'))
+        .and_return(fake_response(200, file_fixture("bnf/veiller_sur_elle.xml").read))
+      described_class.find_by_ean("9782070360024")
+      expect(described_class.send(:isbn10, "9781000000010")).to eq("100000001X")
     end
 
     it "accepte un code passé en nombre" do

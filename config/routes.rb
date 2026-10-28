@@ -33,6 +33,7 @@ Rails.application.routes.draw do
   namespace :api do
     get "search/search_game"
     get "search/book", to: "search#book"
+    get "search/book_detail/:isbn", to: "search#book_detail"
     get "search/movie", to: "search#movie"
     get "search/movie_detail/:id", to: "search#movie_detail"
     get "search/music", to: "search#music"

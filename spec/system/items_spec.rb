@@ -84,6 +84,38 @@ RSpec.describe "Items (navigateur)", type: :system do
     end
   end
 
+  describe "formulaire complet : pré-remplissage par la recherche de livre" do
+    it "la liste vient de Google Books, la fiche de la BnF ; l'item est relié à l'œuvre et garde son ISBN" do
+      allow_any_instance_of(Api::SearchController).to receive(:get_json)
+        .and_return("items" => [ { "id" => "g1", "volumeInfo" => { "title" => "Veiller sur elle", "authors" => [ "Jean-Baptiste Andrea" ],
+                                                                   "description" => "Texte Google",
+                                                                   "industryIdentifiers" => [ { "type" => "ISBN_13", "identifier" => "9782378803759" } ] } } ])
+      allow(BnfService).to receive(:find_by_ean).and_return(
+        kind: "book", bnf_ark: "ark:/12148/x", title: "Veiller sur elle", complement: nil, support: "1 vol. (580 p.)",
+        publisher: "l'Iconoclaste", release_year: 2023, creators: { "070" => [ "Jean-Baptiste Andrea" ] }
+      )
+      allow(WikimediaService).to receive(:book_work_id).and_return("Q123360390")
+      veiller = create(:product, :book, wikidata_id: "Q123360390", description: "Roman de Jean-Baptiste Andrea")
+      allow(ProductCatalog).to receive(:book).and_return(veiller)
+      books = collection_of("books")
+
+      visit new_collection_item_path(books)
+      find("[data-type='BookDetail']").click
+      within("[data-form='BookDetail']") do
+        fill_in placeholder: "Rechercher un livre...", with: "Veiller sur elle"
+        find("[data-book-search-target='results'] div", text: "Veiller sur elle").click
+        expect(page).to have_field(placeholder: "Auteur", with: "Jean-Baptiste Andrea")
+        expect(page).not_to have_field(with: "Texte Google")
+      end
+      click_on "Valider"
+
+      expect(page).to have_content("Item ajouté !")
+      expect(Item.last).to have_attributes(product: veiller, barcode: "9782378803759")
+      expect(Item.last.item_detailable).to have_attributes(publisher: "l'Iconoclaste", pages: 580, isbn: "9782378803759",
+                                                           description: "Roman de Jean-Baptiste Andrea")
+    end
+  end
+
   describe "formulaire complet : pré-remplissage par la recherche de film" do
     it "la liste vient de TMDB, la fiche du catalogue (Wikidata, Wikipédia) ; l'item est relié à l'œuvre" do
       allow_any_instance_of(Api::SearchController).to receive(:tmdb_get)
