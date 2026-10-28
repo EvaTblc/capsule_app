@@ -1,8 +1,7 @@
 # Code-barres d'un jeu ou d'un film → informations pour pré-remplir le formulaire, en deux étapes :
-# 1. product_title : titre brut du produit, UPCitemdb d'abord, EAN-DB en secours
-# 2. product_details : Claude extrait de ce titre brut, souvent une annonce de vendeur
-#    (« Game: Pokemon Diamant Edition for Nintendo DS + LITE + DSi... ») qu'aucune règle ne sait nettoyer,
-#    les noms à chercher sur IGDB / TMDB, et ce que la boîte dit du produit possédé : plateforme ou format, édition
+# 1. lookup : la boîte (BarcodeProduct), déjà connue ou cherchée à la BnF, puis UPCitemdb et EAN-DB, et enregistrée
+# 2. names_for : les noms à chercher sur IGDB / TMDB, extraits une fois par Claude (product_details) du titre brut,
+#    souvent une annonce de vendeur (« Game: Pokemon Diamant Edition for Nintendo DS + LITE + DSi... »)
 class BarcodeService
   class Error < StandardError; end
 
@@ -33,17 +32,29 @@ class BarcodeService
     table.find { |word, _value| text.to_s.downcase.include?(word.downcase) }&.last
   end
 
-  # Titre brut du produit, nil si aucune des deux bases ne connaît le code.
-  # Le code est inséré dans l'URL d'EAN-DB : on n'accepte que des chiffres (EAN-8 à GTIN-14)
-  def self.product_title(ean)
-    return nil unless ean.to_s.match?(/\A\d{8,14}\z/)
-
-    upcitemdb_title(ean) || ean_db_title(ean)
-  end
-
+  # Boîte correspondant au code-barres : déjà connue, sinon cherchée puis enregistrée ; nil si inconnue partout.
+  # Peut être d'un autre type que kind (livre scanné depuis le formulaire jeu) : à l'appelant de le signaler.
+  # Le code est inséré dans les URL de la BnF et d'EAN-DB : on n'accepte que des chiffres (EAN-8 à GTIN-14)
   def self.lookup(ean, kind:)
     return nil unless ean.to_s.match?(/\A\d{8,14}\z/)
+
     BarcodeProduct.find_by(barcode: ean) || find_and_save(ean, kind)
+  end
+
+  # Noms à chercher sur IGDB / TMDB pour une boîte : extraits une seule fois par Claude, puis gardés avec elle
+  # (le scan suivant du même code ne rappelle pas Claude). Claude complète au passage plateforme, format
+  # et édition quand la boîte ne les a pas (titres bruts d'UPCitemdb et d'EAN-DB) ; ceux de la BnF sont gardés.
+  # Lève BarcodeService::Error si Claude ne répond pas (rien n'est alors gardé).
+  def self.names_for(box)
+    return box.details["names"] if box.details["names"].present?
+
+    extracted = product_details(box.raw_title, kind: box.kind.to_sym)
+    box.platform ||= extracted[:platform] if box.game?
+    box.format ||= extracted[:format] if box.movie?
+    box.edition ||= extracted[:edition]
+    box.details = box.details.merge("names" => extracted[:names])
+    box.save!
+    extracted[:names]
   end
 
   # Boîte inconnue : BnF (notice structurée), puis UPCitemdb et EAN-DB (titre brut seulement), et on l'enregistre

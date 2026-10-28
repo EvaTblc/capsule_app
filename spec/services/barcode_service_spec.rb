@@ -9,8 +9,13 @@ RSpec.describe BarcodeService do
                        request: HTTP::Request.new(verb: :get, uri: "https://example.com"))
   end
 
-  describe ".product_title : UPCitemdb d'abord, EAN-DB en secours" do
+  # Code inconnu de la BnF : on vérifie ici les appels réels à UPCitemdb et EAN-DB (requêtes HTTP simulées)
+  describe "secours d'UPCitemdb puis d'EAN-DB (via .lookup)" do
+    # Titre brut de la boîte enregistrée, nil si aucune boîte
+    def title_for(code) = described_class.lookup(code, kind: :game)&.raw_title
+
     before do
+      allow(BnfService).to receive(:find_by_ean).and_return(nil)
       allow(HTTP).to receive(:timeout).with(10).and_return(http)
       allow(http).to receive(:auth).with("Bearer jeton").and_return(http)
       allow(http).to receive(:headers).and_return(http)
@@ -29,46 +34,47 @@ RSpec.describe BarcodeService do
     it "code connu d'UPCitemdb : son titre, sans appel à EAN-DB (payant)" do
       upcitemdb_returns(fake_response(200, { items: [ { title: "Pokemon - Diamant Edition (nintendo Ds)" } ] }))
       expect(http).not_to receive(:get).with(/ean-db/)
-      expect(described_class.product_title(ean)).to eq("Pokemon - Diamant Edition (nintendo Ds)")
+      expect(title_for(ean)).to eq("Pokemon - Diamant Edition (nintendo Ds)")
     end
 
     it "code inconnu d'UPCitemdb : titre d'EAN-DB, en français de préférence" do
       upcitemdb_returns(fake_response(200, { items: [] }))
       ean_db_returns(fake_response(200, { product: { titles: { en: "Pokemon Diamond", fr: "Pokémon Diamant" } } }))
-      expect(described_class.product_title(ean)).to eq("Pokémon Diamant")
+      expect(title_for(ean)).to eq("Pokémon Diamant")
     end
 
     it "sans titre français : le titre anglais d'EAN-DB" do
       upcitemdb_returns(fake_response(200, { items: [] }))
       ean_db_returns(fake_response(200, { product: { titles: { nl: "Mario Kart 8 Deluxe - Nintendo Switch", en: "Nintendo Mario Kart 8 Deluxe" } } }))
-      expect(described_class.product_title(ean)).to eq("Nintendo Mario Kart 8 Deluxe")
+      expect(title_for(ean)).to eq("Nintendo Mario Kart 8 Deluxe")
     end
 
     it "quota d'essai d'UPCitemdb dépassé (429) ou UPCitemdb injoignable : EAN-DB prend le relais" do
       ean_db_returns(fake_response(200, { product: { titles: { en: "Pokemon Diamond" } } }))
       upcitemdb_returns(fake_response(429, { code: "TOO_FAST" }))
-      expect(described_class.product_title(ean)).to eq("Pokemon Diamond")
+      expect(title_for(ean)).to eq("Pokemon Diamond")
 
+      BarcodeProduct.delete_all # sinon la boîte enregistrée serait retrouvée sans rien redemander
       allow(http).to receive(:get).with(%r{upcitemdb.com}, params: { upc: ean }).and_raise(HTTP::TimeoutError)
-      expect(described_class.product_title(ean)).to eq("Pokemon Diamond")
+      expect(title_for(ean)).to eq("Pokemon Diamond")
     end
 
     it "code inconnu des deux services : nil" do
       upcitemdb_returns(fake_response(200, { items: [] }))
       ean_db_returns(fake_response(404, { error: { code: 404 } }))
-      expect(described_class.product_title(ean)).to be_nil
+      expect(title_for(ean)).to be_nil
     end
 
     it "code-barres qui n'est pas une suite de chiffres : nil, sans aucun appel" do
       expect(HTTP).not_to receive(:timeout)
-      [ "../account", "123?x=1", "12", "" ].each { |code| expect(described_class.product_title(code)).to be_nil }
+      [ "../account", "123?x=1", "12", "" ].each { |code| expect(title_for(code)).to be_nil }
     end
 
     it "sans jeton EAN-DB : pas d'appel, nil" do
       allow(Rails.application.credentials).to receive(:dig).with(:ean_db, :api_key).and_return(nil)
       upcitemdb_returns(fake_response(200, { items: [] }))
       expect(http).not_to receive(:get).with(/ean-db/)
-      expect(described_class.product_title(ean)).to be_nil
+      expect(title_for(ean)).to be_nil
     end
   end
 
@@ -207,6 +213,41 @@ RSpec.describe BarcodeService do
         sources_return
         expect { expect(described_class.lookup("9999999999994", kind: :game)).to be_nil }.not_to change(BarcodeProduct, :count)
       end
+    end
+  end
+
+  describe ".names_for : noms à chercher, extraits une fois par Claude puis gardés avec la boîte" do
+    def claude_extracts(**details) = allow(described_class).to receive(:product_details).and_return({ names: [ "Pokémon Diamond Version" ] }.merge(details))
+
+    it "garde les noms : le second appel ne rappelle pas Claude" do
+      box = create(:barcode_product, source: "upcitemdb", raw_title: "Game: Pokemon Diamant Edition for Nintendo DS")
+      claude_extracts(platform: "Nintendo DS")
+      expect(described_class.names_for(box)).to eq([ "Pokémon Diamond Version" ])
+      expect(box.reload.details["names"]).to eq([ "Pokémon Diamond Version" ])
+
+      expect(described_class).not_to receive(:product_details)
+      expect(described_class.names_for(box.reload)).to eq([ "Pokémon Diamond Version" ])
+    end
+
+    it "titre brut (UPCitemdb, EAN-DB) : Claude complète la plateforme et l'édition" do
+      box = create(:barcode_product, source: "upcitemdb", raw_title: "Pokemon Diamant Collector DS")
+      claude_extracts(platform: "Nintendo DS", edition: "Collector")
+      described_class.names_for(box)
+      expect(box.reload).to have_attributes(platform: "Nintendo DS", edition: "Collector")
+    end
+
+    it "notice BnF : sa plateforme et son édition sont gardées, Claude ne les remplace pas" do
+      box = create(:barcode_product, source: "bnf", raw_title: "Inception : ultimate edition", kind: "movie", format: "Blu-ray", edition: "ultimate edition")
+      claude_extracts(format: "DVD", edition: "Steelbook")
+      described_class.names_for(box)
+      expect(box.reload).to have_attributes(format: "Blu-ray", edition: "ultimate edition")
+    end
+
+    it "Claude indisponible : l'erreur remonte et rien n'est gardé (le prochain scan réessaiera)" do
+      box = create(:barcode_product, source: "upcitemdb", raw_title: "Zelda")
+      allow(described_class).to receive(:product_details).and_raise(BarcodeService::Error, "API surchargée")
+      expect { described_class.names_for(box) }.to raise_error(BarcodeService::Error)
+      expect(box.reload.details).not_to have_key("names")
     end
   end
 end

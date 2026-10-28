@@ -66,7 +66,7 @@ RSpec.describe "API de recherche", type: :request do
     end
 
     it "bug interne : 500 générique" do
-      allow(BarcodeService).to receive(:product_title).and_raise(RuntimeError, "secret interne")
+      allow(BarcodeService).to receive(:lookup).and_raise(RuntimeError, "secret interne")
       get "/api/search/game_barcode", params: { ean: "123" }
       expect(response).to have_http_status(500)
       expect(response.body).not_to include("secret")
@@ -92,7 +92,7 @@ RSpec.describe "API de recherche", type: :request do
     end
   end
 
-  # Les deux services de code-barres et Claude sont simulés : titres bruts réels, relevés le 2026-10-27
+  # La boîte (BarcodeService.lookup, testé à part) et Claude sont simulés : titres bruts réels, relevés le 2026-10-27
   describe "GET /api/search/game_barcode" do
     let(:game) do
       { "id" => 1, "name" => "Zelda", "summary" => "A game", "cover" => { "url" => "//img/t_thumb/x.jpg" },
@@ -108,15 +108,18 @@ RSpec.describe "API de recherche", type: :request do
         "alternative_names" => [ { "name" => "Professeur Layton et l'Appel du Spectre", "comment" => "French title" } ] }
     end
 
-    def scan(raw_title, names, **details)
-      allow(BarcodeService).to receive(:product_title).with("123").and_return(raw_title)
-      allow(BarcodeService).to receive(:product_details).with(raw_title, kind: :game).and_return(names: names, **details)
+    # Boîte trouvée (UPCitemdb par défaut) dont Claude extrait names
+    def scan(raw_title, names, source: "upcitemdb", **box_attributes)
+      box = create(:barcode_product, raw_title: raw_title, source: source, **box_attributes)
+      allow(BarcodeService).to receive(:lookup).with("123", kind: :game).and_return(box)
+      allow(BarcodeService).to receive(:product_details).with(raw_title, kind: :game).and_return(names: names, platform: nil, edition: nil)
       allow(TranslationService).to receive(:translate_batch) { |texts| texts }
       get "/api/search/game_barcode", params: { ean: "123" }
+      box
     end
 
-    it "code-barres inconnu des deux services : 404 avec fallback, sans appel à Claude" do
-      allow(BarcodeService).to receive(:product_title).and_return(nil)
+    it "code-barres inconnu partout : 404 avec fallback, sans appel à Claude" do
+      allow(BarcodeService).to receive(:lookup).and_return(nil)
       expect(BarcodeService).not_to receive(:product_details)
       get "/api/search/game_barcode", params: { ean: "123" }
       expect(response).to have_http_status(404)
@@ -135,10 +138,28 @@ RSpec.describe "API de recherche", type: :request do
       expect(json).to include("name" => "Pokémon Diamant", "original_name" => "Pokémon Diamond Version")
     end
 
-    it "ce que dit la boîte : plateforme, édition, et le code-barres à garder avec l'item" do
+    it "ce que dit la boîte : plateforme, édition, et le code-barres (normalisé) à garder avec l'item" do
       allow_any_instance_of(controller_class).to receive(:igdb_search).and_return([ diamond ])
-      scan("Pokemon Diamant Edition Collector Nintendo DS", [ "Pokémon Diamond Version" ], platform: "Nintendo DS", edition: "Collector")
-      expect(json).to include("platform" => "Nintendo DS", "edition" => "Collector", "barcode" => "123")
+      box = scan("Pokémon : version diamant", [ "Pokémon Diamond Version" ], source: "bnf", platform: "Nintendo DS", edition: "Collector")
+      expect(json).to include("platform" => "Nintendo DS", "edition" => "Collector", "barcode" => box.barcode)
+    end
+
+    it "les noms extraits sont gardés avec la boîte : le scan suivant du même code ne rappelle pas Claude" do
+      allow_any_instance_of(controller_class).to receive(:igdb_search).and_return([ diamond ])
+      box = scan("Pokémon : version diamant", [ "Pokémon Diamond Version" ])
+      expect(box.reload.details["names"]).to eq([ "Pokémon Diamond Version" ])
+      expect(BarcodeService).not_to receive(:product_details)
+      get "/api/search/game_barcode", params: { ean: "123" }
+      expect(json["name"]).to eq("Pokémon Diamant")
+    end
+
+    it "code-barres d'un autre type (livre scanné depuis le formulaire jeu) : 404 qui le dit, sans chercher de jeu" do
+      allow(BarcodeService).to receive(:lookup).and_return(create(:barcode_product, kind: "book", raw_title: "Peintures 2011-2012"))
+      expect(BarcodeService).not_to receive(:product_details)
+      get "/api/search/game_barcode", params: { ean: "123" }
+      expect(response).to have_http_status(404)
+      expect(json).to include("fallback" => true, "other_kind" => "book",
+                              "error" => "Ce code-barres correspond à un livre, pas à un jeu vidéo.")
     end
 
     it "garde-fou : un jeu mieux classé mais au titre différent est écarté" do
@@ -170,7 +191,7 @@ RSpec.describe "API de recherche", type: :request do
     end
 
     it "Claude indisponible : repli sur le nettoyage par règles, même JSON qu'avant" do
-      allow(BarcodeService).to receive(:product_title).and_return("Zelda - Nintendo Switch")
+      allow(BarcodeService).to receive(:lookup).and_return(create(:barcode_product, source: "upcitemdb", raw_title: "Zelda - Nintendo Switch"))
       allow(BarcodeService).to receive(:product_details).and_raise(BarcodeService::Error, "API surchargée")
       expect_any_instance_of(controller_class).to receive(:igdb_search).with("Zelda", limit: 3).and_return([ game ])
       allow(TranslationService).to receive(:translate_batch).and_return([ "Un jeu" ])
@@ -183,14 +204,15 @@ RSpec.describe "API de recherche", type: :request do
 
   describe "GET /api/search/movie_barcode" do
     it "code-barres inconnu : 404 directement, sans appels inutiles à TMDB" do
-      allow(BarcodeService).to receive(:product_title).and_return(nil)
+      allow(BarcodeService).to receive(:lookup).and_return(nil)
       expect(HTTP).not_to receive(:timeout)
       get "/api/search/movie_barcode", params: { ean: "123" }
       expect(response).to have_http_status(404)
     end
 
     it "film trouvé : titre extrait par Claude, puis détails et réalisateur" do
-      allow(BarcodeService).to receive(:product_title).and_return("Inception (DVD)")
+      box = create(:barcode_product, kind: "movie", source: "upcitemdb", raw_title: "Inception (DVD)")
+      allow(BarcodeService).to receive(:lookup).with("123", kind: :movie).and_return(box)
       allow(BarcodeService).to receive(:product_details).with("Inception (DVD)", kind: :movie)
                                                        .and_return(names: [ "Inception" ], format: "Blu-ray", edition: "Steelbook")
       stub_http do |url, params|
@@ -204,11 +226,11 @@ RSpec.describe "API de recherche", type: :request do
       end
       get "/api/search/movie_barcode", params: { ean: "123" }
       expect(json).to include("title" => "Inception", "year" => 2010, "director" => "Christopher Nolan", "studio" => "Warner",
-                              "format" => "Blu-ray", "edition" => "Steelbook", "barcode" => "123")
+                              "format" => "Blu-ray", "edition" => "Steelbook", "barcode" => box.barcode)
     end
 
     it "garde-fou : aucun film au titre correspondant, 404 plutôt qu'un mauvais film" do
-      allow(BarcodeService).to receive(:product_title).and_return("Amelie [DVD]")
+      allow(BarcodeService).to receive(:lookup).and_return(create(:barcode_product, kind: "movie", source: "upcitemdb", raw_title: "Amelie [DVD]"))
       allow(BarcodeService).to receive(:product_details).and_return(names: [ "Le Fabuleux Destin d'Amélie Poulain" ])
       stub_http { fake_response(200, { results: [ { id: 1, title: "Les Misérables", original_title: "Les Misérables" } ] }) }
       get "/api/search/movie_barcode", params: { ean: "123" }

@@ -88,7 +88,9 @@ export default class extends Controller {
           this.queryTarget.value = ""
           this.queryTarget.placeholder = "Tape le titre du film..."
           // premium : compte free, le serveur refuse le scan (403)
-          const message = data.premium ? `${data.error} Tape le titre du film ci-dessus.`
+          // other_kind : code d'un autre type (livre scanné ici...), le serveur explique lequel
+          const message = data.other_kind ? data.error
+            : data.premium ? `${data.error} Tape le titre du film ci-dessus.`
             : data.fallback ? "Film introuvable pour ce code-barres : tape son titre ci-dessus."
             : "Recherche indisponible pour le moment : tape le titre du film ci-dessus."
           this.showMessage(message, true)

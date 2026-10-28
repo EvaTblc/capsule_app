@@ -15,16 +15,17 @@ class Api::SearchController < ApplicationController
     ean = params[:ean].to_s.strip
     return render json: { error: "Barcode manquant" }, status: :unprocessable_entity if ean.blank?
 
-    # Étape 1 : titre brut du produit (UPCitemdb, puis EAN-DB), étape 2 : nom du jeu extrait par Claude
-    product_title = BarcodeService.product_title(ean)
-    return render json: { error: "Jeu non trouvé", fallback: true }, status: :not_found unless product_title
+    # Étape 1 : la boîte (déjà connue, sinon BnF → UPCitemdb → EAN-DB), étape 2 : les noms du jeu
+    box = BarcodeService.lookup(ean, kind: :game)
+    return render json: { error: "Jeu non trouvé", fallback: true }, status: :not_found unless box
+    return render_other_kind(box, :game) unless box.game?
 
-    details = scanned_details(product_title, :game)
-    Rails.logger.info("[game_barcode] #{product_title} → #{details.inspect}")
+    names = scanned_names(box)
+    Rails.logger.info("[game_barcode] #{box.source} : #{box.raw_title} → #{names.inspect}")
 
     # Étape 3 : IGDB par nom (titre principal, puis titre français), en écartant les jeux dont le titre ne correspond pas
     game = nil
-    details[:names].each do |name|
+    names.each do |name|
       games = igdb_search(name, limit: 3)
       return render json: { error: "IGDB indisponible" }, status: :service_unavailable if games.nil?
 
@@ -42,24 +43,25 @@ class Api::SearchController < ApplicationController
 
     # La boîte dit sur quelle plateforme est le jeu possédé, et son édition ; le code-barres est gardé avec l'item
     json = igdb_game_json(game, summary: summary)
-    render json: json.merge(platform: details[:platform] || json[:platform], edition: details[:edition], barcode: ean)
+    render json: json.merge(platform: box.platform || json[:platform], edition: box.edition, barcode: box.barcode)
   end
 
   def movie_barcode
     ean = params[:ean].to_s.strip
     return render json: { error: "Barcode manquant" }, status: :unprocessable_entity if ean.blank?
 
-    # Étape 1 : titre brut du produit (UPCitemdb, puis EAN-DB), étape 2 : titre du film extrait par Claude
+    # Étape 1 : la boîte (déjà connue, sinon BnF → UPCitemdb → EAN-DB), étape 2 : les titres du film
     # (TMDB ne sait pas chercher par EAN : sans titre, on passe en recherche manuelle)
-    product_title = BarcodeService.product_title(ean)
-    return render json: { error: "Film non trouvé", fallback: true }, status: :not_found unless product_title
+    box = BarcodeService.lookup(ean, kind: :movie)
+    return render json: { error: "Film non trouvé", fallback: true }, status: :not_found unless box
+    return render_other_kind(box, :movie) unless box.movie?
 
-    details = scanned_details(product_title, :movie)
-    Rails.logger.info("[movie_barcode] #{product_title} → #{details.inspect}")
+    names = scanned_names(box)
+    Rails.logger.info("[movie_barcode] #{box.source} : #{box.raw_title} → #{names.inspect}")
 
     # Étape 3 : TMDB par titre (original, puis français), en écartant les films dont le titre ne correspond pas
     movie = nil
-    details[:names].each do |name|
+    names.each do |name|
       results = tmdb_get("search/movie", query: name, language: "fr-FR")["results"] || []
       movie = results.first(3).find { |candidate| matching_title?(name, [ candidate["title"], candidate["original_title"] ]) }
       break if movie
@@ -82,9 +84,9 @@ class Api::SearchController < ApplicationController
       director: director,
       studio: studio,
       poster_url: poster_url,
-      format: details[:format],
-      edition: details[:edition],
-      barcode: ean
+      format: box.format,
+      edition: box.edition,
+      barcode: box.barcode
     }
   end
 
@@ -222,13 +224,22 @@ class Api::SearchController < ApplicationController
     render json: { error: "Recherche indisponible" }, status: external ? :bad_gateway : :internal_server_error
   end
 
-  # Noms à chercher, plateforme ou format, édition : extraits du titre brut par Claude.
-  # S'il ne répond pas : nom nettoyé par règles (moins fiable, mais mieux que rien), et rien d'autre
-  def scanned_details(product_title, kind)
-    BarcodeService.product_details(product_title, kind: kind)
+  # Noms à chercher pour une boîte (extraits une fois par Claude, puis gardés avec elle).
+  # S'il ne répond pas : nom nettoyé par règles (moins fiable, mais mieux que rien), non gardé
+  def scanned_names(box)
+    BarcodeService.names_for(box)
   rescue BarcodeService::Error => e
-    Rails.logger.warn("[#{kind}_barcode] Claude indisponible, nettoyage par règles : #{e.message}")
-    { names: [ kind == :game ? clean_game_title(product_title) : clean_movie_title(product_title) ] }
+    Rails.logger.warn("[#{box.kind}_barcode] Claude indisponible, nettoyage par règles : #{e.message}")
+    [ box.game? ? clean_game_title(box.raw_title) : clean_movie_title(box.raw_title) ]
+  end
+
+  KIND_LABELS = { "game" => "un jeu vidéo", "movie" => "un film", "book" => "un livre" }.freeze
+
+  # Code-barres d'un autre type que le formulaire (livre scanné depuis le formulaire jeu...) :
+  # on le dit, au lieu de pré-remplir avec n'importe quoi
+  def render_other_kind(box, expected)
+    render json: { error: "Ce code-barres correspond à #{KIND_LABELS[box.kind]}, pas à #{KIND_LABELS[expected.to_s]}.",
+                   fallback: true, other_kind: box.kind }, status: :not_found
   end
 
   # Mots qui ne distinguent pas un titre d'un autre
