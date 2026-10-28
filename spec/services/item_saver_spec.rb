@@ -7,9 +7,9 @@ RSpec.describe ItemSaver do
 
   let(:premium) { create(:user, :premium) }
 
-  def save(item, type:, detail: {}, item_attributes: {}, images: nil, user: premium)
+  def save(item, type:, detail: {}, item_attributes: {}, images: nil, user: premium, igdb_id: nil, tmdb_id: nil)
     described_class.new(item, user: user, item_attributes: { title: "Zelda" }.merge(item_attributes),
-                              detail_type: type, detail_attributes: detail, images: images).save
+                              detail_type: type, detail_attributes: detail, images: images, igdb_id: igdb_id, tmdb_id: tmdb_id).save
   end
 
   describe "liste blanche des types" do
@@ -49,6 +49,64 @@ RSpec.describe ItemSaver do
         expect(save(item, type: "FigurineDetail", detail: { "edition" => "Bidon" }, item_attributes: { title: "" })).to be false
       }.not_to change(FigurineDetail, :count)
       expect(item.errors.full_messages).to include(a_string_including("titre"), a_string_including("Edition"))
+    end
+  end
+
+  describe "catalogue : l'item est relié à l'œuvre choisie" do
+    let(:item) { collection.items.new }
+    let(:diamant) { create(:product, igdb_id: 1560) }
+
+    it "jeu choisi (identifiant IGDB) : relié à son œuvre, retrouvée ou créée par le serveur" do
+      expect(ProductCatalog).to receive(:game).with("1560").and_return(diamant)
+      save(item, type: "VideoGameDetail", detail: { "description" => "Catch them all" }, igdb_id: "1560")
+      expect(item.reload.product).to eq(diamant)
+    end
+
+    it "boîte scannée : confirmée par cette validation, avec son auteur" do
+      allow(ProductCatalog).to receive(:game).and_return(diamant)
+      box = create(:barcode_product, barcode: "0045496464851")
+      save(item, type: "VideoGameDetail", item_attributes: { barcode: "0045496464851" }, igdb_id: "1560")
+      expect(box.reload).to have_attributes(product: diamant, confirmed_by: premium)
+    end
+
+    it "boîte d'un autre type (livre) : pas reliée à un jeu" do
+      allow(ProductCatalog).to receive(:game).and_return(diamant)
+      box = create(:barcode_product, barcode: "1234567890123", kind: "book")
+      save(item, type: "VideoGameDetail", item_attributes: { barcode: "1234567890123" }, igdb_id: "1560")
+      expect(box.reload.product).to be_nil
+    end
+
+    it "œuvre déjà traduite : l'item reprend le résumé français, sans nouvelle traduction" do
+      diamant.update!(description: "Attrapez-les tous")
+      allow(ProductCatalog).to receive(:game).and_return(diamant)
+      expect { save(item, type: "VideoGameDetail", detail: { "description" => "Catch them all" }, igdb_id: "1560") }
+        .not_to have_enqueued_job(TranslationJob)
+      expect(item.item_detailable.reload.description).to eq("Attrapez-les tous")
+    end
+
+    it "œuvre déjà traduite : le compte free en profite aussi (aucun coût)" do
+      diamant.update!(description: "Attrapez-les tous")
+      allow(ProductCatalog).to receive(:game).and_return(diamant)
+      save(item, type: "VideoGameDetail", detail: { "description" => "Catch them all" }, igdb_id: "1560", user: create(:user))
+      expect(item.item_detailable.reload.description).to eq("Attrapez-les tous")
+    end
+
+    it "film choisi (identifiant TMDB) : relié à son œuvre, qui lui donne le résumé de Wikipédia ; boîte confirmée" do
+      intouchables = create(:product, :movie, tmdb_id: 77338, description: "Comédie dramatique de Toledano et Nakache")
+      expect(ProductCatalog).to receive(:movie).with("77338").and_return(intouchables)
+      box = create(:barcode_product, barcode: "3384442276306", kind: "movie")
+      save(item, type: "MovieDetail", item_attributes: { barcode: "3384442276306" }, tmdb_id: "77338")
+      expect(item.reload.product).to eq(intouchables)
+      expect(item.item_detailable.description).to eq("Comédie dramatique de Toledano et Nakache")
+      expect(box.reload.product).to eq(intouchables)
+    end
+
+    it "sans jeu choisi, ou IGDB indisponible : l'item est enregistré, sans œuvre" do
+      expect(save(item, type: "VideoGameDetail")).to be true
+      allow(ProductCatalog).to receive(:game).and_return(nil)
+      other = collection.items.new
+      expect(save(other, type: "VideoGameDetail", igdb_id: "1560")).to be true
+      expect([ item.reload.product, other.reload.product ]).to all(be_nil)
     end
   end
 

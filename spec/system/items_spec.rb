@@ -47,7 +47,10 @@ RSpec.describe "Items (navigateur)", type: :system do
     let(:games) { collection_of("video_games") }
     let(:zelda) { { "id" => 1, "name" => "The Legend of Zelda", "platforms" => [ { "name" => "Nintendo Switch" } ] } }
 
-    before { allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([ zelda ]) }
+    before do
+      allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([ zelda ])
+      allow(IgdbService).to receive(:game) { |id| zelda.merge("id" => id) }
+    end
 
     it "recherche, choix du jeu, ajout : confirmation dans le panneau, sans quitter la page" do
       visit collection_path(games)
@@ -62,6 +65,7 @@ RSpec.describe "Items (navigateur)", type: :system do
       expect(games.items.last.title).to eq("The Legend of Zelda")
       # Jeu sorti sur une seule plateforme : elle est choisie (avant : « Nintendo Switch », hors liste)
       expect(games.items.last.item_detailable.platform).to eq("Switch")
+      expect(games.items.last.product.igdb_id).to eq(1)
     end
 
     it "jeu multiplateforme : la plateforme choisie par l'utilisateur n'est pas écrasée par le choix du jeu" do
@@ -80,12 +84,41 @@ RSpec.describe "Items (navigateur)", type: :system do
     end
   end
 
+  describe "formulaire complet : pré-remplissage par la recherche de film" do
+    it "la liste vient de TMDB, la fiche du catalogue (Wikidata, Wikipédia) ; l'item est relié à l'œuvre" do
+      allow_any_instance_of(Api::SearchController).to receive(:tmdb_get)
+        .and_return("results" => [ { "id" => 77338, "title" => "Intouchables", "release_date" => "2011-11-02", "overview" => "Texte TMDB" } ])
+      intouchables = create(:product, :movie, tmdb_id: 77338, title: "Intouchables", release_year: 2011,
+                                              creator: "Olivier Nakache, Éric Toledano", description: "Comédie dramatique (Wikipédia)",
+                                              description_source: "wikipedia", details: { "studios" => [ "Gaumont" ], "wikipedia_url" => "https://fr.wikipedia.org/wiki/Intouchables_(film)" })
+      allow(ProductCatalog).to receive(:movie).and_return(intouchables)
+      movies = collection_of("movies")
+
+      visit new_collection_item_path(movies)
+      find("[data-type='MovieDetail']").click
+      within("[data-form='MovieDetail']") do
+        fill_in placeholder: "Rechercher un film...", with: "Intouchables"
+        find("[data-movie-search-target='results'] div", text: "Intouchables (2011)").click
+
+        expect(page).to have_field(placeholder: "Réalisateur", with: "Olivier Nakache, Éric Toledano")
+        expect(page).to have_field(placeholder: "Studio", with: "Gaumont")
+        expect(page).not_to have_field(with: "Texte TMDB") # le résumé vient de Wikipédia, pas de TMDB
+      end
+      click_on "Valider"
+
+      expect(page).to have_content("Item ajouté !")
+      expect(Item.last.product).to eq(intouchables)
+      expect(page).to have_link("Résumé : Wikipédia (CC BY-SA)", href: "https://fr.wikipedia.org/wiki/Intouchables_(film)")
+    end
+  end
+
   describe "formulaire complet : pré-remplissage par la recherche de jeu" do
     it "plateforme, genre, développeur et année remplis ; l'édition se saisit et s'enregistre" do
       botw = { "id" => 7, "name" => "The Legend of Zelda: Breath of the Wild", "first_release_date" => 1488499200,
                "platforms" => [ { "name" => "Nintendo Switch" } ], "genres" => [ { "name" => "Adventure" } ],
                "involved_companies" => [ { "developer" => true, "company" => { "name" => "Nintendo EPD" } } ] }
       allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([ botw ])
+      allow(IgdbService).to receive(:game).with(7).and_return(botw) # relu par le serveur à l'enregistrement
       games = collection_of("video_games")
 
       visit new_collection_item_path(games)
@@ -104,6 +137,8 @@ RSpec.describe "Items (navigateur)", type: :system do
 
       expect(page).to have_content("Item ajouté !")
       expect(Item.last.item_detailable).to have_attributes(platform: "Switch", developer: "Nintendo EPD", release_date: 2017, edition: "Collector")
+      # L'œuvre du catalogue est créée à partir d'IGDB, pas des champs du formulaire (l'édition reste sur l'item)
+      expect(Item.last.product).to have_attributes(igdb_id: 7, title: "The Legend of Zelda: Breath of the Wild", creator: "Nintendo EPD")
     end
   end
 

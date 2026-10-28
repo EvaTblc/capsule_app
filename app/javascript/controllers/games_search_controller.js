@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["query", "results", "platform", "genre", "releaseDate", "developer", "edition", "barcode", "description", "scanner", "title"]
+  static targets = ["query", "results", "platform", "genre", "releaseDate", "developer", "edition", "barcode", "igdbId", "description", "scanner", "title"]
 
   connect() {
     this.closeResults = (e) => {
@@ -172,6 +172,8 @@ export default class extends Controller {
     if (this.hasDeveloperTarget) this.developerTarget.value = game.developer || ""
     if (this.hasEditionTarget) this.editionTarget.value = game.edition || ""
     if (this.hasBarcodeTarget && game.barcode) this.barcodeTarget.value = game.barcode
+    // Identifiant du jeu choisi : le serveur s'en sert pour relier l'item à l'œuvre du catalogue
+    if (this.hasIgdbIdTarget) this.igdbIdTarget.value = game.id || ""
     if (this.hasGenreTarget) this.genreTarget.value = game.genres || ""
     if (this.hasReleaseDateTarget) this.releaseDateTarget.value = game.release_date || ""
     if (this.hasDescriptionTarget) this.descriptionTarget.value = game.summary || ""

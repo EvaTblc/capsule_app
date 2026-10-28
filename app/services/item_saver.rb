@@ -1,6 +1,7 @@
 # Enregistre un item et son détail (livre, jeu, film...) ensemble, en création comme en modification :
 # - construit le détail, ou le remplace si le type d'item change
 # - enregistre les deux dans une même transaction (tout ou rien)
+# - relie l'item à son œuvre du catalogue partagé (et la boîte scannée à cette œuvre)
 # - décide des tâches de fond : traduction du résumé d'un jeu, résumé généré d'un livre
 # - en cas d'échec, regroupe sur l'item ses erreurs et celles du détail, pour les afficher ensemble
 class ItemSaver
@@ -24,13 +25,16 @@ class ItemSaver
 
   # user : celui qui enregistre, c'est son rôle qui décide des tâches payantes
   # images : nouvelles photos, ajoutées aux existantes (jamais assignées : ça remplacerait les autres)
-  def initialize(item, user:, item_attributes:, detail_type:, detail_attributes:, images: nil)
+  # igdb_id / tmdb_id : jeu ou film choisi via la recherche ou le scan ; seul l'identifiant vient du navigateur
+  def initialize(item, user:, item_attributes:, detail_type:, detail_attributes:, images: nil, igdb_id: nil, tmdb_id: nil)
     @item = item
     @user = user
     @item_attributes = item_attributes
     @detail_type = detail_type
     @detail_attributes = detail_attributes
     @images = images
+    @igdb_id = igdb_id
+    @tmdb_id = tmdb_id
   end
 
   def save
@@ -92,7 +96,33 @@ class ItemSaver
   def after_save
     item.images.attach(@images) if @images.present?
     @replaced_detail&.destroy
+    link_product
     enqueue_detail_jobs
+  end
+
+  # Œuvre du catalogue : créée ou retrouvée côté serveur à partir de l'identifiant choisi (jamais des champs saisis).
+  # Valider le formulaire confirme aussi la boîte scannée (la dernière validation gagne).
+  # Si l'œuvre a déjà son résumé en français (traduit, ou de Wikipédia), l'item le reprend : pas de nouvelle traduction
+  def link_product
+    product = catalog_product
+    return unless product
+
+    item.update!(product: product)
+    box = BarcodeProduct.find_by(barcode: item.barcode) if item.barcode.present?
+    box.confirm!(product, by: @user) if box && box.kind == product.kind
+
+    detail = item.item_detailable
+    if detail.description.blank? && product.description.present?
+      detail.update!(description: product.description)
+      @translate = false
+    end
+  end
+
+  def catalog_product
+    case @detail_type
+    when "VideoGameDetail" then ProductCatalog.game(@igdb_id) if @igdb_id.present?
+    when "MovieDetail" then ProductCatalog.movie(@tmdb_id) if @tmdb_id.present?
+    end
   end
 
   # Tâches de fond, pour ne pas faire attendre l'utilisateur pendant l'appel à Claude.

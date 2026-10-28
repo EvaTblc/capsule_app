@@ -2,6 +2,8 @@
 <div data-item-type-target="form" data-form="VideoGameDetail" class="hidden mb-4" data-controller="games-search">
   <%# Code-barres scanné, gardé avec l'item %>
   <%= f.hidden_field :barcode, data: { "games-search-target": "barcode" } %>
+  <%# Jeu choisi via la recherche ou le scan : seul son identifiant part, le serveur relit l'œuvre chez IGDB %>
+  <%= hidden_field_tag "product[igdb_id]", f.object.product&.igdb_id, id: nil, data: { "games-search-target": "igdbId" } %>
   <div class="relative mb-4">
     <label class="text-sm font-semibold text-gray-600 mb-1 block">Recherche</label>
     <div class="flex gap-2">

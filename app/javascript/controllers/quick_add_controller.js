@@ -20,11 +20,13 @@ export default class extends Controller {
       const queryInput = this.element.querySelector("[data-games-search-target='query']")
       const titleInput = this.element.querySelector("[data-games-search-target='title']")
       const platformInput = this.element.querySelector("[data-games-search-target='platform']")
+      const igdbIdInput = this.element.querySelector("[data-games-search-target='igdbId']")
       const results = this.element.querySelector("[data-games-search-target='results']")
 
       if (queryInput) queryInput.value = ""
       if (titleInput) titleInput.value = ""
       if (platformInput) platformInput.value = ""
+      if (igdbIdInput) igdbIdInput.value = ""
       if (results) results.classList.add("hidden")
 
       // Reset pills plateforme

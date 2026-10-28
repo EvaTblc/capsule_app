@@ -12,7 +12,15 @@ class TranslationJob < ApplicationJob
     return if detail.description.present?
     return if detail.summary_en.blank?
 
+    # Déjà traduit pour une autre personne entre-temps : on reprend la traduction de l'œuvre
+    product = item.product
+    return detail.update(description: product.description) if product&.description.present?
+
     translated = TranslationService.translate_batch([ detail.summary_en ]).first
-    detail.update(description: translated) if translated.present?
+    return if translated.blank?
+
+    detail.update(description: translated)
+    # Traduit une fois pour tout le monde : les prochains ajouts de ce jeu la reprendront
+    product&.update(description: translated, description_source: "igdb_translated")
   end
 end
