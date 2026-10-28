@@ -17,6 +17,8 @@ class User < ApplicationRecord
 
   has_many :sent_friendships, class_name: "Friendship", foreign_key: :requester_id, dependent: :destroy
   has_many :received_friendships, class_name: "Friendship", foreign_key: :receiver_id, dependent: :destroy
+  # Boîtes du catalogue reliées à une œuvre par ce compte ; la base vide la référence si le compte est supprimé
+  has_many :confirmed_barcode_products, class_name: "BarcodeProduct", foreign_key: :confirmed_by_id, inverse_of: :confirmed_by
 
   enum :role, { admin: "admin", premium: "premium", free: "free" }, validate: true
 

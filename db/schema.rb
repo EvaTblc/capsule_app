@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_144632) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_28_114336) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_144632) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "barcode_products", force: :cascade do |t|
+    t.string "barcode", null: false
+    t.string "kind", null: false
+    t.string "source", null: false
+    t.string "raw_title"
+    t.string "bnf_ark"
+    t.string "platform"
+    t.string "format"
+    t.string "edition"
+    t.string "publisher"
+    t.integer "release_year"
+    t.jsonb "details", default: {}, null: false
+    t.bigint "product_id"
+    t.bigint "confirmed_by_id"
+    t.datetime "confirmed_at"
+    t.datetime "fetched_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["barcode"], name: "index_barcode_products_on_barcode", unique: true
+    t.index ["confirmed_by_id"], name: "index_barcode_products_on_confirmed_by_id"
+    t.index ["product_id"], name: "index_barcode_products_on_product_id"
+    t.check_constraint "barcode::text ~ '^[0-9]{13}$'::text", name: "barcode_products_barcode_valid"
+    t.check_constraint "kind::text = ANY (ARRAY['game'::character varying, 'movie'::character varying, 'book'::character varying]::text[])", name: "barcode_products_kind_valid"
+    t.check_constraint "source::text = ANY (ARRAY['bnf'::character varying, 'upcitemdb'::character varying, 'ean_db'::character varying]::text[])", name: "barcode_products_source_valid"
   end
 
   create_table "board_game_details", force: :cascade do |t|
@@ -128,8 +154,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_144632) do
     t.string "condition"
     t.string "barcode"
     t.string "comment"
+    t.bigint "product_id"
     t.index ["collection_id"], name: "index_items_on_collection_id"
     t.index ["item_detailable_type", "item_detailable_id"], name: "index_items_on_item_detailable"
+    t.index ["product_id"], name: "index_items_on_product_id"
   end
 
   create_table "movie_details", force: :cascade do |t|
@@ -167,6 +195,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_144632) do
     t.index ["collection_id"], name: "index_notes_on_collection_id"
     t.index ["sender_id"], name: "index_notes_on_sender_id"
     t.index ["user_id"], name: "index_notes_on_user_id"
+  end
+
+  create_table "products", force: :cascade do |t|
+    t.string "kind", null: false
+    t.string "title", null: false
+    t.string "original_title"
+    t.integer "release_year"
+    t.string "creator"
+    t.text "description"
+    t.string "description_source"
+    t.jsonb "details", default: {}, null: false
+    t.integer "igdb_id"
+    t.integer "tmdb_id"
+    t.string "wikidata_id"
+    t.datetime "fetched_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["igdb_id"], name: "index_products_on_igdb_id", unique: true
+    t.index ["tmdb_id"], name: "index_products_on_tmdb_id", unique: true
+    t.index ["wikidata_id"], name: "index_products_on_wikidata_id", unique: true
+    t.check_constraint "kind::text = ANY (ARRAY['game'::character varying, 'movie'::character varying, 'book'::character varying]::text[])", name: "products_kind_valid"
   end
 
   create_table "solid_cable_messages", force: :cascade do |t|
@@ -368,11 +417,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_144632) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "barcode_products", "products", on_delete: :nullify
+  add_foreign_key "barcode_products", "users", column: "confirmed_by_id", on_delete: :nullify
   add_foreign_key "events", "users"
   add_foreign_key "events", "users", column: "sender_id", on_delete: :nullify
   add_foreign_key "friendships", "users", column: "receiver_id"
   add_foreign_key "friendships", "users", column: "requester_id"
   add_foreign_key "items", "collections"
+  add_foreign_key "items", "products", on_delete: :nullify
   add_foreign_key "notes", "collections"
   add_foreign_key "notes", "users"
   add_foreign_key "notes", "users", column: "sender_id", on_delete: :nullify

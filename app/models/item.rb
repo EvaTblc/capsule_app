@@ -1,6 +1,8 @@
 class Item < ApplicationRecord
   belongs_to :item_detailable, polymorphic: true, dependent: :destroy
   belongs_to :collection
+  # L'œuvre du catalogue partagé, quand on l'a identifiée (jeu, film ou livre choisi via la recherche ou le scan)
+  belongs_to :product, optional: true
 
   has_many_attached :images
 

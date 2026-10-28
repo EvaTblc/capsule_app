@@ -54,4 +54,45 @@ RSpec.describe "Contraintes de la base" do
     User.where(id: sender.id).delete_all # sans callbacks Rails
     expect(note.reload.sender_id).to be_nil
   end
+
+  describe "catalogue" do
+    let(:product) { create(:product) }
+    let(:box) { create(:barcode_product) }
+
+    it "une œuvre a forcément un type connu" do
+      expect { product.update_columns(kind: "music") }.to raise_error(ActiveRecord::StatementInvalid, /products_kind_valid/)
+    end
+
+    it "une œuvre a forcément un titre" do
+      expect { product.update_columns(title: nil) }.to raise_error(ActiveRecord::NotNullViolation)
+    end
+
+    it "un code-barres est toujours enregistré sur 13 chiffres" do
+      # En SQL brut : Rails normalise le code-barres même dans update_columns et update_all
+      expect { BarcodeProduct.connection.execute("UPDATE barcode_products SET barcode = '045496464851' WHERE id = #{box.id}") }
+        .to raise_error(ActiveRecord::StatementInvalid, /barcode_products_barcode_valid/)
+    end
+
+    it "une boîte a forcément un type connu" do
+      expect { box.update_columns(kind: "music") }.to raise_error(ActiveRecord::StatementInvalid, /barcode_products_kind_valid/)
+    end
+
+    it "une boîte vient forcément d'une source connue" do
+      expect { box.update_columns(source: "amazon") }.to raise_error(ActiveRecord::StatementInvalid, /barcode_products_source_valid/)
+    end
+
+    it "une œuvre supprimée en SQL est retirée des boîtes et des items, qui restent" do
+      box.update_columns(product_id: product.id)
+      item = create(:item, product: product)
+      Product.where(id: product.id).delete_all # sans callbacks Rails
+      expect(box.reload.product_id).to be_nil
+      expect(item.reload.product_id).to be_nil
+    end
+
+    it "un compte supprimé en SQL est retiré des boîtes qu'il a validées" do
+      box.update_columns(confirmed_by_id: user.id)
+      User.where(id: user.id).delete_all
+      expect(box.reload.confirmed_by_id).to be_nil
+    end
+  end
 end
