@@ -68,26 +68,12 @@ class Api::SearchController < ApplicationController
     end
     return render json: { error: "Film non trouvé", fallback: true }, status: :not_found unless movie
 
-    # Étape 4 : Détails + réalisateur
-    detail_data = tmdb_get("movie/#{movie['id']}", language: "fr-FR")
-    credits_data = tmdb_get("movie/#{movie['id']}/credits")
+    # Étape 4 : la fiche vient du catalogue (Wikidata, Wikipédia) et non de TMDB, qui interdit de conserver ses données
+    product = ProductCatalog.movie(movie["id"])
+    return render_movie_unavailable unless product
 
-    director = credits_data["crew"]&.find { |p| p["job"] == "Director" }&.dig("name")
-    studio = detail_data["production_companies"]&.map { |c| c["name"] }&.join(", ")
-    poster_url = movie["poster_path"] ? "https://image.tmdb.org/t/p/w500#{movie['poster_path']}" : nil
-
-    render json: {
-      id: movie["id"],
-      title: movie["title"],
-      year: movie["release_date"]&.split("-")&.first&.to_i,
-      description: movie["overview"],
-      director: director,
-      studio: studio,
-      poster_url: poster_url,
-      format: box.format,
-      edition: box.edition,
-      barcode: box.barcode
-    }
+    # La boîte dit le format et l'édition du film possédé ; le code-barres est gardé avec l'item
+    render json: catalog_movie_json(product).merge(format: box.format, edition: box.edition, barcode: box.barcode)
   end
 
   def search_game
@@ -136,29 +122,20 @@ class Api::SearchController < ApplicationController
 
     data = tmdb_get("search/movie", query: query, language: "fr-FR")
 
+    # Affichage seulement (titre, année) : la fiche du film choisi vient ensuite du catalogue (movie_detail)
     results = data["results"]&.first(5)&.map do |movie|
-      {
-        id: movie["id"],
-        title: movie["title"],
-        year: movie["release_date"]&.split("-")&.first,
-        description: movie["overview"]
-      }
+      { id: movie["id"], title: movie["title"], year: movie["release_date"]&.split("-")&.first }
     end
 
     render json: results || []
   end
 
+  # Fiche du film choisi dans la recherche (identifiant TMDB), lue au catalogue : Wikidata et Wikipédia, jamais TMDB
   def movie_detail
-    data = tmdb_get("movie/#{params[:id]}", language: "fr-FR")
-    # Crédits pour le réalisateur
-    credits_data = tmdb_get("movie/#{params[:id]}/credits")
+    product = ProductCatalog.movie(params[:id])
+    return render_movie_unavailable unless product
 
-    director = credits_data["crew"]&.find { |p| p["job"] == "Director" }&.dig("name")
-
-    render json: {
-      director: director,
-      studio: data["production_companies"]&.map { |c| c["name"] }&.join(", ")
-    }
+    render json: catalog_movie_json(product)
   end
 
   def music
@@ -233,6 +210,24 @@ class Api::SearchController < ApplicationController
     [ box.game? ? clean_game_title(box.raw_title) : clean_movie_title(box.raw_title) ]
   end
 
+  # Fiche de film pour pré-remplir le formulaire ; tmdb_id repart avec le formulaire pour relier l'item à l'œuvre
+  def catalog_movie_json(product)
+    {
+      tmdb_id: product.tmdb_id,
+      title: product.title,
+      year: product.release_year,
+      description: product.description,
+      director: product.creator,
+      studio: product.details["studios"].to_a.first(3).join(", ").presence
+    }
+  end
+
+  # Film inconnu de Wikidata : on ne pré-remplit pas avec les données de TMDB (non conservables)
+  def render_movie_unavailable
+    render json: { error: "Fiche indisponible pour ce film : complète-la à la main.", fallback: true, unavailable: true },
+           status: :not_found
+  end
+
   KIND_LABELS = { "game" => "un jeu vidéo", "movie" => "un film", "book" => "un livre" }.freeze
 
   # Code-barres d'un autre type que le formulaire (livre scanné depuis le formulaire jeu...) :
@@ -261,12 +256,6 @@ class Api::SearchController < ApplicationController
     [ game["name"], *game["alternative_names"]&.map { |alt| alt["name"] } ]
   end
 
-  # Liste de jeux IGDB ([] si aucun résultat), nil si IGDB est indisponible
-  IGDB_GAME_FIELDS = %w[name cover.url platforms.name summary genres.name first_release_date
-                        alternative_names.name alternative_names.comment game_type total_rating_count
-                        involved_companies.company.name involved_companies.developer
-                        release_dates.date release_dates.release_region].freeze
-
   # Types IGDB qui ne sont pas des jeux qu'on range dans une collection : DLC, mod, mise à jour, épisode, saison, fork, pack
   IGDB_EXCLUDED_GAME_TYPES = [ 1, 5, 6, 7, 12, 13, 14 ].freeze
 
@@ -280,14 +269,14 @@ class Api::SearchController < ApplicationController
 
     # Les guillemets fermeraient la chaîne de la requête IGDB : on les retire
     query = name.delete('"\\')
-    french_fields = IGDB_GAME_FIELDS.map { |field| "game.#{field}" }.join(",")
+    french_fields = IgdbService::GAME_FIELDS.map { |field| "game.#{field}" }.join(",")
 
     # On demande plus de résultats que nécessaire : une partie est écartée (mods, mises à jour...)
     fetch_limit = [ limit * 3, 15 ].max
     searches = [
-      Thread.new { igdb_post("games", "fields #{IGDB_GAME_FIELDS.join(',')}; search \"#{query}\"; limit #{fetch_limit};", token) },
+      Thread.new { IgdbService.post("games", "fields #{IgdbService::GAME_FIELDS.join(',')}; search \"#{query}\"; limit #{fetch_limit};", token) },
       Thread.new do
-        igdb_post("alternative_names",
+        IgdbService.post("alternative_names",
                   "fields #{french_fields}; where name ~ *\"#{query}\"* & comment = \"French title\"; limit #{fetch_limit};", token)
       end
     ]
@@ -305,7 +294,7 @@ class Api::SearchController < ApplicationController
     games.uniq { |game| game["id"] }
          .reject { |game| IGDB_EXCLUDED_GAME_TYPES.include?(game["game_type"]) }
          .sort_by do |game|
-           titles = [ game["name"], french_title(game) ].compact.map { |title| normalize_game_title(title) }
+           titles = [ game["name"], IgdbService.french_title(game) ].compact.map { |title| normalize_game_title(title) }
            [ titles.include?(wanted) ? 0 : 1, -(game["total_rating_count"] || 0) ]
          end
   end
@@ -315,42 +304,13 @@ class Api::SearchController < ApplicationController
     I18n.transliterate(title.to_s).downcase.gsub(/[^a-z0-9]+/, " ").strip
   end
 
-  # Réponse JSON d'IGDB, ou nil en cas d'erreur
-  def igdb_post(endpoint, body, token)
-    response = HTTP.timeout(10)
-                   .headers("Client-ID" => Rails.application.credentials.dig(:igdb, :client_id),
-                            "Authorization" => "Bearer #{token}")
-                   .post("https://api.igdb.com/v4/#{endpoint}", body: body)
-    # Token expiré ou révoqué : on l'oublie pour qu'un nouveau soit demandé au prochain appel
-    Rails.cache.delete(IgdbService::CACHE_KEY) if response.code == 401
-    response.status.success? ? JSON.parse(response.body.to_s) : nil
-  rescue HTTP::Error, JSON::ParserError => e
-    Rails.logger.warn("[igdb] #{endpoint} : #{e.class} #{e.message}")
-    nil
-  end
-
-  IGDB_EUROPE_REGION = 1 # release_date_regions d'IGDB : 1 = europe
-
-  # Date de sortie européenne (la plus ancienne, toutes plateformes) : c'est celle des boîtes françaises.
-  # À défaut, première sortie mondiale, souvent japonaise ou nord-américaine (Pokémon Diamant : 2006 au Japon, 2007 en Europe)
-  def release_date_of(game)
-    european = game["release_dates"]&.select { |release| release["release_region"] == IGDB_EUROPE_REGION }
-    timestamp = european&.filter_map { |release| release["date"] }&.min || game["first_release_date"]
-    timestamp && Time.at(timestamp).utc.to_date
-  end
-
-  # Titre français officiel référencé par IGDB, s'il existe
-  def french_title(game)
-    game["alternative_names"]&.find { |alt| alt["comment"] == "French title" }&.dig("name")
-  end
-
   def igdb_game_json(game, summary:)
     cover_url = game.dig("cover", "url") ? "https:#{game['cover']['url'].gsub('t_thumb', 't_cover_big')}" : nil
-    release_date = release_date_of(game)
+    release_date = IgdbService.release_date(game)
     platforms = game["platforms"]&.map { |p| p["name"] }&.join(", ")
     genres = game["genres"]&.map { |g| g["name"] }&.join(", ")
-    french_name = french_title(game)
-    developers = game["involved_companies"]&.select { |company| company["developer"] }&.filter_map { |company| company.dig("company", "name") }
+    french_name = IgdbService.french_title(game)
+    developers = IgdbService.developers(game)
     # Plateforme de l'appli, seulement si le jeu n'existe que sur une seule : sinon c'est à l'utilisateur de choisir
     app_platforms = game["platforms"]&.filter_map { |p| VideoGameDetail::IGDB_PLATFORMS[p["name"]] }&.uniq || []
 

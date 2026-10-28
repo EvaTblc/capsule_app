@@ -30,12 +30,12 @@ RSpec.describe "API de recherche", type: :request do
       end
     end
 
-    it "movie : paramètres encodés par la librairie, même JSON qu'avant" do
+    it "movie : paramètres encodés par la librairie ; seuls le titre et l'année de TMDB sont renvoyés (affichage)" do
       stub_http { fake_response(200, { results: [ { id: 1, title: "Le Fabuleux Destin", release_date: "2001-04-25", overview: "..." } ] }) }
       get "/api/search/movie", params: { query: "amélie & co" }
       expect(http_calls.last[:url]).to eq("https://api.themoviedb.org/3/search/movie")
       expect(http_calls.last[:params]).to include(query: "amélie & co", language: "fr-FR")
-      expect(json).to eq([ { "id" => 1, "title" => "Le Fabuleux Destin", "year" => "2001", "description" => "..." } ])
+      expect(json).to eq([ { "id" => 1, "title" => "Le Fabuleux Destin", "year" => "2001" } ])
     end
 
     it "music : envoie le User-Agent exigé par Discogs" do
@@ -210,23 +210,34 @@ RSpec.describe "API de recherche", type: :request do
       expect(response).to have_http_status(404)
     end
 
-    it "film trouvé : titre extrait par Claude, puis détails et réalisateur" do
+    it "film trouvé : titre extrait par Claude, film trouvé sur TMDB, fiche lue au catalogue (Wikidata) et non chez TMDB" do
       box = create(:barcode_product, kind: "movie", source: "upcitemdb", raw_title: "Inception (DVD)")
       allow(BarcodeService).to receive(:lookup).with("123", kind: :movie).and_return(box)
       allow(BarcodeService).to receive(:product_details).with("Inception (DVD)", kind: :movie)
                                                        .and_return(names: [ "Inception" ], format: "Blu-ray", edition: "Steelbook")
       stub_http do |url, params|
-        case url
-        when %r{search/movie}
-          expect(params[:query]).to eq("Inception")
-          fake_response(200, { results: [ { id: 27205, title: "Inception", release_date: "2010-07-16" } ] })
-        when /credits/ then fake_response(200, { crew: [ { job: "Director", name: "Christopher Nolan" } ] })
-        else fake_response(200, { production_companies: [ { name: "Warner" } ] })
-        end
+        expect(url).to match(%r{search/movie}) # plus aucun appel aux détails ni aux crédits de TMDB
+        expect(params[:query]).to eq("Inception")
+        fake_response(200, { results: [ { id: 27205, title: "Inception", release_date: "2010-07-16" } ] })
       end
+      inception = create(:product, :movie, tmdb_id: 27205, title: "Inception", release_year: 2010, creator: "Christopher Nolan",
+                                           description: "Un thriller de science-fiction", details: { "studios" => [ "Syncopy", "Warner Bros." ] })
+      expect(ProductCatalog).to receive(:movie).with(27205).and_return(inception)
       get "/api/search/movie_barcode", params: { ean: "123" }
-      expect(json).to include("title" => "Inception", "year" => 2010, "director" => "Christopher Nolan", "studio" => "Warner",
+      expect(json).to include("tmdb_id" => 27205, "title" => "Inception", "year" => 2010, "director" => "Christopher Nolan",
+                              "studio" => "Syncopy, Warner Bros.", "description" => "Un thriller de science-fiction",
                               "format" => "Blu-ray", "edition" => "Steelbook", "barcode" => box.barcode)
+    end
+
+    it "film reconnu mais absent de Wikidata : 404 qui le dit, sans pré-remplir avec les données de TMDB" do
+      allow(BarcodeService).to receive(:lookup).and_return(create(:barcode_product, kind: "movie", source: "upcitemdb", raw_title: "Inception (DVD)"))
+      allow(BarcodeService).to receive(:product_details).and_return(names: [ "Inception" ])
+      stub_http { fake_response(200, { results: [ { id: 27205, title: "Inception", release_date: "2010-07-16" } ] }) }
+      allow(ProductCatalog).to receive(:movie).and_return(nil)
+      get "/api/search/movie_barcode", params: { ean: "123" }
+      expect(response).to have_http_status(404)
+      expect(json).to include("unavailable" => true, "error" => a_string_including("complète-la à la main"))
+      expect(response.body).not_to include("2010")
     end
 
     it "garde-fou : aucun film au titre correspondant, 404 plutôt qu'un mauvais film" do
@@ -235,6 +246,25 @@ RSpec.describe "API de recherche", type: :request do
       stub_http { fake_response(200, { results: [ { id: 1, title: "Les Misérables", original_title: "Les Misérables" } ] }) }
       get "/api/search/movie_barcode", params: { ean: "123" }
       expect(response).to have_http_status(404)
+    end
+  end
+
+  describe "GET /api/search/movie_detail/:id" do
+    it "fiche du film choisi : lue au catalogue (Wikidata, Wikipédia), sans aucun appel à TMDB" do
+      expect(HTTP).not_to receive(:timeout)
+      amelie = create(:product, :movie, tmdb_id: 194, title: "Le Fabuleux Destin d'Amélie Poulain", release_year: 2001,
+                                        creator: "Jean-Pierre Jeunet", description: "Un film de Jeunet", details: { "studios" => [ "UGC" ] })
+      allow(ProductCatalog).to receive(:movie).with("194").and_return(amelie)
+      get "/api/search/movie_detail/194"
+      expect(json).to eq("tmdb_id" => 194, "title" => "Le Fabuleux Destin d'Amélie Poulain", "year" => 2001,
+                         "description" => "Un film de Jeunet", "director" => "Jean-Pierre Jeunet", "studio" => "UGC")
+    end
+
+    it "film absent de Wikidata : 404, à compléter à la main" do
+      allow(ProductCatalog).to receive(:movie).and_return(nil)
+      get "/api/search/movie_detail/194"
+      expect(response).to have_http_status(404)
+      expect(json).to include("unavailable" => true)
     end
   end
 

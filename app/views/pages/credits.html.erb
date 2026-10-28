@@ -22,6 +22,22 @@
       <%# Mention exacte demandée par les conditions d'utilisation de l'API TMDB (section 3) %>
       <p class="text-sm text-gray-700">This product uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</p>
       <p class="text-xs text-gray-400 mt-1">Capsule utilise TMDB et les API de TMDB, sans être approuvé, certifié ou soutenu par TMDB.</p>
+      <p class="text-sm text-gray-700 mt-2">
+        Fiches de films : <%= link_to "Wikidata", "https://www.wikidata.org", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %> (CC0)
+        et résumés de <%= link_to "Wikipédia", "https://fr.wikipedia.org", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>
+        (<%= link_to "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/deed.fr", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>), cités sur chaque fiche concernée.
+      </p>
+    </section>
+
+    <section class="bg-white border border-gray-100 rounded-2xl p-4">
+      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Catalogue français</h2>
+      <%# Licence Ouverte : mention de la source et de la date de récupération (conservée pour chaque code-barres) %>
+      <p class="text-sm text-gray-700">
+        Codes-barres des jeux, films et livres commercialisés en France : catalogue de la
+        <%= link_to "Bibliothèque nationale de France", "https://catalogue.bnf.fr", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>,
+        sous <%= link_to "Licence Ouverte", "https://www.etalab.gouv.fr/licence-ouverte-open-licence/", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>.
+        La date de récupération de chaque notice est conservée.
+      </p>
     </section>
 
     <section class="bg-white border border-gray-100 rounded-2xl p-4">

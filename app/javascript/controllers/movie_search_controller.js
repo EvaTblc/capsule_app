@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["query", "results", "title", "year", "description", "director", "studio", "format", "edition", "barcode", "scanner"]
+  static targets = ["query", "results", "title", "year", "description", "director", "studio", "format", "edition", "barcode", "tmdbId", "scanner"]
 
   search() {
     const query = this.queryTarget.value
@@ -89,14 +89,15 @@ export default class extends Controller {
           this.queryTarget.placeholder = "Tape le titre du film..."
           // premium : compte free, le serveur refuse le scan (403)
           // other_kind : code d'un autre type (livre scanné ici...), le serveur explique lequel
-          const message = data.other_kind ? data.error
+          // unavailable : film reconnu mais absent du catalogue, à compléter à la main
+          const message = data.other_kind || data.unavailable ? data.error
             : data.premium ? `${data.error} Tape le titre du film ci-dessus.`
             : data.fallback ? "Film introuvable pour ce code-barres : tape son titre ci-dessus."
             : "Recherche indisponible pour le moment : tape le titre du film ci-dessus."
           this.showMessage(message, true)
           this.queryTarget.focus()
         } else {
-          this.fill(data)
+          this.fillFromCatalog(data)
         }
       })
   }
@@ -111,27 +112,29 @@ export default class extends Controller {
     this.resultsTarget.classList.remove("hidden")
   }
 
+  // Film choisi dans la recherche : la liste vient de TMDB (affichage seulement), la fiche du catalogue
+  // (Wikidata, Wikipédia) est demandée au serveur. Rien de TMDB n'est enregistré : leurs conditions l'interdisent
   fill(movie) {
+    this.resultsTarget.classList.add("hidden")
+    this.queryTarget.value = movie.title || ""
+    fetch(`/api/search/movie_detail/${movie.id}`)
+      .then(res => res.json())
+      .catch(() => ({ error: "Fiche indisponible pour le moment : complète-la à la main." }))
+      .then(data => data.error ? this.showMessage(data.error, true) : this.fillFromCatalog(data))
+  }
+
+  // Fiche du catalogue (réponse de movie_detail ou du scan) ; tmdb_id repart avec le formulaire pour relier l'œuvre
+  fillFromCatalog(movie) {
     this.titleTarget.value = movie.title || ""
     this.yearTarget.value = movie.year || ""
     this.descriptionTarget.value = movie.description || ""
+    this.directorTarget.value = movie.director || ""
+    this.studioTarget.value = movie.studio || ""
+    if (this.hasTmdbIdTarget) this.tmdbIdTarget.value = movie.tmdb_id || ""
     // Lus sur la boîte au scan (absents d'une recherche par titre : on ne touche pas à la saisie)
     if (movie.format) this.formatTarget.value = movie.format
     if (movie.edition) this.editionTarget.value = movie.edition
     if (this.hasBarcodeTarget && movie.barcode) this.barcodeTarget.value = movie.barcode
     this.resultsTarget.classList.add("hidden")
-
-    // Si director/studio déjà dans la réponse (barcode), pas besoin du deuxième fetch
-    if (movie.director || movie.studio) {
-      this.directorTarget.value = movie.director || ""
-      this.studioTarget.value = movie.studio || ""
-    } else if (movie.id) {
-      fetch(`/api/search/movie_detail/${movie.id}`)
-        .then(res => res.json())
-        .then(data => {
-          this.directorTarget.value = data.director || ""
-          this.studioTarget.value = data.studio || ""
-        })
-    }
   }
 }

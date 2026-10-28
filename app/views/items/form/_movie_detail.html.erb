@@ -2,6 +2,8 @@
 <div data-item-type-target="form" data-form="MovieDetail" class="hidden mb-4" data-controller="movie-search">
   <%# Code-barres scanné, gardé avec l'item %>
   <%= f.hidden_field :barcode, data: { "movie-search-target": "barcode" } %>
+  <%# Film choisi : seul son identifiant part, le serveur relit l'œuvre au catalogue (Wikidata, jamais TMDB) %>
+  <%= hidden_field_tag "product[tmdb_id]", f.object.product&.tmdb_id, id: nil, data: { "movie-search-target": "tmdbId" } %>
   <div class="relative mb-4">
     <label class="text-sm font-semibold text-gray-600 mb-1 block">Recherche</label>
     <div class="flex gap-2">
