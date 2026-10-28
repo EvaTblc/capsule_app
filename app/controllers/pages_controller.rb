@@ -1,5 +1,5 @@
 class PagesController < ApplicationController
-  before_action :authenticate_user!, except: [ :home, :offline ]
+  before_action :authenticate_user!, except: [ :home, :offline, :credits ]
   def home
     if user_signed_in?
       redirect_to collections_path
@@ -31,6 +31,10 @@ class PagesController < ApplicationController
     else
       render :edit_address, status: :unprocessable_entity
     end
+  end
+
+  # Attribution des sources de données, exigée par leurs conditions d'utilisation
+  def credits
   end
 
   def offline

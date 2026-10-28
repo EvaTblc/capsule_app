@@ -63,6 +63,7 @@ Rails.application.routes.draw do
   get "profile", to: "pages#profile"
   get "invite/:token", to: "invites#join", as: "invite"
   get "offline", to: "pages#offline"
+  get "credits", to: "pages#credits"
   # Violations de Content Security Policy signalées par les navigateurs
   post "csp-violations", to: "csp_reports#create"
   post "/items/identify", to: "items#identify"

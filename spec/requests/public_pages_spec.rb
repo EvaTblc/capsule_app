@@ -11,7 +11,8 @@ RSpec.describe "Pages publiques", type: :request do
     "accueil" => "/",
     "connexion" => "/users/sign_in",
     "inscription" => "/users/sign_up",
-    "mot de passe oublié" => "/users/password/new"
+    "mot de passe oublié" => "/users/password/new",
+    "crédits" => "/credits"
   }.each do |name, path|
     it "#{name} : vouvoiement, aucun tutoiement" do
       get path
@@ -24,6 +25,23 @@ RSpec.describe "Pages publiques", type: :request do
     messages = YAML.load_file(Rails.root.join("config/locales/devise.fr.yml"))["fr"].to_s
     expect(messages).not_to match(TUTOIEMENT)
     expect(messages).not_to match(/\b(connectée|déconnectée|inscrite)\b/)
+  end
+
+  describe "crédits" do
+    it "attribue chaque source, avec le logo et la mention exacte exigés par TMDB" do
+      get credits_path
+      expect(response.body).to include("credits/tmdb", # logo TMDB obligatoire
+                                       "This product uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.",
+                                       "IGDB.com", "Google Books", "Discogs", "UPCitemdb", "EAN-DB", "OpenStreetMap", "Anthropic")
+    end
+
+    it "est accessible depuis l'accueil et depuis le profil" do
+      get root_path
+      expect(response.body).to include(credits_path)
+      sign_in create(:user)
+      get profile_path
+      expect(response.body).to include(credits_path)
+    end
   end
 
   describe "inscription" do

@@ -1,0 +1,73 @@
+<%# Crédits des sources de données : attribution exigée par leurs conditions d'utilisation (TMDB : logo et mention
+    exacte ; IGDB : attribution visible à un endroit fixe ; Google, Discogs...). Page publique, tournures neutres %>
+<div class="min-h-screen p-4 pt-20 pb-24 max-w-lg mx-auto">
+
+  <%= link_to (user_signed_in? ? profile_path : root_path), class: "flex items-center gap-1 text-xs text-gray-400 mb-3" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+    <%= user_signed_in? ? "Profil" : "Accueil" %>
+  <% end %>
+
+  <h1 class="text-2xl font-black tracking-tight mb-2">Crédits</h1>
+  <p class="text-sm text-gray-500 mb-6">Capsule s'appuie sur ces services pour retrouver et compléter les fiches des collections.</p>
+
+  <div class="flex flex-col gap-3">
+    <section class="bg-white border border-gray-100 rounded-2xl p-4">
+      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Films</h2>
+      <%# Logo TMDB obligatoire, moins visible que la marque Capsule %>
+      <%= link_to "https://www.themoviedb.org", target: "_blank", rel: "noopener" do %>
+        <%= image_tag "credits/tmdb.svg", alt: "The Movie Database (TMDB)", class: "h-4 mb-2" %>
+      <% end %>
+      <%# Mention exacte demandée par les conditions d'utilisation de l'API TMDB (section 3) %>
+      <p class="text-sm text-gray-700">This product uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</p>
+      <p class="text-xs text-gray-400 mt-1">Capsule utilise TMDB et les API de TMDB, sans être approuvé, certifié ou soutenu par TMDB.</p>
+    </section>
+
+    <section class="bg-white border border-gray-100 rounded-2xl p-4">
+      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Jeux vidéo</h2>
+      <p class="text-sm text-gray-700">
+        Données de jeux fournies par <%= link_to "IGDB.com", "https://www.igdb.com", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>.
+      </p>
+    </section>
+
+    <section class="bg-white border border-gray-100 rounded-2xl p-4">
+      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Livres</h2>
+      <p class="text-sm text-gray-700">
+        Données de livres fournies par <%= link_to "Google Books", "https://books.google.com", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>.
+      </p>
+    </section>
+
+    <section class="bg-white border border-gray-100 rounded-2xl p-4">
+      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Musique</h2>
+      <p class="text-sm text-gray-700">
+        Données musicales fournies par <%= link_to "Discogs", "https://www.discogs.com", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>.
+      </p>
+    </section>
+
+    <section class="bg-white border border-gray-100 rounded-2xl p-4">
+      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Codes-barres</h2>
+      <p class="text-sm text-gray-700">
+        Produits identifiés grâce à <%= link_to "UPCitemdb", "https://www.upcitemdb.com", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>
+        et <%= link_to "EAN-DB", "https://ean-db.com", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>.
+      </p>
+    </section>
+
+    <section class="bg-white border border-gray-100 rounded-2xl p-4">
+      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Carte et brocantes</h2>
+      <p class="text-sm text-gray-700">
+        Carte © <%= link_to "Mapbox", "https://www.mapbox.com/about/maps", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>
+        © <%= link_to "OpenStreetMap", "https://www.openstreetmap.org/copyright", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>.
+        Brocantes et vide-greniers référencés par <%= link_to "Brocabrac", "https://brocabrac.fr", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>.
+      </p>
+    </section>
+
+    <section class="bg-white border border-gray-100 rounded-2xl p-4">
+      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Intelligence artificielle</h2>
+      <p class="text-sm text-gray-700">
+        Traductions, estimations de valeur, identification de figurines et lecture des codes-barres par Claude,
+        d'<%= link_to "Anthropic", "https://www.anthropic.com", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>.
+      </p>
+    </section>
+  </div>
+</div>

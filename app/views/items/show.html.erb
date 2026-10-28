@@ -51,7 +51,7 @@
 
       <% if key == "description" %>
         <div class="flex justify-between items-start border-b border-gray-50 pb-2" data-controller="expandable">
-          <p class="text-xs font-semibold text-gray-400 uppercase">Description<%= " (en anglais)" if english_only %></p>
+          <p class="text-xs font-semibold text-gray-400 uppercase">Description<%= " (en anglais)" if english_only || current_user.free? %></p>
           <div class="flex flex-col items-end gap-1 max-w-xs">
             <p class="text-sm font-medium text-right line-clamp-3" data-expandable-target="content"><%= value %></p>
             <button data-expandable-target="button" data-action="click->expandable#toggle" class="text-xs text-purple-600 font-semibold">Voir plus</button>
