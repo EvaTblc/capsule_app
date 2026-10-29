@@ -8,7 +8,8 @@ class CspReportsController < ActionController::API
     report = JSON.parse(request.raw_post).fetch("csp-report", {}) rescue {}
     Rails.logger.warn(
       "[CSP] #{report["violated-directive"] || report["effective-directive"]} " \
-      "bloquerait #{report["blocked-uri"].to_s.truncate(200)} sur #{report["document-uri"].to_s.truncate(200)}"
+      "bloquerait #{report["blocked-uri"].to_s.truncate(200)} sur #{report["document-uri"].to_s.truncate(200)}" \
+      "#{" : #{report["script-sample"].to_s.squish.truncate(80).inspect}" if report["script-sample"].present?}"
     )
     head :no_content
   end

@@ -9,8 +9,9 @@ Rails.application.configure do
   config.content_security_policy do |policy|
     policy.default_src :self
     # Scripts : l'appli (importmap + nonce pour les scripts en ligne), Mapbox GL, Lottie (version figée + SRI),
-    # jspm (modules mapbox-gl et process pinnés dans config/importmap.rb)
-    policy.script_src :self, "https://api.mapbox.com", "https://unpkg.com", "https://ga.jspm.io"
+    # jspm (modules mapbox-gl et process pinnés dans config/importmap.rb).
+    # report-sample : le rapport de violation contient le début du script fautif (logué par CspReportsController)
+    policy.script_src :self, "https://api.mapbox.com", "https://unpkg.com", "https://ga.jspm.io", :report_sample
     # Styles : unsafe-inline nécessaire pour les attributs style= et les styles injectés par Turbo et Mapbox
     policy.style_src :self, :unsafe_inline, "https://api.mapbox.com"
     # Images : couvertures (Cloudinary, IGDB, TMDB), avatars Google, aperçus locaux (data:, blob:)
@@ -33,6 +34,10 @@ Rails.application.configure do
 
   # Nonce pour les scripts en ligne (importmap, enregistrement du service worker) : seuls ceux
   # générés par le serveur pour cette page portent le bon nonce
+  # Nonce différent à chaque requête (un nonce volé ne sert qu'une fois). Conséquence avec Turbo, qui charge les pages
+  # suivantes sans recharger le document : le navigateur garde le nonce du premier chargement, donc AUCUN script en
+  # ligne dans le <body> (il serait bloqué sur les pages ouvertes via Turbo). Le JS va dans app/javascript ; seuls les
+  # scripts de l'importmap, dans le <head>, ne sont pas réexécutés. Vérifié par spec/system/content_security_policy_spec.rb
   config.content_security_policy_nonce_generator = ->(request) { SecureRandom.base64(16) }
   config.content_security_policy_nonce_directives = %w[script-src]
 

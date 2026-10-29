@@ -131,12 +131,5 @@
       </nav>
     <% end %>
 
-    <%# nonce : script en ligne autorisé par la CSP, car généré par le serveur pour cette page %>
-    <%= javascript_tag nonce: true do %>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker')
-      }
-    <% end %>
-
   </body>
 </html>
