@@ -69,18 +69,18 @@ RSpec.describe "Items (navigateur)", type: :system do
     end
 
     it "jeu multiplateforme : la plateforme choisie par l'utilisateur n'est pas écrasée par le choix du jeu" do
-      multi = zelda.merge("platforms" => [ { "name" => "PlayStation 4" }, { "name" => "Xbox One" } ])
+      multi = zelda.merge("platforms" => [ { "name" => "PlayStation 5" }, { "name" => "Xbox Series X|S" } ])
       allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([ multi ])
       visit collection_path(games)
       find("[data-action='click->quick-add#open']").click
 
-      click_on "PS4"
+      click_on "PS5"
       fill_in placeholder: "Rechercher un jeu...", with: "Zelda"
       find("[data-games-search-target='results'] div", text: "The Legend of Zelda").click
       click_on "Ajouter →"
 
       expect(page).to have_css("#quick-add-list", text: "✓ The Legend of Zelda")
-      expect(games.items.last.item_detailable.platform).to eq("PS4")
+      expect(games.items.last.item_detailable.platform).to eq("PS5")
     end
   end
 
@@ -141,6 +141,68 @@ RSpec.describe "Items (navigateur)", type: :system do
       expect(page).to have_content("Item ajouté !")
       expect(Item.last.product).to eq(intouchables)
       expect(page).to have_link("Résumé : Wikipédia (CC BY-SA)", href: "https://fr.wikipedia.org/wiki/Intouchables_(film)")
+    end
+  end
+
+  describe "plateformes : boutons pour les actuelles, liste déroulante pour les autres" do
+    let(:games) { collection_of("video_games") }
+
+    def open_game_form
+      visit new_collection_item_path(games)
+      find("[data-type='VideoGameDetail']").click
+    end
+
+    it "plateforme choisie dans la liste, puis un bouton : la liste revient à zéro, la dernière choisie est enregistrée" do
+      open_game_form
+      within("[data-form='VideoGameDetail']") do
+        find("[data-games-search-target='platformList']").select("Game Boy Advance")
+        expect(find("[data-games-search-target='platform']", visible: false).value).to eq("Game Boy Advance")
+
+        click_on "Switch 2"
+        expect(find("[data-games-search-target='platformList']").value).to eq("")
+        expect(page).to have_css("button.bg-purple-100[data-platform='Switch 2']")
+
+        find("[data-games-search-target='platformList']").select("PC")
+        expect(page).not_to have_css("button.bg-purple-100[data-platform]")
+        fill_in placeholder: "Titre de l'item...", with: "Doom"
+      end
+      click_on "Valider"
+
+      expect(page).to have_content("Item ajouté !")
+      expect(Item.last.item_detailable.platform).to eq("PC")
+    end
+
+    it "jeu sorti sur une seule plateforme rétro : sélectionnée automatiquement dans la liste" do
+      gba = { "id" => 5, "name" => "Golden Sun", "platforms" => [ { "name" => "Game Boy Advance" } ] }
+      allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([ gba ])
+      allow(IgdbService).to receive(:game).and_return(gba)
+
+      open_game_form
+      within("[data-form='VideoGameDetail']") do
+        fill_in placeholder: "Rechercher un jeu...", with: "Golden Sun"
+        find("[data-games-search-target='results'] div", text: "Golden Sun").click
+        expect(find("[data-games-search-target='platformList']").value).to eq("Game Boy Advance")
+      end
+    end
+
+    it "modification d'un jeu rétro : sa plateforme est présélectionnée dans la liste" do
+      item = create(:item, collection: games, title: "Golden Sun", item_detailable_type: "VideoGameDetail",
+                           item_detailable: create(:video_game_detail, platform: "Game Boy Advance"))
+      visit edit_collection_item_path(games, item)
+      expect(find("[data-form='VideoGameDetail'] [data-games-search-target='platformList']").value).to eq("Game Boy Advance")
+    end
+
+    it "ajout rapide : après un ajout, la liste revient aussi à zéro" do
+      allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([])
+      visit collection_path(games)
+      find("[data-action='click->quick-add#open']").click
+      find("[data-games-search-target='platformList']").select("Wii")
+      find("[data-games-search-target='title']", visible: false).execute_script("this.value = 'Wii Sports'")
+      click_on "Ajouter →"
+
+      expect(page).to have_css("#quick-add-list", text: "✓ Wii Sports")
+      expect(games.items.last.item_detailable.platform).to eq("Wii")
+      expect(find("[data-games-search-target='platformList']").value).to eq("")
     end
   end
 

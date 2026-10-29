@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["query", "results", "platform", "genre", "releaseDate", "developer", "edition", "barcode", "igdbId", "description", "scanner", "title"]
+  static targets = ["query", "results", "platform", "genre", "releaseDate", "developer", "edition", "barcode", "igdbId", "description", "scanner", "title", "platformList"]
 
   connect() {
     this.closeResults = (e) => {
@@ -162,6 +162,15 @@ export default class extends Controller {
         btn.classList.add('bg-white', 'border-gray-200', 'text-gray-500')
       }
     })
+    
+    const isButton = [ ...this.element.querySelectorAll("[data-platform]") ].some(btn => btn.dataset.platform === selected)
+    if (this.hasPlatformListTarget) {
+      this.platformListTarget.value = isButton ? "" : selected
+    }
+  }
+
+  selectFromList(event) {
+    this.choosePlatform(event.target.value)
   }
 
   fill(game) {

@@ -22,13 +22,14 @@ export default class extends Controller {
       const platformInput = this.element.querySelector("[data-games-search-target='platform']")
       const igdbIdInput = this.element.querySelector("[data-games-search-target='igdbId']")
       const results = this.element.querySelector("[data-games-search-target='results']")
+      const platformList = this.element.querySelector("[data-games-search-target='platformList']")
 
       if (queryInput) queryInput.value = ""
       if (titleInput) titleInput.value = ""
       if (platformInput) platformInput.value = ""
       if (igdbIdInput) igdbIdInput.value = ""
       if (results) results.classList.add("hidden")
-
+      if (platformList) platformList.value = ""
       // Reset pills plateforme
       // Mêmes classes que games-search#choosePlatform
       this.element.querySelectorAll("[data-platform]").forEach(btn => {

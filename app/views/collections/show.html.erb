@@ -280,7 +280,7 @@
           <input data-games-search-target="platform" name="video_game_detail[platform]" type="hidden">
 
           <div class="flex flex-wrap gap-2">
-            <% VideoGameDetail::PLATFORMS.each do |platform| %>
+            <% VideoGameDetail::MAIN_PLATFORMS.each do |platform| %>
               <button type="button"
                       data-platform="<%= platform %>"
                       data-action="click->games-search#selectPlatform"
@@ -288,6 +288,9 @@
                 <%= platform %>
               </button>
             <% end %>
+            <select data-games-search-target="platformList" data-action="change->games-search#selectFromList" class="mt-2 w-full border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-600 bg-white focus:outline-none focus:border-purple-400">
+              <%= grouped_options_for_select(VideoGameDetail::PLATFORM_GROUPS, nil, prompt: "Autres plateformes…") %>
+            </select>
           </div>
 
           <div class="flex items-center gap-3">

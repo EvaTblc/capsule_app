@@ -16,12 +16,17 @@ class BarcodeService
   }.freeze
 
   # Mots du support décrit par la BnF (zone 215) → plateforme de l'appli. Les plus précis d'abord :
-  # « Nintendo 3DS » avant « Nintendo DS », « PlayStation 4 » avant « PlayStation »
+  # « Nintendo 3DS » avant « Nintendo DS », « PlayStation 4 » avant « PlayStation », « Game Boy Advance » avant « Game Boy »
   BNF_PLATFORMS = {
     "Nintendo Switch 2" => "Switch 2", "Switch" => "Switch", "Nintendo 3DS" => "Nintendo 3DS", "Nintendo DS" => "Nintendo DS",
-    "Wii U" => "Wii U", "Wii" => "Wii", "GameCube" => "Gamecube",
+    "Wii U" => "Wii U", "Wii" => "Wii", "GameCube" => "Gamecube", "Nintendo 64" => "Nintendo 64", "Super Nintendo" => "Super Nintendo",
+    "Game Boy Advance" => "Game Boy Advance", "Game Boy Color" => "Game Boy Color", "Game Boy" => "Game Boy",
     "PlayStation 5" => "PS5", "PlayStation 4" => "PS4", "PlayStation 3" => "PS3", "PlayStation 2" => "PS2", "PlayStation" => "PS1",
-    "Xbox Series" => "Xbox Series", "Xbox One" => "Xbox One", "Xbox 360" => "Xbox 360", "Xbox" => "Xbox"
+    "Xbox Series" => "Xbox Series", "Xbox One" => "Xbox One", "Xbox 360" => "Xbox 360", "Xbox" => "Xbox",
+    "Mega Drive" => "Mega Drive", "Game Gear" => "Game Gear", "Atari" => "Atari",
+    # Jeux PC : la BnF ne nomme pas la plateforme, seulement le disque (« 4 disques optiques numériques (DVD-ROM) »),
+    # alors qu'un jeu console la précise toujours (« (PlayStation 4) ») : en dernier, un nom de console l'emporte
+    "DVD-ROM" => "PC", "CD-ROM" => "PC"
   }.freeze
 
   # Même chose pour le format d'un film

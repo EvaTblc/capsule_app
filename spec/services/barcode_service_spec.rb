@@ -92,8 +92,8 @@ RSpec.describe BarcodeService do
     end
 
     it "plateforme hors de la liste de l'appli : ignorée (le champ n'accepte que ses boutons)" do
-      claude_answers('{"title": "Doom", "french_title": "Doom", "platform": "PC", "edition": null}')
-      expect(described_class.product_details("Doom PC", kind: :game)[:platform]).to be_nil
+      claude_answers('{"title": "Super Mario Bros.", "french_title": "Super Mario Bros.", "platform": "NES", "edition": null}')
+      expect(described_class.product_details("Super Mario Bros NES", kind: :game)[:platform]).to be_nil
     end
 
     it "film : format de la liste, envoie le titre brut et la consigne propre aux films" do
@@ -171,8 +171,18 @@ RSpec.describe BarcodeService do
         expect(described_class.lookup("5051889041535", kind: :movie)).to have_attributes(format: "Blu-ray", edition: "ultimate edition")
       end
 
-      it "plateformes : la plus précise l'emporte (PS4 et non PS1, 3DS et non DS)" do
-        { "1 disque optique numérique (PlayStation 4)" => "PS4", "1 cartouche Nintendo 3DS" => "Nintendo 3DS" }.each_with_index do |(support, platform), i|
+      it "plateformes : la plus précise l'emporte (PS4 et non PS1, 3DS et non DS, Game Boy Advance et non Game Boy)" do
+        # Supports réels relevés dans le catalogue de la BnF (majuscules variables : la recherche les ignore)
+        {
+          "1 disque optique numérique (PlayStation 4)" => "PS4",
+          "1 cartouche Nintendo 3DS" => "Nintendo 3DS",
+          "1 cartouche Game Boy advance : coul., son. ; 6 cm" => "Game Boy Advance",
+          "1 cartouche Game Boy : n. et b." => "Game Boy",
+          "1 cartouche Nintendo 64 : coul. (PAL), son. ; 12 cm" => "Nintendo 64",
+          "1 cartouche SEGA Mega Drive : coul. (PAL, SECAM), son." => "Mega Drive",
+          "4 disques optiques numériques (DVD-ROM) : coul., son. ; 12 cm" => "PC", # jeu PC : seul le disque est nommé
+          "1 disque optique numérique (DVD-ROM PlayStation 3)" => "PS3" # un nom de console l'emporte sur « DVD-ROM »
+        }.each_with_index do |(support, platform), i|
           sources_return(bnf: pokemon.merge(support: support))
           expect(described_class.lookup("004549646485#{i}", kind: :game).platform).to eq(platform)
         end
