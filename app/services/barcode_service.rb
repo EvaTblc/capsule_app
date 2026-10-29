@@ -11,7 +11,7 @@ class BarcodeService
   KINDS = {
     game: { label: "un jeu vidéo", title: "son titre principal tel que référencé sur IGDB (en général le titre nord-américain)",
             support: "platform", support_label: "sa plateforme", choices: VideoGameDetail::PLATFORMS - [ "Autres" ] },
-    movie: { label: "un filmfix(csp): service worker enregistré dans le JS de l'appli, plus aucun script en ligne bloqué via Turbo (DVD, Blu-ray...)", title: "son titre original",
+    movie: { label: "un film (DVD, Blu-ray...)", title: "son titre original",
              support: "format", support_label: "son format", choices: MovieDetail::FORMATS }
   }.freeze
 
