@@ -35,4 +35,21 @@ RSpec.describe VideoGameDetail, type: :model do
       expect(detail).not_to be_valid
     end
   end
+
+  describe "validations platform" do
+    it "est valide avec une plateforme de l'appli, des boutons comme de la liste" do
+      expect(build(:video_game_detail, platform: "Switch 2")).to be_valid
+      expect(build(:video_game_detail, platform: "Game Boy Advance")).to be_valid
+    end
+
+    it "est valide sans plateforme" do
+      expect(build(:video_game_detail, platform: nil)).to be_valid
+      expect(build(:video_game_detail, platform: "")).to be_valid
+    end
+
+    it "est invalide avec un nom IGDB ou une liste de plateformes" do
+      expect(build(:video_game_detail, platform: "Nintendo Switch")).not_to be_valid
+      expect(build(:video_game_detail, platform: "Wii U, Game Boy Advance")).not_to be_valid
+    end
+  end
 end

@@ -27,9 +27,14 @@ RSpec.describe PlatformCleanup do
   end
 
   describe ".run" do
+    # Anciennes valeurs refusées aujourd'hui par la validation : enregistrées sans elle, comme avant son ajout
+    def legacy_game(platform)
+      build(:video_game_detail, platform: platform).tap { |detail| detail.save!(validate: false) }
+    end
+
     let!(:correct) { create(:video_game_detail, platform: "PS5") }
-    let!(:igdb) { create(:video_game_detail, platform: "Nintendo Switch") }
-    let!(:list) { create(:video_game_detail, platform: "Wii U, Game Boy Advance") }
+    let!(:igdb) { legacy_game("Nintendo Switch") }
+    let!(:list) { legacy_game("Wii U, Game Boy Advance") }
 
     it "mode essai (par défaut) : le verdict de chaque jeu, et rien n'est enregistré" do
       results = described_class.run
