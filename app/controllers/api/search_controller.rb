@@ -28,7 +28,7 @@ class Api::SearchController < ApplicationController
     # Étape 3 : IGDB par nom (titre principal, puis titre français), en écartant les jeux dont le titre ne correspond pas
     game = nil
     names.each do |name|
-      games = igdb_search(name, limit: 3)
+      games = IgdbService.search(name, limit: 3)
       return render json: { error: "IGDB indisponible" }, status: :service_unavailable if games.nil?
 
       game = games.find { |candidate| matching_title?(name, igdb_titles(candidate)) }
@@ -82,7 +82,7 @@ class Api::SearchController < ApplicationController
     query = params[:query].to_s.strip
     return render json: { error: "Query vide" }, status: :unprocessable_entity if query.blank?
 
-    games = igdb_search(query, limit: 10)
+    games = IgdbService.search(query, limit: 10)
     return render json: { error: "IGDB indisponible" }, status: :service_unavailable if games.nil?
 
     render json: { games: games.map { |game| igdb_game_json(game, summary: game["summary"]) } }
@@ -279,60 +279,12 @@ class Api::SearchController < ApplicationController
   end
 
   def significant_words(title)
-    normalize_game_title(title).split.to_set - TITLE_FILLER_WORDS
+    IgdbService.normalize_title(title).split.to_set - TITLE_FILLER_WORDS
   end
 
   # Titre d'origine et titres alternatifs (français, européen...) d'un jeu IGDB
   def igdb_titles(game)
     [ game["name"], *game["alternative_names"]&.map { |alt| alt["name"] } ]
-  end
-
-  # Types IGDB qui ne sont pas des jeux qu'on range dans une collection : DLC, mod, mise à jour, épisode, saison, fork, pack
-  IGDB_EXCLUDED_GAME_TYPES = [ 1, 5, 6, 7, 12, 13, 14 ].freeze
-
-  # Jeux IGDB correspondant à name ([] si aucun), nil si IGDB est indisponible.
-  # Deux recherches en parallèle : celle d'IGDB, qui ignore les titres français,
-  # et une recherche dans les titres français officiels (« Pokémon Épée » → Pokémon Sword).
-  # Les correspondances françaises passent en premier, sans doublon.
-  def igdb_search(name, limit:)
-    token = IgdbService.access_token
-    return nil unless token
-
-    # Les guillemets fermeraient la chaîne de la requête IGDB : on les retire
-    query = name.delete('"\\')
-    french_fields = IgdbService::GAME_FIELDS.map { |field| "game.#{field}" }.join(",")
-
-    # On demande plus de résultats que nécessaire : une partie est écartée (mods, mises à jour...)
-    fetch_limit = [ limit * 3, 15 ].max
-    searches = [
-      Thread.new { IgdbService.post("games", "fields #{IgdbService::GAME_FIELDS.join(',')}; search \"#{query}\"; limit #{fetch_limit};", token) },
-      Thread.new do
-        IgdbService.post("alternative_names",
-                  "fields #{french_fields}; where name ~ *\"#{query}\"* & comment = \"French title\"; limit #{fetch_limit};", token)
-      end
-    ]
-    games, french_matches = searches.map(&:value)
-    return nil if games.nil? # la recherche principale a échoué : IGDB indisponible
-
-    french_games = (french_matches || []).filter_map { |match| match["game"] }
-    rank_igdb_games(french_games + games, query).first(limit)
-  end
-
-  # Écarte les mods & co, puis classe : titre identique à la recherche d'abord, puis les plus populaires.
-  # Sans ça, « Super Mario Odyssey » renvoyait en premier un mod de fan (« Super Mario Odyssey F.L.U.D.D. »)
-  def rank_igdb_games(games, query)
-    wanted = normalize_game_title(query)
-    games.uniq { |game| game["id"] }
-         .reject { |game| IGDB_EXCLUDED_GAME_TYPES.include?(game["game_type"]) }
-         .sort_by do |game|
-           titles = [ game["name"], IgdbService.french_title(game) ].compact.map { |title| normalize_game_title(title) }
-           [ titles.include?(wanted) ? 0 : 1, -(game["total_rating_count"] || 0) ]
-         end
-  end
-
-  # « Super Mario: Odyssey » et « Super Mario Odyssey » doivent être considérés comme identiques
-  def normalize_game_title(title)
-    I18n.transliterate(title.to_s).downcase.gsub(/[^a-z0-9]+/, " ").strip
   end
 
   def igdb_game_json(game, summary:)

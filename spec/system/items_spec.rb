@@ -48,7 +48,7 @@ RSpec.describe "Items (navigateur)", type: :system do
     let(:zelda) { { "id" => 1, "name" => "The Legend of Zelda", "platforms" => [ { "name" => "Nintendo Switch" } ] } }
 
     before do
-      allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([ zelda ])
+      allow(IgdbService).to receive(:search).and_return([ zelda ])
       allow(IgdbService).to receive(:game) { |id| zelda.merge("id" => id) }
     end
 
@@ -70,7 +70,7 @@ RSpec.describe "Items (navigateur)", type: :system do
 
     it "jeu multiplateforme : la plateforme choisie par l'utilisateur n'est pas écrasée par le choix du jeu" do
       multi = zelda.merge("platforms" => [ { "name" => "PlayStation 5" }, { "name" => "Xbox Series X|S" } ])
-      allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([ multi ])
+      allow(IgdbService).to receive(:search).and_return([ multi ])
       visit collection_path(games)
       find("[data-action='click->quick-add#open']").click
 
@@ -174,7 +174,7 @@ RSpec.describe "Items (navigateur)", type: :system do
 
     it "jeu sorti sur une seule plateforme rétro : sélectionnée automatiquement dans la liste" do
       gba = { "id" => 5, "name" => "Golden Sun", "platforms" => [ { "name" => "Game Boy Advance" } ] }
-      allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([ gba ])
+      allow(IgdbService).to receive(:search).and_return([ gba ])
       allow(IgdbService).to receive(:game).and_return(gba)
 
       open_game_form
@@ -193,7 +193,7 @@ RSpec.describe "Items (navigateur)", type: :system do
     end
 
     it "ajout rapide : après un ajout, la liste revient aussi à zéro" do
-      allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([])
+      allow(IgdbService).to receive(:search).and_return([])
       visit collection_path(games)
       find("[data-action='click->quick-add#open']").click
       find("[data-games-search-target='platformList']").select("Wii")
@@ -211,7 +211,7 @@ RSpec.describe "Items (navigateur)", type: :system do
       botw = { "id" => 7, "name" => "The Legend of Zelda: Breath of the Wild", "first_release_date" => 1488499200,
                "platforms" => [ { "name" => "Nintendo Switch" } ], "genres" => [ { "name" => "Adventure" } ],
                "involved_companies" => [ { "developer" => true, "company" => { "name" => "Nintendo EPD" } } ] }
-      allow_any_instance_of(Api::SearchController).to receive(:igdb_search).and_return([ botw ])
+      allow(IgdbService).to receive(:search).and_return([ botw ])
       allow(IgdbService).to receive(:game).with(7).and_return(botw) # relu par le serveur à l'enregistrement
       games = collection_of("video_games")
 

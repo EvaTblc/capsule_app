@@ -11,6 +11,9 @@ class IgdbService
 
   EUROPE_REGION = 1 # release_date_regions d'IGDB : 1 = europe
 
+  # Types IGDB qui ne sont pas des jeux qu'on range dans une collection : DLC, mod, mise à jour, épisode, saison, fork, pack
+  EXCLUDED_GAME_TYPES = [ 1, 5, 6, 7, 12, 13, 14 ].freeze
+
   def self.access_token
     token = Rails.cache.read(CACHE_KEY)
     if token.nil?
@@ -34,6 +37,39 @@ class IgdbService
   rescue HTTP::Error, JSON::ParserError => e
     Rails.logger.warn("[igdb] #{endpoint} : #{e.class} #{e.message}")
     nil
+  end
+
+  # Jeux IGDB correspondant à name ([] si aucun), nil si IGDB est indisponible.
+  # Deux recherches en parallèle : celle d'IGDB, qui ignore les titres français,
+  # et une recherche dans les titres français officiels (« Pokémon Épée » → Pokémon Sword).
+  # Les correspondances françaises passent en premier, sans doublon.
+  def self.search(name, limit:)
+    token = access_token
+    return nil unless token
+
+    # Les guillemets fermeraient la chaîne de la requête IGDB : on les retire
+    query = name.delete('"\\')
+    french_fields = GAME_FIELDS.map { |field| "game.#{field}" }.join(",")
+
+    # On demande plus de résultats que nécessaire : une partie est écartée (mods, mises à jour...)
+    fetch_limit = [ limit * 3, 15 ].max
+    searches = [
+      Thread.new { post("games", "fields #{GAME_FIELDS.join(',')}; search \"#{query}\"; limit #{fetch_limit};", token) },
+      Thread.new do
+        post("alternative_names",
+             "fields #{french_fields}; where name ~ *\"#{query}\"* & comment = \"French title\"; limit #{fetch_limit};", token)
+      end
+    ]
+    games, french_matches = searches.map(&:value)
+    return nil if games.nil? # la recherche principale a échoué : IGDB indisponible
+
+    french_games = (french_matches || []).filter_map { |match| match["game"] }
+    rank(french_games + games, query).first(limit)
+  end
+
+  # « Super Mario: Odyssey » et « Super Mario Odyssey » doivent être considérés comme identiques
+  def self.normalize_title(title)
+    I18n.transliterate(title.to_s).downcase.gsub(/[^a-z0-9]+/, " ").strip
   end
 
   # Un jeu par son identifiant IGDB, nil s'il est inconnu ou si IGDB ne répond pas
@@ -72,6 +108,18 @@ class IgdbService
     Rails.logger.error("IGDB token fetch failed: #{e.message}")
     nil
   end
+  # Écarte les mods & co, puis classe : titre identique à la recherche d'abord, puis les plus populaires.
+  # Sans ça, « Super Mario Odyssey » renvoyait en premier un mod de fan (« Super Mario Odyssey F.L.U.D.D. »)
+  def self.rank(games, query)
+    wanted = normalize_title(query)
+    games.uniq { |game| game["id"] }
+         .reject { |game| EXCLUDED_GAME_TYPES.include?(game["game_type"]) }
+         .sort_by do |game|
+           titles = [ game["name"], french_title(game) ].compact.map { |title| normalize_title(title) }
+           [ titles.include?(wanted) ? 0 : 1, -(game["total_rating_count"] || 0) ]
+         end
+  end
+
   # « private » ne s'applique pas aux méthodes def self. : il faut private_class_method
-  private_class_method :fetch_new_token
+  private_class_method :fetch_new_token, :rank
 end

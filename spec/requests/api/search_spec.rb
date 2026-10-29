@@ -141,19 +141,19 @@ RSpec.describe "API de recherche", type: :request do
     end
 
     it "annonce en vrac : le nom extrait par Claude trouve le bon jeu, en français" do
-      expect_any_instance_of(controller_class).to receive(:igdb_search).with("Pokémon Diamond Version", limit: 3).and_return([ diamond ])
+      expect(IgdbService).to receive(:search).with("Pokémon Diamond Version", limit: 3).and_return([ diamond ])
       scan("Game: Pokemon Diamant Edition for Nintendo DS + LITE + DSi + XL + 3DS 2DS", [ "Pokémon Diamond Version", "Pokémon Diamant" ])
       expect(json).to include("name" => "Pokémon Diamant", "original_name" => "Pokémon Diamond Version")
     end
 
     it "ce que dit la boîte : plateforme, édition, et le code-barres (normalisé) à garder avec l'item" do
-      allow_any_instance_of(controller_class).to receive(:igdb_search).and_return([ diamond ])
+      allow(IgdbService).to receive(:search).and_return([ diamond ])
       box = scan("Pokémon : version diamant", [ "Pokémon Diamond Version" ], source: "bnf", platform: "Nintendo DS", edition: "Collector")
       expect(json).to include("platform" => "Nintendo DS", "edition" => "Collector", "barcode" => box.barcode)
     end
 
     it "les noms extraits sont gardés avec la boîte : le scan suivant du même code ne rappelle pas Claude" do
-      allow_any_instance_of(controller_class).to receive(:igdb_search).and_return([ diamond ])
+      allow(IgdbService).to receive(:search).and_return([ diamond ])
       box = scan("Pokémon : version diamant", [ "Pokémon Diamond Version" ])
       expect(box.reload.details["names"]).to eq([ "Pokémon Diamond Version" ])
       expect(BarcodeService).not_to receive(:product_details)
@@ -171,20 +171,20 @@ RSpec.describe "API de recherche", type: :request do
     end
 
     it "garde-fou : un jeu mieux classé mais au titre différent est écarté" do
-      allow_any_instance_of(controller_class).to receive(:igdb_search).and_return([ white_2, diamond ])
+      allow(IgdbService).to receive(:search).and_return([ white_2, diamond ])
       scan("Pokemon - Diamant Edition (nintendo Ds)", [ "Pokémon Diamond Version" ])
       expect(json["name"]).to eq("Pokémon Diamant")
     end
 
     it "garde-fou : aucun titre ne correspond, 404 plutôt qu'un mauvais jeu" do
-      allow_any_instance_of(controller_class).to receive(:igdb_search).and_return([ white_2 ])
+      allow(IgdbService).to receive(:search).and_return([ white_2 ])
       scan("Pokemon - Diamant Edition (nintendo Ds)", [ "Pokémon Diamond Version", "Pokémon Diamant" ])
       expect(response).to have_http_status(404)
       expect(json["fallback"]).to be true
     end
 
     it "titre principal introuvable sur IGDB : le titre français prend le relais" do
-      allow_any_instance_of(controller_class).to receive(:igdb_search) do |_controller, name, limit:|
+      allow(IgdbService).to receive(:search) do |name, limit:|
         name == "Professeur Layton et l'Appel du Spectre" ? [ layton ] : []
       end
       scan("Nintendo Professeur Layton Et L'appel Du Spectre [ds], Good Nintendo Ds Video Ga",
@@ -193,7 +193,7 @@ RSpec.describe "API de recherche", type: :request do
     end
 
     it "IGDB indisponible : 503" do
-      allow_any_instance_of(controller_class).to receive(:igdb_search).and_return(nil)
+      allow(IgdbService).to receive(:search).and_return(nil)
       scan("Zelda - Nintendo Switch", [ "Zelda" ])
       expect(response).to have_http_status(503)
     end
@@ -201,7 +201,7 @@ RSpec.describe "API de recherche", type: :request do
     it "Claude indisponible : repli sur le nettoyage par règles, même JSON qu'avant" do
       allow(BarcodeService).to receive(:lookup).and_return(create(:barcode_product, source: "upcitemdb", raw_title: "Zelda - Nintendo Switch"))
       allow(BarcodeService).to receive(:product_details).and_raise(BarcodeService::Error, "API surchargée")
-      expect_any_instance_of(controller_class).to receive(:igdb_search).with("Zelda", limit: 3).and_return([ game ])
+      expect(IgdbService).to receive(:search).with("Zelda", limit: 3).and_return([ game ])
       allow(TranslationService).to receive(:translate_batch).and_return([ "Un jeu" ])
       get "/api/search/game_barcode", params: { ean: "123" }
       expect(json).to include("name" => "Zelda", "summary" => "Un jeu", "platforms" => "Switch",
