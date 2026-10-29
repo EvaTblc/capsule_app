@@ -33,8 +33,10 @@ Dernière mise à jour : 2026-10-29
 
 ## Qualité des données
 
-- [ ] Plateformes enregistrées par l'ancien bug (liste de toutes les plateformes, « Nintendo Switch »…) : tâche de
-      nettoyage vers la liste de l'appli (exemple : « Mario & Sonic » noté « Switch »).
+- [x] Plateformes enregistrées par l'ancien bug : `platforms:cleanup APPLY=1` lancée en prod le 2026-10-29
+      (2 noms IGDB corrigés, 6 listes reprises à la main, bilan : ok 154), puis validation de la plateforme.
+- [x] Fiches orphelines (sans item) : 12 jeux, tous d'avant le correctif du 2026-10-21, supprimés en prod le
+      2026-10-29 ; aucun film ni livre.
 - [ ] Jeux reliés sans description française : option de traduction une fois par œuvre (coût Claude à estimer).
 - [ ] Recherche IGDB en français sensible aux accents (« Pokemon Epee » ne trouve rien).
 - [ ] Plateforme absente de certaines notices BnF (« 1 cartouche informatique ») : la chercher aussi dans les notes (zone 300).
@@ -57,4 +59,5 @@ Dernière mise à jour : 2026-10-29
 
 - [ ] Specs de contrôleur historiques à convertir en specs de requête.
 - [ ] Remplacer les `allow_any_instance_of` des specs d'API (stubs plus ciblés).
-- [ ] `rescue_from StandardError` trop large dans `Api::SearchController`.
+- [x] `rescue_from StandardError` trop large dans `Api::SearchController` : API externes (502) séparées des bugs
+      (relancés en dev / test, trace dans les logs en prod), le 2026-10-29.

@@ -7,9 +7,11 @@ class Api::SearchController < ApplicationController
   before_action :require_paid_features, only: [ :game_barcode, :movie_barcode ]
   rate_limit to: 20, within: 1.minute, only: [ :game_barcode, :search_game ]
 
-  # Filet de sécurité commun à toutes les actions : le détail part dans les logs,
-  # le navigateur ne reçoit qu'un message générique
-  rescue_from StandardError, with: :render_api_error
+  # Filets de sécurité communs à toutes les actions : le détail part dans les logs,
+  # le navigateur ne reçoit qu'un message générique.
+  # Rails prend le dernier rescue_from qui correspond : StandardError d'abord, sinon il attraperait aussi les API
+  rescue_from StandardError, with: :render_internal_error
+  rescue_from ExternalApiError, HTTP::Error, JSON::ParserError, with: :render_external_error
 
   def game_barcode
     ean = params[:ean].to_s.strip
@@ -214,11 +216,20 @@ class Api::SearchController < ApplicationController
     render json: { error: "Identifiant invalide" }, status: :bad_request unless params[:id].to_s.match?(/\A\d+\z/)
   end
 
-  def render_api_error(error)
-    Rails.logger.error("[api/search##{action_name}] #{error.class}: #{error.message}")
-    # 502 = une API externe a échoué ; 500 = bug chez nous
-    external = error.is_a?(ExternalApiError) || error.is_a?(HTTP::Error) || error.is_a?(JSON::ParserError)
-    render json: { error: "Recherche indisponible" }, status: external ? :bad_gateway : :internal_server_error
+  # Une API externe a échoué (panne, quota, timeout, réponse illisible) : attendu, une ligne de log suffit
+  def render_external_error(error)
+    Rails.logger.warn("[api/search##{action_name}] #{error.class}: #{error.message}")
+    render json: { error: "Recherche indisponible" }, status: :bad_gateway
+  end
+
+  # Bug chez nous : en dev et en test, l'erreur remonte pour être vue tout de suite ;
+  # en prod, le formulaire reçoit quand même du JSON, et les logs l'endroit du plantage
+  def render_internal_error(error)
+    raise error if Rails.env.local?
+
+    trace = Rails.backtrace_cleaner.clean(error.backtrace.to_a).first(5).join(" | ")
+    Rails.logger.error("[api/search##{action_name}] #{error.class}: #{error.message} | #{trace}")
+    render json: { error: "Recherche indisponible" }, status: :internal_server_error
   end
 
   # Noms à chercher pour une boîte (extraits une fois par Claude, puis gardés avec elle).

@@ -65,11 +65,19 @@ RSpec.describe "API de recherche", type: :request do
       expect(response).to have_http_status(502)
     end
 
-    it "bug interne : 500 générique" do
+    it "bug interne en dev et en test : l'erreur remonte au lieu d'être cachée" do
       allow(BarcodeService).to receive(:lookup).and_raise(RuntimeError, "secret interne")
+      expect { get "/api/search/game_barcode", params: { ean: "123" } }.to raise_error(RuntimeError, "secret interne")
+    end
+
+    it "bug interne en prod : 500 générique, l'endroit du plantage dans les logs" do
+      allow(Rails.env).to receive(:local?).and_return(false)
+      allow(BarcodeService).to receive(:lookup).and_raise(RuntimeError, "secret interne")
+      allow(Rails.logger).to receive(:error)
       get "/api/search/game_barcode", params: { ean: "123" }
       expect(response).to have_http_status(500)
       expect(response.body).not_to include("secret")
+      expect(Rails.logger).to have_received(:error).with(/RuntimeError: secret interne \| .*search_controller\.rb/)
     end
   end
 
