@@ -1,6 +1,4 @@
 class Api::SearchController < ApplicationController
-  class ExternalApiError < StandardError; end
-
   before_action :authenticate_user!
   before_action :require_numeric_id, only: [ :movie_detail, :music_detail ]
   # Scans : UPCitemdb (et Claude pour les jeux). Le scan de livre passe par la recherche Google Books, gratuite
@@ -11,7 +9,7 @@ class Api::SearchController < ApplicationController
   # le navigateur ne reçoit qu'un message générique.
   # Rails prend le dernier rescue_from qui correspond : StandardError d'abord, sinon il attraperait aussi les API
   rescue_from StandardError, with: :render_internal_error
-  rescue_from ExternalApiError, HTTP::Error, JSON::ParserError, with: :render_external_error
+  rescue_from ExternalApi::Error, HTTP::Error, JSON::ParserError, with: :render_external_error
 
   def game_barcode
     ean = params[:ean].to_s.strip
@@ -64,7 +62,7 @@ class Api::SearchController < ApplicationController
     # Étape 3 : TMDB par titre (original, puis français), en écartant les films dont le titre ne correspond pas
     movie = nil
     names.each do |name|
-      results = tmdb_get("search/movie", query: name, language: "fr-FR")["results"] || []
+      results = ExternalApi.tmdb("search/movie", query: name, language: "fr-FR")["results"] || []
       movie = results.first(3).find { |candidate| matching_title?(name, [ candidate["title"], candidate["original_title"] ]) }
       break if movie
     end
@@ -95,12 +93,7 @@ class Api::SearchController < ApplicationController
     search_query = query.match?(/^\d{10,13}$/) ? "isbn:#{query}" : query
     Rails.logger.info("[book] search_query: #{search_query}")
 
-    data = get_json("https://www.googleapis.com/books/v1/volumes", params: {
-      q: search_query,
-      key: Rails.application.credentials.dig(:google, :books_api_key),
-      maxResults: 5,
-      langRestrict: "fr"
-    })
+    data = ExternalApi.google_books(q: search_query, maxResults: 5, langRestrict: "fr")
 
     # Affichage seulement (titre, auteur) : la fiche du livre choisi vient ensuite de la BnF par son ISBN (book_detail).
     # Google interdit d'en garder des copies : rien de Google Books n'est enregistré
@@ -142,7 +135,7 @@ class Api::SearchController < ApplicationController
     query = params[:query].to_s.strip
     return render json: [] if query.blank?
 
-    data = tmdb_get("search/movie", query: query, language: "fr-FR")
+    data = ExternalApi.tmdb("search/movie", query: query, language: "fr-FR")
 
     # Affichage seulement (titre, année) : la fiche du film choisi vient ensuite du catalogue (movie_detail)
     results = data["results"]&.first(5)&.map do |movie|
@@ -164,7 +157,7 @@ class Api::SearchController < ApplicationController
     query = params[:query].to_s.strip
     return render json: [] if query.blank?
 
-    data = discogs_get("database/search", q: query, type: "release", per_page: 5)
+    data = ExternalApi.discogs("database/search", q: query, type: "release", per_page: 5)
 
     results = data["results"]&.map do |release|
       {
@@ -181,7 +174,7 @@ class Api::SearchController < ApplicationController
   end
 
   def music_detail
-    data = discogs_get("releases/#{params[:id]}")
+    data = ExternalApi.discogs("releases/#{params[:id]}")
 
     render json: {
       artist: data["artists"]&.map { |a| a["name"] }&.join(", "),
@@ -190,26 +183,6 @@ class Api::SearchController < ApplicationController
   end
 
   private
-
-  # GET d'une API JSON externe, avec timeout.
-  # Lève ExternalApiError si l'API répond en erreur (clé invalide, quota, 500...)
-  def get_json(url, params: {}, headers: {})
-    response = HTTP.timeout(10).headers(headers).get(url, params: params)
-    raise ExternalApiError, "#{URI(url).host} a répondu #{response.status}" unless response.status.success?
-
-    JSON.parse(response.body.to_s)
-  end
-
-  def tmdb_get(path, **params)
-    get_json("https://api.themoviedb.org/3/#{path}",
-             params: params.merge(api_key: Rails.application.credentials.dig(:tmdb, :api_key)))
-  end
-
-  def discogs_get(path, **params)
-    get_json("https://api.discogs.com/#{path}",
-             params: params.merge(token: Rails.application.credentials.dig(:discogs, :token)),
-             headers: { "User-Agent" => "CapsuleApp/1.0" }) # Discogs refuse les requêtes sans User-Agent
-  end
 
   # L'id est inséré dans l'URL de l'API externe : on n'accepte que des chiffres
   def require_numeric_id

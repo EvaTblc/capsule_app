@@ -86,7 +86,7 @@ RSpec.describe "Items (navigateur)", type: :system do
 
   describe "formulaire complet : pré-remplissage par la recherche de livre" do
     it "la liste vient de Google Books, la fiche de la BnF ; l'item est relié à l'œuvre et garde son ISBN" do
-      allow_any_instance_of(Api::SearchController).to receive(:get_json)
+      allow(ExternalApi).to receive(:google_books)
         .and_return("items" => [ { "id" => "g1", "volumeInfo" => { "title" => "Veiller sur elle", "authors" => [ "Jean-Baptiste Andrea" ],
                                                                    "description" => "Texte Google",
                                                                    "industryIdentifiers" => [ { "type" => "ISBN_13", "identifier" => "9782378803759" } ] } } ])
@@ -118,7 +118,7 @@ RSpec.describe "Items (navigateur)", type: :system do
 
   describe "formulaire complet : pré-remplissage par la recherche de film" do
     it "la liste vient de TMDB, la fiche du catalogue (Wikidata, Wikipédia) ; l'item est relié à l'œuvre" do
-      allow_any_instance_of(Api::SearchController).to receive(:tmdb_get)
+      allow(ExternalApi).to receive(:tmdb)
         .and_return("results" => [ { "id" => 77338, "title" => "Intouchables", "release_date" => "2011-11-02", "overview" => "Texte TMDB" } ])
       intouchables = create(:product, :movie, tmdb_id: 77338, title: "Intouchables", release_year: 2011,
                                               creator: "Olivier Nakache, Éric Toledano", description: "Comédie dramatique (Wikipédia)",
