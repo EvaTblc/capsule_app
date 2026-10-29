@@ -46,7 +46,7 @@ Dernière mise à jour : 2026-10-29
 - [ ] **CSP** : cause des violations trouvée et corrigée le 2026-10-29 (script en ligne du service worker, bloqué
       sur les pages ouvertes via Turbo) + test navigateur permanent. RESTE : déployer en mode rapport, vérifier
       les logs de prod quelques jours (`heroku logs -n 1500 | grep "\[CSP\]"`), puis `content_security_policy_report_only = false`.
-- [ ] **Quota UPCitemdb** : journaliser `X-RateLimit-Remaining` pour voir quand il s'épuise.
+- [x] **Quota UPCitemdb** : quota restant journalisé à chaque appel (`heroku logs --tail | grep upcitemdb`), le 2026-10-29.
 - [ ] **Logs** : conservation plus longue (module gratuit type Better Stack) — action en prod, à décider.
 - [ ] **Mémoire du dyno** : surveiller (graphique Metrics) ; si elle remonte, dyno worker séparé.
 - [ ] Fiche d'item rafraîchie automatiquement à la fin de la traduction / du résumé (`broadcast_refresh`, Solid Cable déjà en place).

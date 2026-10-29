@@ -11,7 +11,7 @@ class BarcodeService
   KINDS = {
     game: { label: "un jeu vidéo", title: "son titre principal tel que référencé sur IGDB (en général le titre nord-américain)",
             support: "platform", support_label: "sa plateforme", choices: VideoGameDetail::PLATFORMS - [ "Autres" ] },
-    movie: { label: "un film (DVD, Blu-ray...)", title: "son titre original",
+    movie: { label: "un filmfix(csp): service worker enregistré dans le JS de l'appli, plus aucun script en ligne bloqué via Turbo (DVD, Blu-ray...)", title: "son titre original",
              support: "format", support_label: "son format", choices: MovieDetail::FORMATS }
   }.freeze
 
@@ -128,6 +128,7 @@ class BarcodeService
   # Essai gratuit, sans clé : 100 requêtes par jour et par IP (IP Heroku partagées). Base surtout américaine
   def self.upcitemdb_title(ean)
     response = HTTP.timeout(10).get("https://api.upcitemdb.com/prod/trial/lookup", params: { upc: ean })
+    Rails.logger.info("[upcitemdb] - quota restant : #{response.headers["X-RateLimit-Remaining"]} / #{response.headers["X-RateLimit-Limit"]} (code #{ean}, réponse: #{response.status})")
     return log_miss("upcitemdb", ean, response.status) unless response.status.success?
 
     JSON.parse(response.body.to_s).dig("items", 0, "title").presence
