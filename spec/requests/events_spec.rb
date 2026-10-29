@@ -5,11 +5,27 @@ RSpec.describe "Événements", type: :request do
   before { sign_in user }
 
   describe "POST /events" do
+    it "crée l'événement et redirige vers lui" do
+      expect { post events_path, params: { event: { title: "Vide grenier", date: Date.today + 7, address: "Nantes", reminder: false } } }
+        .to change(user.events, :count).by(1)
+      expect(response).to redirect_to(event_path(Event.last))
+      follow_redirect!
+      expect(response.body).to include("Vide grenier")
+    end
+
     it "sans titre : formulaire réaffiché avec le message, onglet Événement" do
       post events_path, params: { event: { title: "" } }
       expect(response).to have_http_status(422)
       expect(response.body).to include("Le titre ne peut pas être vide")
       expect(response.body).to include('data-carnet-toggle-initial-value="event"')
+    end
+  end
+
+  describe "DELETE /events/:id" do
+    it "supprime l'événement et revient au carnet" do
+      event = create(:event, user: user)
+      expect { delete event_path(event) }.to change(Event, :count).by(-1)
+      expect(response).to redirect_to(notes_path)
     end
   end
 

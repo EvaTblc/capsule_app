@@ -91,12 +91,23 @@ RSpec.describe "Collections", type: :request do
     end
   end
 
+  describe "POST /collections" do
+    it "crée la collection, dont on devient propriétaire, et redirige vers elle" do
+      sign_in owner
+      expect { post collections_path, params: { collection: { title: "Ma collection", category: "books" } } }
+        .to change(Collection, :count).by(1)
+      expect(response).to redirect_to(collection_path(Collection.last))
+      expect(owner.user_collections.find_by(collection: Collection.last).role).to eq("owner")
+    end
+  end
+
   describe "DELETE /collections/:id" do
     it "supprime la collection avec ses items et leurs détails" do
       sign_in owner
       collection = collection_for(owner)
       item = create(:item, collection: collection)
       delete collection_path(collection)
+      expect(response).to redirect_to(collections_path)
       expect(Collection.exists?(collection.id)).to be false
       expect(Item.exists?(item.id)).to be false
       expect(BookDetail.exists?(item.item_detailable_id)).to be false

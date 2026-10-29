@@ -4,7 +4,25 @@ RSpec.describe "Notes", type: :request do
   let(:user) { create(:user) }
   before { sign_in user }
 
+  describe "GET /notes" do
+    it "n'affiche que ses propres notes" do
+      create(:note, user: user, title: "Ma note")
+      create(:note, user: create(:user), title: "Note secrète")
+      get notes_path
+      expect(response.body).to include("Ma note")
+      expect(response.body).not_to include("Note secrète")
+    end
+  end
+
   describe "POST /notes" do
+    it "crée la note et redirige vers elle" do
+      expect { post notes_path, params: { note: { title: "Ma note", comment: "Contenu", reminder: false } } }
+        .to change(user.notes, :count).by(1)
+      expect(response).to redirect_to(note_path(Note.last))
+      follow_redirect!
+      expect(response.body).to include("Ma note", "Contenu")
+    end
+
     it "sans titre : formulaire réaffiché avec le message, onglet Note" do
       post notes_path, params: { note: { title: "" } }
       expect(response).to have_http_status(422)
@@ -35,6 +53,14 @@ RSpec.describe "Notes", type: :request do
       patch note_path(note), params: { note: { collection_id: collection.id } }
       expect(response).to have_http_status(422)
       expect(note.reload.collection_id).to be_nil
+    end
+  end
+
+  describe "DELETE /notes/:id" do
+    it "supprime la note et revient au carnet" do
+      note = create(:note, user: user)
+      expect { delete note_path(note) }.to change(Note, :count).by(-1)
+      expect(response).to redirect_to(notes_path)
     end
   end
 

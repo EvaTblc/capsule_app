@@ -103,6 +103,22 @@ RSpec.describe "Items", type: :request do
     end
   end
 
+  describe "GET /collections/:id/items/new" do
+    it "affiche le formulaire d'ajout" do
+      get new_collection_item_path(collection_of("books"))
+      expect(response).to have_http_status(200)
+    end
+  end
+
+  describe "DELETE /collections/:id/items/:id" do
+    it "supprime l'item avec son détail, et revient à la collection" do
+      books = collection_of("books")
+      item = create(:item, collection: books)
+      expect { delete collection_item_path(books, item) }.to change(Item, :count).by(-1).and change(BookDetail, :count).by(-1)
+      expect(response).to redirect_to(collection_path(books))
+    end
+  end
+
   describe "GET /collections/:id/items/:id" do
     it "sans description française (compte free, traduction échouée) : affiche le résumé anglais, signalé comme tel" do
       games = collection_of("video_games")

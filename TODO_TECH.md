@@ -57,7 +57,8 @@ Dernière mise à jour : 2026-10-29
 
 ## Dette de tests et de code
 
-- [ ] Specs de contrôleur historiques à convertir en specs de requête.
+- [x] Specs de contrôleur historiques converties en specs de requête (cas non couverts déplacés, spec/controllers
+      supprimé), le 2026-10-29.
 - [x] `allow_any_instance_of` remplacés (recherches IGDB, TMDB, Google Books et Discogs sorties du contrôleur vers
       `IgdbService` et `ExternalApi`), le 2026-10-29. Seul reste celui du test CSP, voulu (observe sans simuler).
 - [x] `rescue_from StandardError` trop large dans `Api::SearchController` : API externes (502) séparées des bugs
