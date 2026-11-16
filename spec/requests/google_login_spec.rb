@@ -49,4 +49,30 @@ RSpec.describe "Connexion Google", type: :request do
     expect(response).to redirect_to(new_user_registration_url)
     expect(flash[:alert]).to include("n'a pas vérifié")
   end
+
+  # Démarrage de la connexion : un POST avec le jeton CSRF, hors de Turbo (sa requête fetch ne peut pas suivre
+  # la redirection vers Google, bloquée par la CSP). Le GET est refusé : il permettait de lancer une connexion
+  # depuis un autre site (CVE-2015-9284)
+  describe "démarrage de la connexion" do
+    before { OmniAuth.config.test_mode = false }
+
+    it "le bouton est un formulaire POST, hors de Turbo" do
+      get new_user_session_path
+      form = Nokogiri::HTML(response.body).at_css("form[action='#{user_google_oauth2_omniauth_authorize_path}']")
+      expect(form).to be_present
+      expect(form["method"]).to eq("post")
+      expect(form["data-turbo"]).to eq("false")
+    end
+
+    it "POST : redirige vers Google" do
+      post user_google_oauth2_omniauth_authorize_path
+      expect(response).to have_http_status(302)
+      expect(response.location).to start_with("https://accounts.google.com/")
+    end
+
+    it "GET : refusé, aucune redirection vers Google" do
+      get user_google_oauth2_omniauth_authorize_path
+      expect(response).to have_http_status(404)
+    end
+  end
 end

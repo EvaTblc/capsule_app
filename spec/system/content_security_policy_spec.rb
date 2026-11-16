@@ -36,7 +36,7 @@ RSpec.describe "Content Security Policy (navigateur)", type: :system do
     click_on "Connexion"
     fill_in "user_email", with: "eva@example.com"
     fill_in "user_password", with: "motdepasse1"
-    find("[type=submit]").click
+    click_on "Se connecter"
     expect(page).to have_current_path("/collections")
 
     click_on "Livres"
