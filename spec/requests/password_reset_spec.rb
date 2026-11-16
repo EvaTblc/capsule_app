@@ -16,7 +16,7 @@ RSpec.describe "Mot de passe oublié", type: :request do
     expect(mail.from).to eq([ "noreply@capsule.click" ])
     expect(mail.subject).to eq("Réinitialisation de votre mot de passe Capsule")
     expect(mail.body.encoded).to include("Choisir un nouveau mot de passe")
-    expect(mail.body.encoded).to match(%r{/users/password/edit\?reset_password_token=\w+})
+    expect(mail.body.encoded).to match(%r{/users/password/edit\?reset_password_token=[\w-]+})
   end
 
   it "affiche un message en français (et non plus « Translation missing »)" do

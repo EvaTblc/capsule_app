@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_28_114336) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_16_135000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -140,6 +140,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_114336) do
     t.index ["receiver_id"], name: "index_friendships_on_receiver_id"
     t.index ["requester_id"], name: "index_friendships_on_requester_id"
     t.check_constraint "requester_id <> receiver_id", name: "friendships_not_self"
+  end
+
+  create_table "igdb_french_titles", force: :cascade do |t|
+    t.bigint "igdb_id", null: false
+    t.bigint "igdb_game_id", null: false
+    t.string "name", null: false
+    t.string "normalized_name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["igdb_id"], name: "index_igdb_french_titles_on_igdb_id", unique: true
   end
 
   create_table "items", force: :cascade do |t|

@@ -41,7 +41,8 @@ class IgdbService
 
   # Jeux IGDB correspondant à name ([] si aucun), nil si IGDB est indisponible.
   # Deux recherches en parallèle : celle d'IGDB, qui ignore les titres français,
-  # et une recherche dans les titres français officiels (« Pokémon Épée » → Pokémon Sword).
+  # et les jeux dont le titre français officiel contient name (« Pokémon Épée » → Pokémon Sword).
+  # Titres français cherchés chez nous (IgdbFrenchTitle) : IGDB ne sait pas ignorer les accents (« Pokemon Epee »).
   # Les correspondances françaises passent en premier, sans doublon.
   def self.search(name, limit:)
     token = access_token
@@ -49,22 +50,31 @@ class IgdbService
 
     # Les guillemets fermeraient la chaîne de la requête IGDB : on les retire
     query = name.delete('"\\')
-    french_fields = GAME_FIELDS.map { |field| "game.#{field}" }.join(",")
 
     # On demande plus de résultats que nécessaire : une partie est écartée (mods, mises à jour...)
     fetch_limit = [ limit * 3, 15 ].max
+    french_ids = french_game_ids(name, limit: fetch_limit)
     searches = [
       Thread.new { post("games", "fields #{GAME_FIELDS.join(',')}; search \"#{query}\"; limit #{fetch_limit};", token) },
       Thread.new do
-        post("alternative_names",
-             "fields #{french_fields}; where name ~ *\"#{query}\"* & comment = \"French title\"; limit #{fetch_limit};", token)
+        next [] if french_ids.empty?
+
+        post("games", "fields #{GAME_FIELDS.join(',')}; where id = (#{french_ids.join(',')}); limit #{fetch_limit};", token)
       end
     ]
-    games, french_matches = searches.map(&:value)
+    games, french_games = searches.map(&:value)
     return nil if games.nil? # la recherche principale a échoué : IGDB indisponible
 
-    french_games = (french_matches || []).filter_map { |match| match["game"] }
-    rank(french_games + games, query).first(limit)
+    rank(french_games.to_a + games, query).first(limit)
+  end
+
+  # Ids IGDB des jeux dont le titre français contient name, sans tenir compte des accents ni des majuscules
+  def self.french_game_ids(name, limit:)
+    wanted = normalize_title(name)
+    return [] if wanted.empty? # « !!! » : LIKE '%%' renverrait tous les titres
+
+    IgdbFrenchTitle.where("normalized_name LIKE ?", "%#{IgdbFrenchTitle.sanitize_sql_like(wanted)}%")
+                   .distinct.limit(limit).pluck(:igdb_game_id)
   end
 
   # « Super Mario: Odyssey » et « Super Mario Odyssey » doivent être considérés comme identiques
@@ -121,5 +131,5 @@ class IgdbService
   end
 
   # « private » ne s'applique pas aux méthodes def self. : il faut private_class_method
-  private_class_method :fetch_new_token, :rank
+  private_class_method :fetch_new_token, :rank, :french_game_ids
 end

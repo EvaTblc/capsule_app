@@ -338,27 +338,30 @@ RSpec.describe "API de recherche", type: :request do
     end
     let(:zelda) { { "id" => 2, "name" => "The Legend of Zelda" } }
 
-    # IGDB simulé : une réponse par endpoint, et les requêtes envoyées sont enregistrées
+    # IGDB simulé : une réponse pour la recherche principale (search), une pour les jeux trouvés par leur titre
+    # français (where id = ...), et les requêtes envoyées sont enregistrées
     let(:igdb_bodies) { {} }
-    def stub_igdb(games:, alternative_names:)
+    def stub_igdb(games:, french_games: [])
       allow(IgdbService).to receive(:access_token).and_return("tok")
       igdb = double("client IGDB")
       allow(HTTP).to receive(:timeout).with(10).and_return(igdb)
       allow(igdb).to receive(:headers).and_return(igdb)
-      allow(igdb).to receive(:post) do |url, body:|
-        endpoint = url.split("/").last
-        igdb_bodies[endpoint] = body
-        result = { "games" => games, "alternative_names" => alternative_names }[endpoint]
+      allow(igdb).to receive(:post) do |_url, body:|
+        kind = body.include?("where id = (") ? :french : :search
+        igdb_bodies[kind] = body
+        result = { search: games, french: french_games }[kind]
         result.is_a?(Integer) ? fake_response(result, {}) : fake_response(200, result)
       end
     end
+
+    def french_title(game_id, name) = IgdbFrenchTitle.create!(igdb_id: game_id + 1000, igdb_game_id: game_id, name: name)
 
     it "développeur, et plateforme de l'appli seulement si le jeu n'existe que sur une seule" do
       one_platform = sword.merge("platforms" => [ { "name" => "Nintendo Switch" } ],
                                  "involved_companies" => [ { "developer" => true, "company" => { "name" => "Game Freak" } },
                                                            { "developer" => false, "company" => { "name" => "Nintendo" } } ])
       several = sword.merge("id" => 9, "platforms" => [ { "name" => "PlayStation 4" }, { "name" => "Xbox One" } ])
-      stub_igdb(games: [ one_platform, several ], alternative_names: [])
+      stub_igdb(games: [ one_platform, several ])
       get "/api/search/search_game", params: { query: "pokemon" }
       games = json["games"].index_by { |game| game["id"] }
       expect(games[1]).to include("platform" => "Switch", "developer" => "Game Freak")
@@ -370,7 +373,7 @@ RSpec.describe "API de recherche", type: :request do
                             "release_dates" => [ { "date" => 1159401600, "release_region" => 5 },
                                                  { "date" => 1185494400, "release_region" => 1 } ]) # 2007 en Europe
       japan_only = sword.merge("id" => 9, "first_release_date" => 1159401600, "release_dates" => [ { "date" => 1159401600, "release_region" => 5 } ])
-      stub_igdb(games: [ diamond, japan_only ], alternative_names: [])
+      stub_igdb(games: [ diamond, japan_only ])
       get "/api/search/search_game", params: { query: "pokemon" }
       games = json["games"].index_by { |game| game["id"] }
       expect(games[1]).to include("release_date" => 2007)
@@ -379,42 +382,64 @@ RSpec.describe "API de recherche", type: :request do
     end
 
     it "affiche le titre français officiel, avec le titre d'origine en petit" do
-      stub_igdb(games: [ sword ], alternative_names: [])
+      stub_igdb(games: [ sword ])
       get "/api/search/search_game", params: { query: "Pokemon Sword" }
       expect(json["games"].first).to include("name" => "Pokémon Épée", "original_name" => "Pokémon Sword")
     end
 
     it "garde le titre d'origine quand IGDB ne connaît pas de titre français" do
-      stub_igdb(games: [ zelda ], alternative_names: [])
+      stub_igdb(games: [ zelda ])
       get "/api/search/search_game", params: { query: "Zelda" }
       expect(json["games"].first).to include("name" => "The Legend of Zelda", "original_name" => nil)
     end
 
     it "trouve un jeu par son titre français, en premier et sans doublon" do
-      stub_igdb(games: [ zelda, sword ], alternative_names: [ { "game" => sword } ])
+      french_title(1, "Pokémon Épée")
+      stub_igdb(games: [ zelda, sword ], french_games: [ sword ])
       get "/api/search/search_game", params: { query: "Pokémon Épée" }
       expect(json["games"].map { |g| g["id"] }).to eq([ 1, 2 ])
-      expect(igdb_bodies["alternative_names"]).to include('where name ~ *"Pokémon Épée"* & comment = "French title"')
+      expect(igdb_bodies[:french]).to include("where id = (1)")
+    end
+
+    it "titre français tapé sans accents ni majuscules : trouvé quand même" do
+      french_title(1, "Pokémon Épée")
+      stub_igdb(games: [], french_games: [ sword ])
+      get "/api/search/search_game", params: { query: "pokemon epee" }
+      expect(json["games"].map { |g| g["name"] }).to eq([ "Pokémon Épée" ])
+    end
+
+    it "aucun titre français correspondant : un seul appel à IGDB" do
+      french_title(1, "Pokémon Épée")
+      stub_igdb(games: [ zelda ])
+      get "/api/search/search_game", params: { query: "Zelda" }
+      expect(igdb_bodies.keys).to eq([ :search ])
+    end
+
+    it "recherche sans lettre ni chiffre (« % », « !!! ») : pas de recherche française, qui renverrait tous les titres" do
+      french_title(1, "Pokémon Épée")
+      stub_igdb(games: [])
+      get "/api/search/search_game", params: { query: "%" }
+      expect(igdb_bodies.keys).to eq([ :search ])
     end
 
     it "fonctionne encore si seule la recherche française échoue" do
-      stub_igdb(games: [ zelda ], alternative_names: 500)
+      french_title(1, "Zelda en français")
+      stub_igdb(games: [ zelda ], french_games: 500)
       get "/api/search/search_game", params: { query: "Zelda" }
       expect(json["games"].map { |g| g["id"] }).to eq([ 2 ])
     end
 
     it "IGDB indisponible : 503" do
-      stub_igdb(games: 500, alternative_names: [])
+      stub_igdb(games: 500)
       get "/api/search/search_game", params: { query: "Zelda" }
       expect(response).to have_http_status(503)
     end
 
-    it "retire les guillemets des deux requêtes IGDB et oublie un token expiré" do
-      stub_igdb(games: 401, alternative_names: 401)
+    it "retire les guillemets de la requête IGDB et oublie un token expiré" do
+      stub_igdb(games: 401)
       expect(Rails.cache).to receive(:delete).with(IgdbService::CACHE_KEY).at_least(:once)
       get "/api/search/search_game", params: { query: 'Zelda" trick; fields *' }
-      expect(igdb_bodies["games"]).to include('search "Zelda trick; fields *"')
-      expect(igdb_bodies["alternative_names"]).to include('*"Zelda trick; fields *"*')
+      expect(igdb_bodies[:search]).to include('search "Zelda trick; fields *"')
       expect(response).to have_http_status(503)
     end
   end

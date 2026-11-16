@@ -2,7 +2,7 @@
 
 Technique des fonctionnalités, exploitation, juridique et dette. Les fonctionnalités sont dans [TODO_FEATURES.md](TODO_FEATURES.md).
 
-Dernière mise à jour : 2026-10-29
+Dernière mise à jour : 2026-11-16
 
 ## Mise en production en cours
 
@@ -40,19 +40,25 @@ Dernière mise à jour : 2026-10-29
 - [ ] Jeux reliés sans description française : option de traduction une fois par œuvre (coût Claude à estimer).
 - [ ] Recherche IGDB en français sensible aux accents (« Pokemon Epee » ne trouve rien).
 - [ ] Plateforme absente de certaines notices BnF (« 1 cartouche informatique ») : la chercher aussi dans les notes (zone 300).
-- [ ] Libellé erroné sur Wikidata : « John Wick: Chaptire » (à corriger directement sur Wikidata).
+- [x] Libellé erroné sur Wikidata : « John Wick: Chaptire », corrigé sur Wikidata le 2026-11-16.
 - [ ] Jeux ajoutés par l'ajout rapide avant le correctif du résumé : résumé perdu.
 
 ## Exploitation
 
-- [ ] **CSP** : cause des violations trouvée et corrigée le 2026-10-29 (script en ligne du service worker, bloqué
-      sur les pages ouvertes via Turbo) + test navigateur permanent. RESTE : déployer en mode rapport, vérifier
-      les logs de prod quelques jours (`heroku logs -n 1500 | grep "\[CSP\]"`), puis `content_security_policy_report_only = false`.
+- [ ] **CSP** : deux causes corrigées et déployées : script en ligne du service worker (2026-10-29), bouton Google
+      chargé par Turbo (2026-11-16, v105). RESTE : relire les logs de prod après quelques jours
+      (`heroku logs -n 1500 | grep "\[CSP\]"`), puis `content_security_policy_report_only = false`.
+- [x] **Connexion Google** en POST hors de Turbo, GET refusé (CVE-2015-9284) ; « Rester connecté » 4 semaines
+      renouvelées à chaque visite (Google et formulaire), le 2026-11-16.
+- [x] **Profil** : 203 → 16 requêtes, ~5 fois plus rapide (N+1 sur les fiches, les compteurs et les amitiés) ; plus de
+      plantage avec un item d'un autre type que sa collection, le 2026-11-16.
+- [x] **Failles des gems** (CI rouge) : Rails 8.1.4.1, Rack, Nokogiri, Puma, OmniAuth… mis à jour le 2026-11-16.
 - [x] **Quota UPCitemdb** : quota restant journalisé à chaque appel (`heroku logs --tail | grep upcitemdb`), le 2026-10-29.
 - [ ] **Logs** : conservation plus longue (module gratuit type Better Stack) — action en prod, à décider.
-- [ ] **Mémoire du dyno** : surveiller (graphique Metrics) ; si elle remonte, dyno worker séparé.
+- [x] **Mémoire du dyno** : graphique Metrics vérifié le 2026-11-16, rien d'anormal (aucune alerte R14/R15) ;
+      si elle remonte un jour, dyno worker séparé.
 - [ ] Fiche d'item rafraîchie automatiquement à la fin de la traduction / du résumé (`broadcast_refresh`, Solid Cable déjà en place).
-- [ ] Test manuel de Claude Haiku 5.5 : estimation de prix et résumé de livre.
+- [ ] Test manuel de Claude Haiku 5.5 : estimation de prix OK (2026-11-16) ; RESTE le résumé de livre (aucun livre dans l'appli).
 - [ ] Outils locaux : Chrome 131 (stable : 156, dépôt Google apt à configurer) ; Heroku CLI 10 → 11.
 
 ## Dette de tests et de code
