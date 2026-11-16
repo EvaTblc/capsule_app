@@ -30,6 +30,10 @@
               placeholder: "••••••••",
               class: "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow" %>
         </div>
+        <div class="flex items-center gap-2">
+          <%= f.check_box :remember_me, checked: true, class: "rounded border-gray-300 text-purple-600 focus:ring-purple-500" %>
+          <%= f.label :remember_me, "Rester connecté" %>
+        </div>
       </div>
 
       <div class="mt-6">

@@ -29,6 +29,13 @@ RSpec.describe "Connexion Google", type: :request do
     expect(flash[:notice]).to include("relié à Google")
   end
 
+  it "reste connecté : cookie de reconnexion posé (sinon, déconnectée à chaque fermeture de l'appli)" do
+    create(:user, email: "eva@gmail.com")
+    mock_google(email: "eva@gmail.com")
+    google_callback
+    expect(response.cookies["remember_user_token"]).to be_present
+  end
+
   it "ferme une session déjà ouverte avec l'ancien mot de passe" do
     existing = create(:user, email: "eva@gmail.com")
     sign_in existing

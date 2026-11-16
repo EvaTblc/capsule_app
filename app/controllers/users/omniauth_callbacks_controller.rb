@@ -3,7 +3,8 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     @user = User.from_omniauth(request.env["omniauth.auth"])
 
     if @user.persisted?
-      sign_in_and_redirect @user, remember_me: true
+      @user.remember_me = true
+      sign_in_and_redirect @user
       if @user.just_linked_to_google
         flash[:notice] = "Ton compte est maintenant relié à Google. Pour te reconnecter avec un mot de passe, " \
                          "utilise « Mot de passe oublié »."
