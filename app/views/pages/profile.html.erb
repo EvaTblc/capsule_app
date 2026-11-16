@@ -66,7 +66,7 @@
               <p class="text-sm font-semibold text-gray-900 truncate"><%= friend.email.split("@").first %></p>
               <p class="text-xs text-gray-400 truncate"><%= friend.email %></p>
             </div>
-            <%= button_to friendship_path(Friendship.between(current_user, friend).first),
+            <%= button_to friendship_path(@friendships_by_friend[friend.id]),
                 method: :delete,
                 class: "text-xs text-red-400 font-semibold" do %>
               Retirer
@@ -183,7 +183,7 @@
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-semibold truncate"><%= collection.title %></p>
-              <p class="text-xs text-gray-400"><%= collection.items.count %> items</p>
+              <p class="text-xs text-gray-400"><%= collection.items.size %> items</p>
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
@@ -191,8 +191,8 @@
           </div>
 
           <% if collection.category == "video_games" %>
-            <% completed = collection.items.select { |i| i.item_detailable&.completed? }.count %>
-            <% incomplete = collection.items.count - completed %>
+            <% completed = collection.items.select { |i| i.item_detailable.try(:completed?) }.count %>
+            <% incomplete = collection.items.size - completed %>
             <div class="flex gap-2">
               <div class="flex-1 bg-purple-50 rounded-xl px-3 py-3 text-center">
                 <p class="text-sm font-black text-purple-600"><%= completed %></p>
@@ -202,17 +202,17 @@
                 <p class="text-sm font-black text-red-400"><%= incomplete %></p>
                 <p class="text-xs text-gray-400">Incomplets</p>
               </div>
-              <% platforms = collection.items.map { |i| i.item_detailable&.platform }.compact.uniq.count %>
+              <% platforms = collection.items.map { |i| i.item_detailable.try(:platform) }.compact.uniq.count %>
               <div class="flex-1 bg-gray-50 rounded-xl px-3 py-3 text-center">
                 <p class="text-sm font-black text-gray-600"><%= platforms %></p>
                 <p class="text-xs text-gray-400">Plateformes</p>
               </div>
             </div>
           <% elsif collection.category == "books" %>
-            <% authors = collection.items.map { |i| i.item_detailable&.author }.compact.uniq.count %>
+            <% authors = collection.items.map { |i| i.item_detailable.try(:author) }.compact.uniq.count %>
             <div class="flex gap-2">
               <div class="flex-1 bg-purple-50 rounded-xl px-3 py-3 text-center">
-                <p class="text-sm font-black text-purple-600"><%= collection.items.count %></p>
+                <p class="text-sm font-black text-purple-600"><%= collection.items.size %></p>
                 <p class="text-xs text-gray-400">Livres</p>
               </div>
               <div class="flex-1 bg-gray-50 rounded-xl px-3 py-3 text-center">
@@ -221,7 +221,7 @@
               </div>
             </div>
           <% elsif collection.category == "movies" %>
-            <% formats = collection.items.map { |i| i.item_detailable&.format }.compact.uniq %>
+            <% formats = collection.items.map { |i| i.item_detailable.try(:format) }.compact.uniq %>
             <div class="flex gap-2 flex-wrap">
               <% formats.each do |format| %>
                 <div class="bg-gray-50 rounded-xl px-4 py-3 text-center">
@@ -230,7 +230,7 @@
               <% end %>
             </div>
           <% elsif collection.category == "music" %>
-            <% formats = collection.items.map { |i| i.item_detailable&.format }.compact.uniq %>
+            <% formats = collection.items.map { |i| i.item_detailable.try(:format) }.compact.uniq %>
             <div class="flex gap-2 flex-wrap">
               <% formats.each do |format| %>
                 <div class="bg-gray-50 rounded-xl px-4 py-3 text-center">
@@ -255,7 +255,7 @@
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-semibold truncate"><%= collection.title %></p>
-              <p class="text-xs text-gray-400"><%= collection.items.count %> items</p>
+              <p class="text-xs text-gray-400"><%= collection.items.size %> items</p>
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
