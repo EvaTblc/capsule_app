@@ -38,7 +38,7 @@
                 data-action="click->category#select"
                 class="border-2 border-gray-100 bg-white rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer transition-all duration-150 active:scale-95">
               <%= render "collections/icons/#{category_to_icon[cat]}" %>
-              <span class="text-xs font-medium text-gray-500"><%= cat.humanize %></span>
+              <span class="text-xs font-medium text-gray-500 text-center"><%= category_label(cat) %></span>
             </div>
           <% end %>
         </div>

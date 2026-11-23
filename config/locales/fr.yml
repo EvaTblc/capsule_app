@@ -71,7 +71,37 @@ fr:
               blank: "Le mot de passe actuel est nécessaire pour enregistrer les modifications."
               invalid: "Le mot de passe actuel est incorrect."
 
+  # Noms affichés des catégories de collection et des types d'item (les clés restent celles du code)
+  categories:
+    movies: "Films"
+    music: "Musique"
+    video_games: "Jeux vidéo"
+    figurines: "Figurines"
+    trading_cards: "Cartes à collectionner"
+    board_games: "Jeux de société"
+    books: "Livres"
+    mixed: "Divers"
+    other: "Autre"
+  item_types:
+    BookDetail: "Livre"
+    VideoGameDetail: "Jeu vidéo"
+    MovieDetail: "Film"
+    MusicDetail: "Musique"
+    FigurineDetail: "Figurine"
+    TcgDetail: "Carte à collectionner"
+    BoardGameDetail: "Jeu de société"
+
+  # Type de compte affiché sur le profil
+  roles:
+    free: "Gratuit"
+    premium: "Premium"
+    admin: "Admin"
+
+  # Pluriel à la française (rails-i18n) : « 0 item », « 1 item », « 2 items »
   items:
+    count:
+      one: "%{count} item"
+      other: "%{count} items"
     form:
       type: "Type"
       search: "Recherche"
@@ -79,7 +109,7 @@ fr:
       condition: "État"
       acquired_at: "Date d'acquisition"
       comment: "Commentaire"
-      barcode: "Barcode"
+      barcode: "Code-barres"
       images: "Images"
       submit: "Valider"
       conditions:
@@ -129,7 +159,7 @@ fr:
         material: "Matériau"
       tcg:
         game: "Jeu"
-        card_set: "Set"
+        card_set: "Extension"
         card_number: "Numéro de carte"
         rarity: "Rareté"
       board_game:
@@ -163,6 +193,7 @@ fr:
       edition: "Édition"
       description: "Description"
     music_detail:
+      description: "Description"
       artist: "Artiste"
       album: "Album"
       year: "Année"
@@ -170,12 +201,21 @@ fr:
       format: "Format"
       genre: "Genre"
     figurine_detail:
+      name: "Personnage"
+      series: "Série / Franchise"
+      manufacturer: "Fabricant"
+      line: "Gamme"
+      edition: "Édition"
+      limited_edition: "Édition limitée"
+      release_year: "Année de sortie"
+      condition_box: "État de la boîte"
+      is_complete: "Complète avec accessoires"
       brand: "Marque"
       scale: "Échelle"
       material: "Matériau"
     tcg_detail:
       game: "Jeu"
-      card_set: "Set"
+      card_set: "Extension"
       card_number: "Numéro de carte"
       rarity: "Rareté"
       condition: "État"

@@ -15,7 +15,7 @@
       <%= render "collections/icons/#{icon}" %>
     </div>
     <div class="flex flex-col gap-1">
-      <p class="text-xs font-semibold uppercase tracking-widest <%= @item.images.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @item.item_type.gsub('Detail', '').titleize %></p>
+      <p class="text-xs font-semibold uppercase tracking-widest <%= @item.images.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= item_type_label(@item.item_type) %></p>
       <p class="text-xs <%= @item.images.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @item.condition %></p>
       <div class="flex items-center justify-between">
         <h1 class="text-3xl font-black tracking-tight <%= @item.images.attached? ? 'text-white' : '' %>"><%= @item.title %></h1>
@@ -88,7 +88,8 @@
       <% else %>
         <div class="flex justify-between items-center border-b border-gray-50 pb-2">
           <p class="text-xs font-semibold text-gray-400 uppercase"><%= t("show.#{@item.item_type.underscore}.#{key}", default: key.humanize) %></p>
-          <p class="text-sm font-medium"><%= value %></p>
+          <%# Oui / non (figurine complète, édition limitée...) plutôt que « true » / « false » %>
+          <p class="text-sm font-medium"><%= [ true, false ].include?(value) ? (value ? "Oui" : "Non") : value %></p>
         </div>
       <% end %>
     <% end %>

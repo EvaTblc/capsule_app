@@ -61,7 +61,7 @@
               </div>
               <div>
                 <h2 class="text-lg font-bold <%= collection.cover_image.attached? ? 'text-white' : '' %>"><%= collection.title %></h2>
-                <p class="text-xs <%= collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @item_counts.fetch(collection.id, 0) %> items</p>
+                <p class="text-xs <%= collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= items_count(@item_counts.fetch(collection.id, 0)) %></p>
               </div>
             </div>
           </div>

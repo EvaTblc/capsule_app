@@ -17,7 +17,7 @@
              data-action="click->item-type#select"
              class="border-2 border-gray-100 bg-white rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer transition-all duration-150 active:scale-95">
           <%= render "collections/icons/#{icon}" %>
-          <span class="text-xs font-medium text-gray-500"><%= type.gsub('Detail', '').titleize %></span>
+          <span class="text-xs font-medium text-gray-500 text-center"><%= item_type_label(type) %></span>
         </div>
       <% end %>
     </div>

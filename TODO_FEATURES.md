@@ -4,7 +4,23 @@ Cap : renforcer ce qui rend Capsule unique (collectionneurs français, plusieurs
 plutôt que copier les catalogueurs généralistes (Libib, CLZ…).
 La partie technique de chaque chantier est dans [TODO_TECH.md](TODO_TECH.md).
 
-Dernière mise à jour : 2026-10-29
+Dernière mise à jour : 2026-11-23
+
+## Objectif : v1 « finie », avant de passer en appli native (Hotwire Native)
+
+Décidé le 2026-11-23. Le design web sera repris tel quel dans l'appli native : chaque finition compte.
+
+- [ ] **Tous les types d'items parfaitement fonctionnels** (livre, jeu vidéo, film, musique, figurine, carte, jeu de
+      société) : ajout, recherche, scan quand il existe, fiche, modification.
+- [ ] **Liste de souhaits** (voir Priorité 1).
+- [ ] **Scan en rafale** (voir Priorité 1).
+- [ ] **Finitions** : textes en français et pluriels (fait le 2026-11-23) ; ✕ rouge trompeur dans les listes,
+      icône de « Mon Carnet », largeur maximale sur ordinateur.
+- [ ] **Montrer les objets** : vignettes dans les listes, vue en grille de photos, « Récemment ajouté » avec images.
+- [ ] **Préparation au natif** : un titre par page, en-tête et barre d'onglets masquables dans l'appli, plus d'`alert()`,
+      zones protégées de l'écran (encoche).
+- [ ] **Scan sur iPhone** (voir Priorité 1).
+- [ ] **Identité** : icône de l'appli, logo, couleur principale (nécessaires pour les stores).
 
 ## Priorité 1
 

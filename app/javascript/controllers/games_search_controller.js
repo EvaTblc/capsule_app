@@ -78,7 +78,7 @@ export default class extends Controller {
 
   async detectBarcode(video) {
     if (!("BarcodeDetector" in window)) {
-      alert("Votre navigateur ne supporte pas la détection de barcode")
+      alert("Ton navigateur ne sait pas lire les codes-barres : tape le titre du jeu à la place.")
       this.stopScan()
       return
     }

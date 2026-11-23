@@ -24,7 +24,7 @@
         <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-3">
           <% category_to_icon = { "comics" => "comics", "movies" => "movies", "music" => "music", "video_games" => "video_games", "figurines" => "figurines", "trading_cards" => "trading_cards", "board_games" => "board_games", "books" => "book", "mixed" => "mixed", "other" => "other" } %>
           <%= render "collections/icons/#{category_to_icon[@collection.category]}" %>      </div>
-        <p class="text-xs font-semibold uppercase tracking-widest <%= @collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @collection.category.humanize.titleize %></p>
+        <p class="text-xs font-semibold uppercase tracking-widest <%= @collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= category_label(@collection.category) %></p>
         <div class="flex items-center justify-between gap-2">
           <h1 class="text-3xl font-black tracking-tight <%= @collection.cover_image.attached? ? 'text-white' : '' %>"><%= @collection.title %></h1>
           <div class="flex items-center gap-2 shrink-0">
@@ -47,7 +47,7 @@
             <% end %>
           </div>
         </div>
-        <p class="text-sm <%= @collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @collection.items.count %> items</p>
+        <p class="text-sm <%= @collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= items_count(@collection.items.count) %></p>
 
       </div>
     </div>
