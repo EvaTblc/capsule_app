@@ -226,6 +226,18 @@ RSpec.describe BarcodeService do
         expect(described_class.lookup("9782378803759", kind: :book, bnf_only: true)).to be_nil
       end
 
+      it "BnF en panne : on passe à UPCitemdb" do
+        sources_return(upcitemdb: "Mario Kart 8 Deluxe Nintendo Switch")
+        allow(BnfService).to receive(:find_by_ean).and_raise(BnfService::Unavailable, "timeout")
+        expect(described_class.lookup("0045496420253", kind: :game)).to have_attributes(source: "upcitemdb")
+      end
+
+      it "BnF en panne en bnf_only (livres) : l'erreur remonte, pour dire « réessaie » plutôt que « introuvable »" do
+        sources_return
+        allow(BnfService).to receive(:find_by_ean).and_raise(BnfService::Unavailable, "timeout")
+        expect { described_class.lookup("9782378803759", kind: :book, bnf_only: true) }.to raise_error(BnfService::Unavailable)
+      end
+
       it "inconnue partout : nil, rien d'enregistré" do
         sources_return
         expect { expect(described_class.lookup("9999999999994", kind: :game)).to be_nil }.not_to change(BarcodeProduct, :count)

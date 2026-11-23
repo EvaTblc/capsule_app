@@ -283,6 +283,20 @@ RSpec.describe "API de recherche", type: :request do
                          "description" => "Roman (Wikipédia)", "barcode" => "9782378803759")
     end
 
+    it "livre inconnu de la BnF (édition étrangère...) : 404, fiche à compléter à la main" do
+      allow(BarcodeService).to receive(:lookup).and_return(nil)
+      get "/api/search/book_detail/9780349436982"
+      expect(response).to have_http_status(:not_found)
+      expect(json["error"]).to start_with("Livre introuvable à la BnF")
+    end
+
+    it "BnF qui ne répond pas : 503 et « réessaie », pas « introuvable »" do
+      allow(BarcodeService).to receive(:lookup).and_raise(BnfService::Unavailable, "HTTP::TimeoutError pour 9780349436982")
+      get "/api/search/book_detail/9780349436982"
+      expect(response).to have_http_status(:service_unavailable)
+      expect(json["error"]).to start_with("La BnF ne répond pas pour le moment")
+    end
+
     it "œuvre introuvable sur Wikidata (tome de manga...) : la notice BnF suffit, sans œuvre ni résumé" do
       box = create(:barcode_product, barcode: "9782723478991", kind: "book", source: "bnf",
                                      details: { "title" => "One Piece", "creators" => { "070" => [ "Eiichirō Oda" ] } })

@@ -108,7 +108,12 @@ class Api::SearchController < ApplicationController
   # Fiche d'un livre par son ISBN (choisi dans la recherche ou scanné) : notice de la BnF (Licence Ouverte),
   # œuvre et résumé de Wikidata / Wikipédia. Gratuit pour tous : ni UPCitemdb, ni EAN-DB (payant), ni Claude
   def book_detail
-    box = BarcodeService.lookup(params[:isbn], kind: :book, bnf_only: true)
+    box = begin
+      BarcodeService.lookup(params[:isbn], kind: :book, bnf_only: true)
+    rescue BnfService::Unavailable
+      return render json: { error: "La BnF ne répond pas pour le moment : réessaie dans quelques instants, ou complète la fiche à la main.",
+                            fallback: true }, status: :service_unavailable
+    end
     unless box
       return render json: { error: "Livre introuvable à la BnF : complète la fiche à la main.", fallback: true }, status: :not_found
     end

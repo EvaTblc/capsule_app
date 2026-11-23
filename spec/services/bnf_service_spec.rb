@@ -89,19 +89,21 @@ RSpec.describe BnfService do
       expect(described_class.find_by_ean("9999999999994")).to be_nil
     end
 
+    it "réponse illisible" do
+      allow(http).to receive(:get).and_return(fake_response(200, "<html>maintenance</html>"))
+      expect(described_class.find_by_ean("0045496464851")).to be_nil
+    end
+  end
+
+  describe "BnF qui ne répond pas : BnfService::Unavailable (à ne pas confondre avec un code inconnu)" do
     it "BnF en erreur" do
       allow(http).to receive(:get).and_return(fake_response(503, "Service Unavailable"))
-      expect(described_class.find_by_ean("0045496464851")).to be_nil
+      expect { described_class.find_by_ean("0045496464851") }.to raise_error(BnfService::Unavailable, /503/)
     end
 
     it "BnF injoignable ou trop lente" do
       allow(http).to receive(:get).and_raise(HTTP::TimeoutError)
-      expect(described_class.find_by_ean("0045496464851")).to be_nil
-    end
-
-    it "réponse illisible" do
-      allow(http).to receive(:get).and_return(fake_response(200, "<html>maintenance</html>"))
-      expect(described_class.find_by_ean("0045496464851")).to be_nil
+      expect { described_class.find_by_ean("0045496464851") }.to raise_error(BnfService::Unavailable, /TimeoutError/)
     end
   end
 end

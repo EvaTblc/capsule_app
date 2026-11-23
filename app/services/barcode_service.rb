@@ -63,9 +63,10 @@ class BarcodeService
     extracted[:names]
   end
 
-  # Boîte inconnue : BnF (notice structurée), puis UPCitemdb et EAN-DB (titre brut seulement), et on l'enregistre
+  # Boîte inconnue : BnF (notice structurée), puis UPCitemdb et EAN-DB (titre brut seulement), et on l'enregistre.
+  # BnF en panne : on passe aux services suivants, sauf en bnf_only (BnfService::Unavailable remonte alors à l'appelant)
   def self.find_and_save(ean, kind, bnf_only)
-    if (bnf = BnfService.find_by_ean(ean))
+    if (bnf = bnf_record(ean, bnf_only))
       return nil unless bnf[:kind]
       save_from_bnf(ean, bnf)
     elsif bnf_only
@@ -75,6 +76,15 @@ class BarcodeService
     elsif (title = ean_db_title(ean))
       save_from_title(ean, kind, "ean_db", title)
     end
+  end
+
+  def self.bnf_record(ean, bnf_only)
+    BnfService.find_by_ean(ean)
+  rescue BnfService::Unavailable => e
+    Rails.logger.warn("[bnf] #{e.message}")
+    raise if bnf_only
+
+    nil
   end
 
   # La boîte est enregistrée pour ce qu'elle est vraiment (type de la notice), quel que soit le formulaire
@@ -160,6 +170,6 @@ class BarcodeService
     Rails.logger.warn("[#{source}] #{reason} pour #{ean}")
     nil
   end
-  private_class_method :upcitemdb_title, :ean_db_title, :log_miss, :find_and_save, :save_from_bnf, :save_from_title,
+  private_class_method :upcitemdb_title, :ean_db_title, :log_miss, :find_and_save, :bnf_record, :save_from_bnf, :save_from_title,
   :match_in
 end

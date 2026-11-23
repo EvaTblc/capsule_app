@@ -5,7 +5,10 @@ class BnfService
   # Type de notice (7e caractère de l'en-tête) → type de produit de l'appli ; les autres (musique, images...) ne nous concernent pas
   KINDS = { "l" => "game", "g" => "movie", "a" => "book" }.freeze
 
+  # La BnF n'a pas répondu (panne, lenteur) : à distinguer d'un code qu'elle ne connaît pas (nil)
+  class Unavailable < StandardError; end
 
+  # Notice de la BnF pour un EAN / ISBN ; nil si la BnF ne le connaît pas, BnfService::Unavailable si elle ne répond pas
   def self.find_by_ean(ean)
     ean = ean.to_s
     return nil unless ean.match?(/\A\d{8,14}\z/)
@@ -21,10 +24,7 @@ class BnfService
       maximumRecords: 1,
       query: "bib.ean any \"#{codes}\" or bib.isbn any \"#{codes}\""
     })
-    unless response.status.success?
-      Rails.logger.warn("[bnf] #{response.status} pour #{ean}")
-      return nil
-    end
+    raise Unavailable, "#{response.status} pour #{ean}" unless response.status.success?
 
     doc = Nokogiri::XML(response.body.to_s)
     record = doc.at_xpath("//mxc:record", NS)
@@ -41,8 +41,7 @@ class BnfService
       creators: creators(record)
     }
   rescue HTTP::Error => e
-    Rails.logger.warn("[bnf] #{e.class} pour #{ean}")
-    nil
+    raise Unavailable, "#{e.class} pour #{ean}"
   end
   # Désignation du support (200$b), quand l'en-tête ne suffit pas
   DESIGNATIONS = { "Ressource électronique" => "game", "Images animées" => "movie", "Texte imprimé" => "book" }.freeze
