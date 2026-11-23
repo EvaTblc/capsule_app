@@ -31,6 +31,10 @@ Rails.application.configure do
   # Store uploaded files on the local file system in a temporary directory.
   config.active_storage.service = :test
 
+  # Redimensionnement des photos : ImageMagick sur les postes de dev, car la libvips d'Ubuntu 22.04 (8.12) est refusée
+  # par Rails (8.13 minimum, pour la sécurité). La prod (Heroku-24) utilise vips (libvips 8.15) : pas d'ImageMagick là-bas
+  config.active_storage.variant_processor = :mini_magick
+
   # Tell Action Mailer not to deliver emails to the real world.
   # The :test delivery method accumulates sent emails in the
   # ActionMailer::Base.deliveries array.

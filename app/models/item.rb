@@ -4,7 +4,11 @@ class Item < ApplicationRecord
   # L'œuvre du catalogue partagé, quand on l'a identifiée (jeu, film ou livre choisi via la recherche ou le scan)
   belongs_to :product, optional: true
 
-  has_many_attached :images
+  # :thumb : vignette des grilles et listes (2× la taille affichée, pour les écrans haute densité), au lieu de la photo
+  # d'origine (souvent plusieurs Mo). Préparée en tâche de fond dès l'ajout de la photo
+  has_many_attached :images do |attachable|
+    attachable.variant :thumb, resize_to_fill: [ 300, 400 ], preprocessed: true
+  end
 
   CONDITIONS = [ "Neuf", "Très bon état", "Bon état", "Correct", "Mauvais état" ].freeze
 

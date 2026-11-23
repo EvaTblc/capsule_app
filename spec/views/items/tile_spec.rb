@@ -30,6 +30,7 @@ RSpec.describe "items/_tile", type: :view do
     item.images.attach(io: File.open(Rails.root.join("spec/fixtures/files/figurine.jpg")), filename: "photo.jpg", content_type: "image/jpeg")
     render partial: "items/tile", locals: { item: item }
     expect(rendered).to include("<img")
+    expect(rendered).to include("/rails/active_storage/representations/") # vignette réduite, pas la photo d'origine
     expect(rendered).not_to include("NINTENDO DS", "Nintendo DS")
   end
 
