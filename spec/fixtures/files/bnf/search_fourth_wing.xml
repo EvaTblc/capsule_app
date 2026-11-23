@@ -1,0 +1,659 @@
+<?xml version="1.0" encoding="UTF-8"?><srw:searchRetrieveResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns="http://catalogue.bnf.fr/namespaces/InterXMarc" xmlns:ixm="http://catalogue.bnf.fr/namespaces/InterXMarc" xmlns:mn="http://catalogue.bnf.fr/namespaces/motsnotices" xmlns:sd="http://www.loc.gov/zing/srw/diagnostic/">
+<srw:version>1.2</srw:version>
+<srw:echoedSearchRetrieveRequest>
+<srw:version>1.2</srw:version>
+<srw:query>bib.title all "fourth wing" and bib.doctype any "a" and bib.isbn any "978* 979* 2*"</srw:query>
+</srw:echoedSearchRetrieveRequest>
+<srw:numberOfRecords>4</srw:numberOfRecords>
+<srw:records>
+<srw:record>
+<srw:recordSchema>marcxchange</srw:recordSchema>
+<srw:recordPacking>xml</srw:recordPacking>
+<srw:recordData>
+<mxc:record xmlns:mxc="info:lc/xmlns/marcxchange-v2" format="UNIMARC" id="ark:/12148/cb474194687" type="Bibliographic">
+<mxc:leader>     cam  22        450 </mxc:leader>
+<mxc:controlfield tag="001">FRBNF474194680000000</mxc:controlfield>
+<mxc:controlfield tag="003">http://catalogue.bnf.fr/ark:/12148/cb474194687</mxc:controlfield>
+<mxc:datafield tag="010" ind1=" " ind2=" ">
+<mxc:subfield code="a">978-2-7556-7313-5</mxc:subfield>
+<mxc:subfield code="b">br.</mxc:subfield>
+<mxc:subfield code="d">21,50 EUR</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="020" ind1=" " ind2=" ">
+<mxc:subfield code="a">FR</mxc:subfield>
+<mxc:subfield code="b">02412927</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="073" ind1=" " ind2="0">
+<mxc:subfield code="a">9782755673135</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="100" ind1=" " ind2=" ">
+<mxc:subfield code="a">20240216d2024    m  y0frey50      ba</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="101" ind1="1" ind2=" ">
+<mxc:subfield code="a">fre</mxc:subfield>
+<mxc:subfield code="c">eng</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="102" ind1=" " ind2=" ">
+<mxc:subfield code="a">FR</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="105" ind1=" " ind2=" ">
+<mxc:subfield code="a">||||z   00|a|</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="106" ind1=" " ind2=" ">
+<mxc:subfield code="a">r</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="181" ind1=" " ind2="0">
+<mxc:subfield code="6">01</mxc:subfield>
+<mxc:subfield code="a">i </mxc:subfield>
+<mxc:subfield code="b">xxxe  </mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="181" ind1=" " ind2=" ">
+<mxc:subfield code="6">02</mxc:subfield>
+<mxc:subfield code="c">txt</mxc:subfield>
+<mxc:subfield code="2">rdacontent</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="182" ind1=" " ind2="0">
+<mxc:subfield code="6">01</mxc:subfield>
+<mxc:subfield code="a">n</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="182" ind1=" " ind2=" ">
+<mxc:subfield code="6">02</mxc:subfield>
+<mxc:subfield code="c">n</mxc:subfield>
+<mxc:subfield code="2">rdamedia</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="200" ind1="1" ind2=" ">
+<mxc:subfield code="a">Fourth wing</mxc:subfield>
+<mxc:subfield code="b">Texte imprimé</mxc:subfield>
+<mxc:subfield code="f">Rebecca Yarros</mxc:subfield>
+<mxc:subfield code="g">traduit de l'anglais (États-Unis) par Karine Forestier</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="214" ind1=" " ind2="0">
+<mxc:subfield code="a">Paris</mxc:subfield>
+<mxc:subfield code="c">Hugo roman</mxc:subfield>
+<mxc:subfield code="d">DL 2024</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="214" ind1=" " ind2="3">
+<mxc:subfield code="a">impr. en Espagne</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="215" ind1=" " ind2=" ">
+<mxc:subfield code="a">1 vol. (619 p.)</mxc:subfield>
+<mxc:subfield code="c">ill.</mxc:subfield>
+<mxc:subfield code="d">23 cm</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="225" ind1="|" ind2=" ">
+<mxc:subfield code="a">Romantasy</mxc:subfield>
+<mxc:subfield code="x">3000-2079</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="330" ind1=" " ind2=" ">
+<mxc:subfield code="a">Passer toutes les épreuves… ou mourir !Rien ne prédestinait Violet Sorrengail à être une cavalière. Elle était censée intégrer le quadrant des Scribes et mener une vie tranquille parmi les livres. Elle dont les os sont si fragiles qu'ils peuvent se briser en un instant…Mais aujourd'hui est le jour des conscriptions, et en tant que fille de la Générale - elle-même cavalière et dresseuse de dragons -, Violet n'a d'autre choix que de satisfaire les ordres de sa mère, et de rejoindre les épreuves de sélection pour devenir dragonnière… L'élite de la Navarre !Pourtant, le simple fait d'envisager s'inscrire à cette compétition lui paraît ridicule… Car les dragons ne se lient pas aux humains « fragiles » : ils les brûlent ! Mais Violet est peut-être la candidate la moins forte physiquement, elle est cependant rusée et rapide. Des qualités indispensables quand on évolue dans un monde sans foi ni loi, où les alliés peuvent vite devenir des ennemis, ou peut-être encore des conquêtes… Violet va vite devoir penser à un plan solide, car cette compétition n'a que deux issues : passer toutes les épreuves ou mourir !</mxc:subfield>
+<mxc:subfield code="2">éditeur</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="410" ind1=" " ind2="0">
+<mxc:subfield code="0">47317066</mxc:subfield>
+<mxc:subfield code="t">Romantasy</mxc:subfield>
+<mxc:subfield code="x">3000-2079</mxc:subfield>
+<mxc:subfield code="d">2024</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="454" ind1=" " ind2="1">
+<mxc:subfield code="t">Fourth wing</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="686" ind1=" " ind2=" ">
+<mxc:subfield code="a">803</mxc:subfield>
+<mxc:subfield code="2">Cadre de classement de la Bibliographie nationale française</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="700" ind1=" " ind2="|">
+<mxc:subfield code="3">17146063</mxc:subfield>
+<mxc:subfield code="o">ISNI0000000444378013</mxc:subfield>
+<mxc:subfield code="a">Yarros</mxc:subfield>
+<mxc:subfield code="b">Rebecca</mxc:subfield>
+<mxc:subfield code="4">070</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="702" ind1=" " ind2="|">
+<mxc:subfield code="3">16973371</mxc:subfield>
+<mxc:subfield code="o">ISNI000000045337644X</mxc:subfield>
+<mxc:subfield code="a">Forestier</mxc:subfield>
+<mxc:subfield code="b">Karine</mxc:subfield>
+<mxc:subfield code="4">730</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="801" ind1=" " ind2="0">
+<mxc:subfield code="a">FR</mxc:subfield>
+<mxc:subfield code="b">FR-751131015</mxc:subfield>
+<mxc:subfield code="c">20240216</mxc:subfield>
+<mxc:subfield code="g">AFNOR</mxc:subfield>
+<mxc:subfield code="h">FRBNF474194680000000</mxc:subfield>
+<mxc:subfield code="2">intermrc</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="856" ind1=" " ind2="2">
+<mxc:subfield code="u">846062</mxc:subfield>
+<mxc:subfield code="b">Première de couverture</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="930" ind1=" " ind2=" ">
+<mxc:subfield code="5">FR-751131010:47419468001001</mxc:subfield>
+<mxc:subfield code="a">2024-40195</mxc:subfield>
+<mxc:subfield code="b">759999999</mxc:subfield>
+<mxc:subfield code="c">Tolbiac - Rez de Jardin - Littérature et art - Magasin</mxc:subfield>
+<mxc:subfield code="d">O</mxc:subfield>
+</mxc:datafield>
+</mxc:record>      </srw:recordData>
+<srw:recordIdentifier>ark:/12148/cb474194687</srw:recordIdentifier>
+<srw:recordPosition>1</srw:recordPosition>
+<srw:extraRecordData>
+<ixm:attr name="CreationDate">20240216</ixm:attr>
+<ixm:attr name="LastModificationDate">20240405</ixm:attr>
+<mn:score>16.058666</mn:score>
+</srw:extraRecordData>
+</srw:record>
+<srw:record>
+<srw:recordSchema>marcxchange</srw:recordSchema>
+<srw:recordPacking>xml</srw:recordPacking>
+<srw:recordData>
+<mxc:record xmlns:mxc="info:lc/xmlns/marcxchange-v2" format="UNIMARC" id="ark:/12148/cb47430246m" type="Bibliographic">
+<mxc:leader>     cam  22        450 </mxc:leader>
+<mxc:controlfield tag="001">FRBNF474302460000009</mxc:controlfield>
+<mxc:controlfield tag="003">http://catalogue.bnf.fr/ark:/12148/cb47430246m</mxc:controlfield>
+<mxc:datafield tag="010" ind1=" " ind2=" ">
+<mxc:subfield code="a">978-2-7556-7147-6</mxc:subfield>
+<mxc:subfield code="b">rel.</mxc:subfield>
+<mxc:subfield code="d">29,95 EUR</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="020" ind1=" " ind2=" ">
+<mxc:subfield code="a">FR</mxc:subfield>
+<mxc:subfield code="b">02415588</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="073" ind1=" " ind2="0">
+<mxc:subfield code="a">9782755671476</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="100" ind1=" " ind2=" ">
+<mxc:subfield code="a">20240304d2024    m  y0frey50      ba</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="101" ind1="1" ind2=" ">
+<mxc:subfield code="a">fre</mxc:subfield>
+<mxc:subfield code="c">eng</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="102" ind1=" " ind2=" ">
+<mxc:subfield code="a">FR</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="105" ind1=" " ind2=" ">
+<mxc:subfield code="a">||||z   00|a|</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="106" ind1=" " ind2=" ">
+<mxc:subfield code="a">r</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="181" ind1=" " ind2="0">
+<mxc:subfield code="6">01</mxc:subfield>
+<mxc:subfield code="a">i </mxc:subfield>
+<mxc:subfield code="b">xxxe  </mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="181" ind1=" " ind2=" ">
+<mxc:subfield code="6">02</mxc:subfield>
+<mxc:subfield code="c">txt</mxc:subfield>
+<mxc:subfield code="2">rdacontent</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="182" ind1=" " ind2="0">
+<mxc:subfield code="6">01</mxc:subfield>
+<mxc:subfield code="a">n</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="182" ind1=" " ind2=" ">
+<mxc:subfield code="6">02</mxc:subfield>
+<mxc:subfield code="c">n</mxc:subfield>
+<mxc:subfield code="2">rdamedia</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="200" ind1="1" ind2=" ">
+<mxc:subfield code="a">Fourth wing</mxc:subfield>
+<mxc:subfield code="b">Texte imprimé</mxc:subfield>
+<mxc:subfield code="f">Rebecca Yarros</mxc:subfield>
+<mxc:subfield code="g">traduit de l'anglais (États-Unis) par Karine Forestier</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="205" ind1=" " ind2=" ">
+<mxc:subfield code="a">Éd. collector</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="214" ind1=" " ind2="0">
+<mxc:subfield code="a">Paris</mxc:subfield>
+<mxc:subfield code="c">Hugo roman</mxc:subfield>
+<mxc:subfield code="d">DL 2024</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="214" ind1=" " ind2="3">
+<mxc:subfield code="a">impr. en Espagne</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="215" ind1=" " ind2=" ">
+<mxc:subfield code="a">1 vol. (619 p.)</mxc:subfield>
+<mxc:subfield code="c">ill.</mxc:subfield>
+<mxc:subfield code="d">24 cm</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="225" ind1="|" ind2=" ">
+<mxc:subfield code="a">Romantasy</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="300" ind1=" " ind2=" ">
+<mxc:subfield code="a">À pour suite : "Iron flame", ISBN 978-2-7556-7148-3</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="330" ind1=" " ind2=" ">
+<mxc:subfield code="a">Passer toutes les épreuves… ou mourir !Rien ne prédestinait Violet Sorrengail à être une cavalière. Elle était censée intégrer le quadrant des Scribes et mener une vie tranquille parmi les livres. Elle dont les os sont si fragiles qu'ils peuvent se briser en un instant…Mais aujourd'hui est le jour des conscriptions, et en tant que fille de la Générale - elle-même cavalière et dresseuse de dragons -, Violet n'a d'autre choix que de satisfaire les ordres de sa mère, et de rejoindre les épreuves de sélection pour devenir dragonnière… L'élite de la Navarre !Pourtant, le simple fait d'envisager s'inscrire à cette compétition lui paraît ridicule… Car les dragons ne se lient pas aux humains « fragiles » : ils les brûlent ! Mais Violet est peut-être la candidate la moins forte physiquement, elle est cependant rusée et rapide. Des qualités indispensables quand on évolue dans un monde sans foi ni loi, où les alliés peuvent vite devenir des ennemis, ou peut-être encore des conquêtes… Violet va vite devoir penser à un plan solide, car cette compétition n'a que deux issues : passer toutes les épreuves ou mourir !</mxc:subfield>
+<mxc:subfield code="2">éditeur</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="410" ind1=" " ind2="0">
+<mxc:subfield code="0">47317066</mxc:subfield>
+<mxc:subfield code="t">Romantasy</mxc:subfield>
+<mxc:subfield code="x">3000-2079</mxc:subfield>
+<mxc:subfield code="d">2024</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="421" ind1=" " ind2="1">
+<mxc:subfield code="0">47506792</mxc:subfield>
+<mxc:subfield code="t">Iron flame</mxc:subfield>
+<mxc:subfield code="y">978-2-7556-7148-3</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="454" ind1=" " ind2="1">
+<mxc:subfield code="t">Fourth wing</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="686" ind1=" " ind2=" ">
+<mxc:subfield code="a">803</mxc:subfield>
+<mxc:subfield code="2">Cadre de classement de la Bibliographie nationale française</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="700" ind1=" " ind2="|">
+<mxc:subfield code="3">17146063</mxc:subfield>
+<mxc:subfield code="o">ISNI0000000444378013</mxc:subfield>
+<mxc:subfield code="a">Yarros</mxc:subfield>
+<mxc:subfield code="b">Rebecca</mxc:subfield>
+<mxc:subfield code="4">070</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="702" ind1=" " ind2="|">
+<mxc:subfield code="3">16973371</mxc:subfield>
+<mxc:subfield code="o">ISNI000000045337644X</mxc:subfield>
+<mxc:subfield code="a">Forestier</mxc:subfield>
+<mxc:subfield code="b">Karine</mxc:subfield>
+<mxc:subfield code="4">730</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="801" ind1=" " ind2="0">
+<mxc:subfield code="a">FR</mxc:subfield>
+<mxc:subfield code="b">FR-751131015</mxc:subfield>
+<mxc:subfield code="c">20240304</mxc:subfield>
+<mxc:subfield code="g">AFNOR</mxc:subfield>
+<mxc:subfield code="h">FRBNF474302460000009</mxc:subfield>
+<mxc:subfield code="2">intermrc</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="856" ind1=" " ind2="2">
+<mxc:subfield code="u">846061</mxc:subfield>
+<mxc:subfield code="b">Première de couverture</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="930" ind1=" " ind2=" ">
+<mxc:subfield code="5">FR-751131010:47430246001001</mxc:subfield>
+<mxc:subfield code="a">2024-50384</mxc:subfield>
+<mxc:subfield code="b">759999999</mxc:subfield>
+<mxc:subfield code="c">Tolbiac - Rez de Jardin - Littérature et art - Magasin</mxc:subfield>
+<mxc:subfield code="d">O</mxc:subfield>
+</mxc:datafield>
+</mxc:record>      </srw:recordData>
+<srw:recordIdentifier>ark:/12148/cb47430246m</srw:recordIdentifier>
+<srw:recordPosition>2</srw:recordPosition>
+<srw:extraRecordData>
+<ixm:attr name="CreationDate">20240304</ixm:attr>
+<ixm:attr name="LastModificationDate">20250820</ixm:attr>
+<mn:score>15.584639</mn:score>
+</srw:extraRecordData>
+</srw:record>
+<srw:record>
+<srw:recordSchema>marcxchange</srw:recordSchema>
+<srw:recordPacking>xml</srw:recordPacking>
+<srw:recordData>
+<mxc:record xmlns:mxc="info:lc/xmlns/marcxchange-v2" format="UNIMARC" id="ark:/12148/cb48658208w" type="Bibliographic">
+<mxc:leader>     cam  22        450 </mxc:leader>
+<mxc:controlfield tag="001">FRBNF486582080000009</mxc:controlfield>
+<mxc:controlfield tag="003">http://catalogue.bnf.fr/ark:/12148/cb48658208w</mxc:controlfield>
+<mxc:datafield tag="010" ind1=" " ind2=" ">
+<mxc:subfield code="a">978-2-7556-8144-4</mxc:subfield>
+<mxc:subfield code="b">br.</mxc:subfield>
+<mxc:subfield code="d">9,90 EUR</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="020" ind1=" " ind2=" ">
+<mxc:subfield code="a">FR</mxc:subfield>
+<mxc:subfield code="b">02601024</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="073" ind1=" " ind2="0">
+<mxc:subfield code="a">9782755681444</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="100" ind1=" " ind2=" ">
+<mxc:subfield code="a">20251202d2025    m  y0frey50      ba</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="101" ind1="1" ind2=" ">
+<mxc:subfield code="a">fre</mxc:subfield>
+<mxc:subfield code="c">eng</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="102" ind1=" " ind2=" ">
+<mxc:subfield code="a">FR</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="105" ind1=" " ind2=" ">
+<mxc:subfield code="a">||||z   00|a|</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="106" ind1=" " ind2=" ">
+<mxc:subfield code="a">r</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="181" ind1=" " ind2="0">
+<mxc:subfield code="6">01</mxc:subfield>
+<mxc:subfield code="a">i </mxc:subfield>
+<mxc:subfield code="b">xxxe  </mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="181" ind1=" " ind2=" ">
+<mxc:subfield code="6">02</mxc:subfield>
+<mxc:subfield code="c">txt</mxc:subfield>
+<mxc:subfield code="2">rdacontent</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="182" ind1=" " ind2="0">
+<mxc:subfield code="6">01</mxc:subfield>
+<mxc:subfield code="a">n</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="182" ind1=" " ind2=" ">
+<mxc:subfield code="6">02</mxc:subfield>
+<mxc:subfield code="c">n</mxc:subfield>
+<mxc:subfield code="2">rdamedia</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="200" ind1="1" ind2=" ">
+<mxc:subfield code="a">Fourth wing</mxc:subfield>
+<mxc:subfield code="b">Texte imprimé</mxc:subfield>
+<mxc:subfield code="f">Rebecca Yarros</mxc:subfield>
+<mxc:subfield code="g">traduit de l'anglais (États-Unis) par Karine Forestier</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="214" ind1=" " ind2="0">
+<mxc:subfield code="a">Boulogne-Billancourt</mxc:subfield>
+<mxc:subfield code="c">Hugo poche</mxc:subfield>
+<mxc:subfield code="d">DL 2025</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="214" ind1=" " ind2="3">
+<mxc:subfield code="a">impr. en Espagne</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="215" ind1=" " ind2=" ">
+<mxc:subfield code="a">1 vol. (986 p.)</mxc:subfield>
+<mxc:subfield code="c">ill.</mxc:subfield>
+<mxc:subfield code="d">18 cm</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="225" ind1="|" ind2=" ">
+<mxc:subfield code="a">Romantasy</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="225" ind1="|" ind2=" ">
+<mxc:subfield code="a">Poche</mxc:subfield>
+<mxc:subfield code="v">811</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="300" ind1=" " ind2=" ">
+<mxc:subfield code="a">A pour suite : "Iron flame", ISBN 978-2-7556-8150-5</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="330" ind1=" " ind2=" ">
+<mxc:subfield code="a">Passer toutes les épreuves&amp; ou mourir !Rien ne prédestinait Violet Sorrengail à être une cavalière. Elle était censée intégrer le quadrant des Scribes et mener une vie tranquille parmi les livres. Elle dont les os sont si fragiles qu ils peuvent se briser en un instant&amp;Mais aujourd hui est le jour des conscriptions, et en tant que fille de la Générale - elle-même cavalière et dresseuse de dragons -, Violet n a d autre choix que de satisfaire les ordres de sa mère, et de rejoindre les épreuves de sélection pour devenir dragonnière&amp; L élite de la Navarre !Pourtant, le simple fait d envisager s inscrire à cette compétition lui paraît ridicule&amp; Car les dragons ne se lient pas aux humains « fragiles » : ils les brûlent ! Mais Violet est peut-être la candidate la moins forte physiquement, elle est cependant rusée et rapide. Des qualités indispensables quand on évolue dans un monde sans foi ni loi, où les alliés peuvent vite devenir des ennemis, ou peut-être encore des conquêtes&amp; Violet va vite devoir penser à un plan solide, car cette compétition n a que deux issues : passer toutes les épreuves ou mourir !"Une fantasy comme vous n'en avez jamais lu auparavant." Jennifer L. Armentrout, auteure #1 New York Times bestseller"J'ai applaudi, j'ai ri, j'ai souri, j'ai réfusé de poser ce livre." Lexi Ryan, auteure #1 New York Times bestseller"Les lecteur.rices seront envoûtés et impatients d'en savoir plus." Publishers Weekly</mxc:subfield>
+<mxc:subfield code="2">éditeur</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="410" ind1=" " ind2="0">
+<mxc:subfield code="0">45795743</mxc:subfield>
+<mxc:subfield code="t">Hugo poche</mxc:subfield>
+<mxc:subfield code="v">811</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="410" ind1=" " ind2="0">
+<mxc:subfield code="0">47317066</mxc:subfield>
+<mxc:subfield code="t">Romantasy</mxc:subfield>
+<mxc:subfield code="x">3000-2079</mxc:subfield>
+<mxc:subfield code="d">2025</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="421" ind1=" " ind2="1">
+<mxc:subfield code="0">48671247</mxc:subfield>
+<mxc:subfield code="t">Iron flame</mxc:subfield>
+<mxc:subfield code="y">978-2-7556-8150-5</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="454" ind1=" " ind2="1">
+<mxc:subfield code="t">Fourth wing</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="686" ind1=" " ind2=" ">
+<mxc:subfield code="a">803</mxc:subfield>
+<mxc:subfield code="2">Cadre de classement de la Bibliographie nationale française</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="700" ind1=" " ind2="|">
+<mxc:subfield code="3">17146063</mxc:subfield>
+<mxc:subfield code="o">ISNI0000000444378013</mxc:subfield>
+<mxc:subfield code="a">Yarros</mxc:subfield>
+<mxc:subfield code="b">Rebecca</mxc:subfield>
+<mxc:subfield code="4">070</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="702" ind1=" " ind2="|">
+<mxc:subfield code="3">16973371</mxc:subfield>
+<mxc:subfield code="o">ISNI000000045337644X</mxc:subfield>
+<mxc:subfield code="a">Forestier</mxc:subfield>
+<mxc:subfield code="b">Karine</mxc:subfield>
+<mxc:subfield code="4">730</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="801" ind1=" " ind2="0">
+<mxc:subfield code="a">FR</mxc:subfield>
+<mxc:subfield code="b">FR-751131015</mxc:subfield>
+<mxc:subfield code="c">20251202</mxc:subfield>
+<mxc:subfield code="g">AFNOR</mxc:subfield>
+<mxc:subfield code="h">FRBNF486582080000009</mxc:subfield>
+<mxc:subfield code="2">intermrc</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="856" ind1=" " ind2="2">
+<mxc:subfield code="u">1083329</mxc:subfield>
+<mxc:subfield code="b">Première de couverture</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="930" ind1=" " ind2=" ">
+<mxc:subfield code="5">FR-751131010:48658208001001</mxc:subfield>
+<mxc:subfield code="a">2025-273339</mxc:subfield>
+<mxc:subfield code="b">759999999</mxc:subfield>
+<mxc:subfield code="c">Tolbiac - Rez de Jardin - Littérature et art - Magasin</mxc:subfield>
+<mxc:subfield code="d">O</mxc:subfield>
+</mxc:datafield>
+</mxc:record>      </srw:recordData>
+<srw:recordIdentifier>ark:/12148/cb48658208w</srw:recordIdentifier>
+<srw:recordPosition>3</srw:recordPosition>
+<srw:extraRecordData>
+<ixm:attr name="CreationDate">20251202</ixm:attr>
+<ixm:attr name="LastModificationDate">20260401</ixm:attr>
+<mn:score>14.930002</mn:score>
+</srw:extraRecordData>
+</srw:record>
+<srw:record>
+<srw:recordSchema>marcxchange</srw:recordSchema>
+<srw:recordPacking>xml</srw:recordPacking>
+<srw:recordData>
+<mxc:record xmlns:mxc="info:lc/xmlns/marcxchange-v2" format="UNIMARC" id="ark:/12148/cb45215263c" type="Bibliographic">
+<mxc:leader>     cam  22     3  450 </mxc:leader>
+<mxc:controlfield tag="001">FRBNF452152630000006</mxc:controlfield>
+<mxc:controlfield tag="003">http://catalogue.bnf.fr/ark:/12148/cb45215263c</mxc:controlfield>
+<mxc:datafield tag="010" ind1=" " ind2=" ">
+<mxc:subfield code="a">9781941040355</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="010" ind1=" " ind2=" ">
+<mxc:subfield code="a">1941040357</mxc:subfield>
+<mxc:subfield code="b">rel.</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="035" ind1=" " ind2=" ">
+<mxc:subfield code="a">OCoLC923794393</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="100" ind1=" " ind2=" ">
+<mxc:subfield code="a">20170607d2016    m  y0engy50      ba</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="101" ind1="0" ind2=" ">
+<mxc:subfield code="a">eng</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="102" ind1=" " ind2=" ">
+<mxc:subfield code="a">US</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="105" ind1=" " ind2=" ">
+<mxc:subfield code="a">a   z   00|a|</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="106" ind1=" " ind2=" ">
+<mxc:subfield code="a">z</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="181" ind1=" " ind2="0">
+<mxc:subfield code="6">01</mxc:subfield>
+<mxc:subfield code="a">i </mxc:subfield>
+<mxc:subfield code="b">xxxe  </mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="181" ind1=" " ind2=" ">
+<mxc:subfield code="6">02</mxc:subfield>
+<mxc:subfield code="c">txt</mxc:subfield>
+<mxc:subfield code="2">rdacontent</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="182" ind1=" " ind2="0">
+<mxc:subfield code="6">01</mxc:subfield>
+<mxc:subfield code="a">n</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="182" ind1=" " ind2=" ">
+<mxc:subfield code="6">02</mxc:subfield>
+<mxc:subfield code="c">n</mxc:subfield>
+<mxc:subfield code="2">rdamedia</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="200" ind1="1" ind2=" ">
+<mxc:subfield code="a">Ninety-nine stories of God</mxc:subfield>
+<mxc:subfield code="b">Texte imprimé</mxc:subfield>
+<mxc:subfield code="f">Joy Williams</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="210" ind1=" " ind2=" ">
+<mxc:subfield code="a">Portland (Or.)</mxc:subfield>
+<mxc:subfield code="c">Tin House books</mxc:subfield>
+<mxc:subfield code="d">2016</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="215" ind1=" " ind2=" ">
+<mxc:subfield code="a">1 vol. (non paginé [ca 150])</mxc:subfield>
+<mxc:subfield code="c">portr.</mxc:subfield>
+<mxc:subfield code="d">21 cm</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="312" ind1=" " ind2=" ">
+<mxc:subfield code="a">Autre forme de titre : 99 stories of God</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="327" ind1="1" ind2=" ">
+<mxc:subfield code="a">Postcard --</mxc:subfield>
+<mxc:subfield code="a">Noche --</mxc:subfield>
+<mxc:subfield code="a">Aubade --</mxc:subfield>
+<mxc:subfield code="a">Cavity --</mxc:subfield>
+<mxc:subfield code="a">Nevertheless --</mxc:subfield>
+<mxc:subfield code="a">See that you remember --</mxc:subfield>
+<mxc:subfield code="a">Not his best --</mxc:subfield>
+<mxc:subfield code="a">Hedgehog --</mxc:subfield>
+<mxc:subfield code="a">Clean --</mxc:subfield>
+<mxc:subfield code="a">Wet --</mxc:subfield>
+<mxc:subfield code="a">Arrangement --</mxc:subfield>
+<mxc:subfield code="a">No --</mxc:subfield>
+<mxc:subfield code="a">Moms --</mxc:subfield>
+<mxc:subfield code="a">Cozy --</mxc:subfield>
+<mxc:subfield code="a">Story --</mxc:subfield>
+<mxc:subfield code="a">If picked or uprooted these beautiful flowers will disappear --</mxc:subfield>
+<mxc:subfield code="a">Dresser --</mxc:subfield>
+<mxc:subfield code="a">This is not a maze --</mxc:subfield>
+<mxc:subfield code="a">Perhaps a kind of cake? --</mxc:subfield>
+<mxc:subfield code="a">This time --</mxc:subfield>
+<mxc:subfield code="a">Coat --</mxc:subfield>
+<mxc:subfield code="a">Some difference --</mxc:subfield>
+<mxc:subfield code="a">And you are-- --</mxc:subfield>
+<mxc:subfield code="a">Nid duw ond dim (without God there is nothing) --</mxc:subfield>
+<mxc:subfield code="a">Veracity --</mxc:subfield>
+<mxc:subfield code="a">Satisfaction --</mxc:subfield>
+<mxc:subfield code="a">A good reason --</mxc:subfield>
+<mxc:subfield code="a">Abandon all hope --</mxc:subfield>
+<mxc:subfield code="a">Ignorance --</mxc:subfield>
+<mxc:subfield code="a">Satan's leathery wing --</mxc:subfield>
+<mxc:subfield code="a">Society --</mxc:subfield>
+<mxc:subfield code="a">Shaken --</mxc:subfield>
+<mxc:subfield code="a">Irreducible --</mxc:subfield>
+<mxc:subfield code="a">Tragedy has obligations --</mxc:subfield>
+<mxc:subfield code="a">Just a rumor --</mxc:subfield>
+<mxc:subfield code="a">Dearest --</mxc:subfield>
+<mxc:subfield code="a">The brain --</mxc:subfield>
+<mxc:subfield code="a">Actually --</mxc:subfield>
+<mxc:subfield code="a">Buried in Colorado all alone --</mxc:subfield>
+<mxc:subfield code="a">Señor Xólotl --</mxc:subfield>
+<mxc:subfield code="a">Jail --</mxc:subfield>
+<mxc:subfield code="a">Pretty much the same, then --</mxc:subfield>
+<mxc:subfield code="a">Her eyes were set rather close together, which gave her an urgent air --</mxc:subfield>
+<mxc:subfield code="a">The individualist --</mxc:subfield>
+<mxc:subfield code="a">Numbers --</mxc:subfield>
+<mxc:subfield code="a">Preference --</mxc:subfield>
+<mxc:subfield code="a">Get out as early as you can --</mxc:subfield>
+<mxc:subfield code="a">Participation --</mxc:subfield>
+<mxc:subfield code="a">Naked mind --</mxc:subfield>
+<mxc:subfield code="a">Buick LeSabre --</mxc:subfield>
+<mxc:subfield code="a">Significance --</mxc:subfield>
+<mxc:subfield code="a">Doll house --</mxc:subfield>
+<mxc:subfield code="a">Peggy --</mxc:subfield>
+<mxc:subfield code="a">Divine --</mxc:subfield>
+<mxc:subfield code="a">Neglect --</mxc:subfield>
+<mxc:subfield code="a">Giraffe --</mxc:subfield>
+<mxc:subfield code="a">Dew --</mxc:subfield>
+<mxc:subfield code="a">Sartre to Camus --</mxc:subfield>
+<mxc:subfield code="a">Looking good --</mxc:subfield>
+<mxc:subfield code="a">Party --</mxc:subfield>
+<mxc:subfield code="a">Museum --</mxc:subfield>
+<mxc:subfield code="a">Essential enough --</mxc:subfield>
+<mxc:subfield code="a">Apropos of nothing --</mxc:subfield>
+<mxc:subfield code="a">I pity the fool --</mxc:subfield>
+<mxc:subfield code="a">Dull --</mxc:subfield>
+<mxc:subfield code="a">Rebirth --</mxc:subfield>
+<mxc:subfield code="a">Forgiveness --</mxc:subfield>
+<mxc:subfield code="a">) ( --</mxc:subfield>
+<mxc:subfield code="a">Inoculum --</mxc:subfield>
+<mxc:subfield code="a">Driveshaft --</mxc:subfield>
+<mxc:subfield code="a">Fog --</mxc:subfield>
+<mxc:subfield code="a">Whale --</mxc:subfield>
+<mxc:subfield code="a">A little prayer --</mxc:subfield>
+<mxc:subfield code="a">Walk-in --</mxc:subfield>
+<mxc:subfield code="a">Transition --</mxc:subfield>
+<mxc:subfield code="a">Whatever is happening? --</mxc:subfield>
+<mxc:subfield code="a">Elephants never forget God --</mxc:subfield>
+<mxc:subfield code="a">The fourth wife --</mxc:subfield>
+<mxc:subfield code="a">Example --</mxc:subfield>
+<mxc:subfield code="a">Opportunity --</mxc:subfield>
+<mxc:subfield code="a">Businesswoman --</mxc:subfield>
+<mxc:subfield code="a">Polyurethane --</mxc:subfield>
+<mxc:subfield code="a">Crazy Injuns --</mxc:subfield>
+<mxc:subfield code="a">Winter --</mxc:subfield>
+<mxc:subfield code="a">Early practice --</mxc:subfield>
+<mxc:subfield code="a">Infidelity --</mxc:subfield>
+<mxc:subfield code="a">Plot --</mxc:subfield>
+<mxc:subfield code="a">A flawed opinion --</mxc:subfield>
+<mxc:subfield code="a">Phew --</mxc:subfield>
+<mxc:subfield code="a">Compline --</mxc:subfield>
+<mxc:subfield code="a">This is the way that night passes --</mxc:subfield>
+<mxc:subfield code="a">Distinction --</mxc:subfield>
+<mxc:subfield code="a">Fathers and sons --</mxc:subfield>
+<mxc:subfield code="a">If you feel you must --</mxc:subfield>
+<mxc:subfield code="a">Sibling --</mxc:subfield>
+<mxc:subfield code="a">Plenary --</mxc:subfield>
+<mxc:subfield code="a">Bread --</mxc:subfield>
+<mxc:subfield code="a">A new arrangement --</mxc:subfield>
+<mxc:subfield code="a">The darkling thrush.</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="330" ind1=" " ind2=" ">
+<mxc:subfield code="a">Seldom occupying more than a couple of pages, Williams' stories are headed by a number, one to 99, the Pulitzer Prize and National Book Award finalist has a one-of-a-kind gift for capturing both the absurdity and the darkness of everyday life. In Ninety-nine stories of God, she takes on one of mankind's most confounding preoccupations: the Supreme Being. This series of short, fictional vignettes explores our day-to-day interactions with an ever-elusive and arbitrary God. It's the Book of Common Prayer as seen through a looking glass--a powerfully vivid collection of seemingly random life moments. The figures that haunt these stories range from Kafka (talking to a fish) to the Aztecs, Tolstoy to Abraham and Sarah, O.J. Simpson to a pack of wolves. Most of Williams' characters, however, are like the rest of us: anonymous strivers and bumblers who brush up against God in the least expected places or go searching for him when he's standing right there. The Lord shows up at a hot-dog-eating contest, a demolition derby, a formal gala, and a drugstore, where he's in line to get a shingles vaccination. At turns comic and yearning, lyric and aphoristic, Ninety-nine stories of God serves as a pure distillation of one of our great artists</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="517" ind1="1" ind2=" ">
+<mxc:subfield code="a">99 stories of God</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="700" ind1=" " ind2="|">
+<mxc:subfield code="3">12287172</mxc:subfield>
+<mxc:subfield code="o">ISNI0000000115109461</mxc:subfield>
+<mxc:subfield code="a">Williams</mxc:subfield>
+<mxc:subfield code="b">Joy</mxc:subfield>
+<mxc:subfield code="f">1944-....</mxc:subfield>
+<mxc:subfield code="4">070</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="801" ind1=" " ind2="3">
+<mxc:subfield code="a">US</mxc:subfield>
+<mxc:subfield code="b">OCoLC</mxc:subfield>
+<mxc:subfield code="c">20170607</mxc:subfield>
+<mxc:subfield code="h">923794393</mxc:subfield>
+<mxc:subfield code="2">marc21</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="801" ind1=" " ind2="0">
+<mxc:subfield code="b">DLC</mxc:subfield>
+<mxc:subfield code="g">rda</mxc:subfield>
+</mxc:datafield>
+<mxc:datafield tag="930" ind1=" " ind2=" ">
+<mxc:subfield code="5">FR-751131010:45215263001001</mxc:subfield>
+<mxc:subfield code="a">2017-104871</mxc:subfield>
+<mxc:subfield code="b">759999999</mxc:subfield>
+<mxc:subfield code="c">Tolbiac - Rez de Jardin - Littérature et art - Magasin</mxc:subfield>
+<mxc:subfield code="d">O</mxc:subfield>
+</mxc:datafield>
+</mxc:record>      </srw:recordData>
+<srw:recordIdentifier>ark:/12148/cb45215263c</srw:recordIdentifier>
+<srw:recordPosition>4</srw:recordPosition>
+<srw:extraRecordData>
+<ixm:attr name="CreationDate">20170220</ixm:attr>
+<ixm:attr name="LastModificationDate">20170607</ixm:attr>
+<mn:score>2.7700226</mn:score>
+</srw:extraRecordData>
+</srw:record>
+</srw:records>
+</srw:searchRetrieveResponse>

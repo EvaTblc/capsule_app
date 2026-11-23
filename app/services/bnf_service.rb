@@ -36,13 +36,78 @@ class BnfService
       title: subfield(record, "200", "a"),
       complement: subfield(record, "200", "e"),
       support: subfield(record, "215", "a"),
-      publisher: (subfields(record, "210", "c").last || subfields(record, "214", "c").last)&.sub(/\s*\[.*\]\z/, ""),
+      publisher: publisher(record),
       release_year: (subfield(record, "210", "d") || subfield(record, "214", "d"))&.[](/\d{4}/)&.to_i,
       creators: creators(record)
     }
   rescue HTTP::Error => e
     raise Unavailable, "#{e.class} pour #{ean}"
   end
+  # Livres dont le titre contient tous les mots cherchés (recherche du formulaire d'ajout) : éditions cataloguées
+  # à la BnF avec un ISBN, donc toutes ouvrables ensuite en fiche (book_detail). La BnF ne classe pas par pertinence :
+  # titre exact d'abord, puis par tome, puis du plus récent au plus ancien.
+  # [] si rien ne correspond, BnfService::Unavailable si la BnF ne répond pas
+  def self.search_books(query, limit: 10)
+    words = normalize(query).split.first(8) # ni guillemets ni opérateurs : la requête CQL reste sûre
+    return [] if words.empty?
+
+    response = HTTP.timeout(10).get(URL, params: {
+      version: "1.2",
+      operation: "searchRetrieve",
+      recordSchema: "unimarcxchange",
+      maximumRecords: 30,
+      # doctype « a » : texte imprimé ; ISBN-13 (978, 979) ou ISBN-10 français (2…)
+      query: "bib.title all \"#{words.join(" ")}\" and bib.doctype any \"a\" and bib.isbn any \"978* 979* 2*\""
+    })
+    raise Unavailable, "#{response.status} pour la recherche « #{query} »" unless response.status.success?
+
+    wanted = words.join(" ")
+    books = Nokogiri::XML(response.body.to_s).xpath("//mxc:record", NS).filter_map { |record| search_result(record) }
+    books = books.select { |book| (words - normalize(book[:title]).split).empty? }.uniq { |book| book[:isbn] }
+    books.sort_by { |book| [ normalize(book[:title]) == wanted ? 0 : 1, book[:volume].to_i, -book[:year].to_i ] }.first(limit)
+  rescue HTTP::Error => e
+    raise Unavailable, "#{e.class} pour la recherche « #{query} »"
+  end
+
+  # Une ligne de la liste de recherche ; nil sans ISBN exploitable (la fiche ne pourrait pas être ouverte)
+  def self.search_result(record)
+    isbn = isbn13(subfield(record, "010", "a"))
+    title = subfield(record, "200", "a")
+    return nil unless isbn && title
+
+    creators = creators(record)
+    {
+      isbn: isbn,
+      title: title,
+      volume: subfield(record, "200", "h"), # numéro de tome (« 10 »)
+      author: (creators["070"] || creators.values.first).to_a.first(2).join(", ").presence,
+      publisher: publisher(record),
+      year: (subfield(record, "210", "d") || subfield(record, "214", "d"))&.[](/\d{4}/)&.to_i
+    }
+  end
+
+  # ISBN imprimé (« 978-2-37880-375-9 », « 2-07-021200-9 ») → EAN à 13 chiffres ; nil s'il est illisible
+  def self.isbn13(isbn)
+    digits = isbn.to_s.upcase.delete("^0-9X")
+    return digits if digits.match?(/\A97[89]\d{10}\z/)
+    return nil unless digits.match?(/\A\d{9}[\dX]\z/)
+
+    base = "978#{digits[0, 9]}"
+    base + ((10 - base.chars.each_with_index.sum { |digit, i| digit.to_i * (i.even? ? 1 : 3) } % 10) % 10).to_s
+  end
+
+  # Éditeur : zones 210 / 214, sauf celles de fabrication (214 avec 2e indicateur 3 : l'imprimeur, ex. « Dupliprint »).
+  # Le dernier nommé est le distributeur français pour les jeux (« Nintendo France »), sans « [distrib.] »
+  def self.publisher(record)
+    names = record.xpath("mxc:datafield[(@tag='210' or @tag='214') and not(@ind2='3')]/mxc:subfield[@code='c']", NS).map(&:text)
+    names.last&.sub(/\s*\[.*\]\z/, "")
+  end
+
+  # Minuscules, sans accents ni ponctuation : « L'Étranger » → « l etranger »
+  def self.normalize(text)
+    I18n.transliterate(text.to_s).downcase.gsub(/[^a-z0-9]+/, " ").strip
+  end
+
   # Désignation du support (200$b), quand l'en-tête ne suffit pas
   DESIGNATIONS = { "Ressource électronique" => "game", "Images animées" => "movie", "Texte imprimé" => "book" }.freeze
 
@@ -88,5 +153,5 @@ class BnfService
     end
     result
   end
-  private_class_method :kind, :isbn10, :subfield, :subfields, :creators
+  private_class_method :kind, :isbn10, :subfield, :subfields, :creators, :search_result, :isbn13, :publisher, :normalize
 end

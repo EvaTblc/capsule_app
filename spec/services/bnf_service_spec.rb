@@ -106,4 +106,56 @@ RSpec.describe BnfService do
       expect { described_class.find_by_ean("0045496464851") }.to raise_error(BnfService::Unavailable, /TimeoutError/)
     end
   end
+
+  describe ".search_books (recherche du formulaire d'ajout)" do
+    it "éditions françaises avec ISBN, titre exact d'abord ; notice sans le titre cherché écartée" do
+      bnf_returns("search_fourth_wing")
+      expect(described_class.search_books("Fourth wing")).to eq([
+        { isbn: "9782755681444", title: "Fourth wing", volume: nil, author: "Rebecca Yarros", publisher: "Hugo poche", year: 2025 },
+        { isbn: "9782755673135", title: "Fourth wing", volume: nil, author: "Rebecca Yarros", publisher: "Hugo roman", year: 2024 },
+        { isbn: "9782755671476", title: "Fourth wing", volume: nil, author: "Rebecca Yarros", publisher: "Hugo roman", year: 2024 }
+      ])
+    end
+
+    it "requête envoyée : titre sans accents ni guillemets, livres imprimés avec ISBN seulement" do
+      bnf_returns("search_fourth_wing")
+      described_class.search_books(%(Fourth "wing"))
+      expect(http).to have_received(:get).with(BnfService::URL, params: hash_including(
+        query: 'bib.title all "fourth wing" and bib.doctype any "a" and bib.isbn any "978* 979* 2*"'
+      ))
+    end
+
+    it "série : tomes dans l'ordre, limités à 10" do
+      bnf_returns("search_atelier_des_sorciers")
+      books = described_class.search_books("atelier des sorciers")
+      expect(books.size).to eq(10)
+      expect(books.map { |book| book[:volume] }).to eq(%w[1 3 4 5 6 7 8 9 10 10])
+      expect(books.first).to include(title: "L'atelier des sorciers", author: "Kamome Shirahama", publisher: "Pika édition")
+    end
+
+    it "anciennes éditions : sans ISBN écartées, ISBN-10 converti en 13 chiffres, accents ignorés" do
+      bnf_returns("search_etranger_camus")
+      books = described_class.search_books("Étranger")
+      expect(books.map { |book| book[:isbn] }).to eq(%w[9782754807685 9782070348633 9782070212002]) # 2-07-021200-9
+      expect(books.map { |book| book[:title] }).to all(match(/étranger/i))
+    end
+
+    it "éditeur : jamais l'imprimeur (zone 214 de fabrication)" do
+      bnf_returns("search_atelier_des_sorciers")
+      expect(described_class.search_books("atelier des sorciers", limit: 50).map { |book| book[:publisher] }.uniq).to eq([ "Pika édition" ])
+    end
+
+    it "recherche vide ou sans mot : [] sans appeler la BnF" do
+      expect(http).not_to receive(:get)
+      expect(described_class.search_books(" ")).to eq([])
+      expect(described_class.search_books(%("" -- ?))).to eq([])
+    end
+
+    it "BnF en panne ou trop lente : BnfService::Unavailable" do
+      allow(http).to receive(:get).and_raise(HTTP::TimeoutError)
+      expect { described_class.search_books("Fourth wing") }.to raise_error(BnfService::Unavailable)
+      allow(http).to receive(:get).and_return(fake_response(503, "Service Unavailable"))
+      expect { described_class.search_books("Fourth wing") }.to raise_error(BnfService::Unavailable)
+    end
+  end
 end
