@@ -85,11 +85,10 @@ RSpec.describe "Items (navigateur)", type: :system do
   end
 
   describe "formulaire complet : pré-remplissage par la recherche de livre" do
-    it "la liste vient de Google Books, la fiche de la BnF ; l'item est relié à l'œuvre et garde son ISBN" do
-      allow(ExternalApi).to receive(:google_books)
-        .and_return("items" => [ { "id" => "g1", "volumeInfo" => { "title" => "Veiller sur elle", "authors" => [ "Jean-Baptiste Andrea" ],
-                                                                   "description" => "Texte Google",
-                                                                   "industryIdentifiers" => [ { "type" => "ISBN_13", "identifier" => "9782378803759" } ] } } ])
+    it "la liste et la fiche viennent de la BnF (bouton « Chercher ») ; l'item est relié à l'œuvre et garde son ISBN" do
+      allow(BnfService).to receive(:search_books).with("Veiller sur elle").and_return(
+        [ { isbn: "9782378803759", title: "Veiller sur elle", volume: nil, author: "Jean-Baptiste Andrea", publisher: "l'Iconoclaste", year: 2023 } ]
+      )
       allow(BnfService).to receive(:find_by_ean).and_return(
         kind: "book", bnf_ark: "ark:/12148/x", title: "Veiller sur elle", complement: nil, support: "1 vol. (580 p.)",
         publisher: "l'Iconoclaste", release_year: 2023, creators: { "070" => [ "Jean-Baptiste Andrea" ] }
@@ -102,10 +101,10 @@ RSpec.describe "Items (navigateur)", type: :system do
       visit new_collection_item_path(books)
       find("[data-type='BookDetail']").click
       within("[data-form='BookDetail']") do
-        fill_in placeholder: "Rechercher un livre...", with: "Veiller sur elle"
-        find("[data-book-search-target='results'] div", text: "Veiller sur elle").click
+        fill_in placeholder: "Titre ou ISBN...", with: "Veiller sur elle"
+        click_on "Chercher"
+        find("[data-book-search-target='results'] > div", text: "Jean-Baptiste Andrea · l'Iconoclaste, 2023").click
         expect(page).to have_field(placeholder: "Auteur", with: "Jean-Baptiste Andrea")
-        expect(page).not_to have_field(with: "Texte Google")
       end
       click_on "Valider"
 
@@ -113,6 +112,33 @@ RSpec.describe "Items (navigateur)", type: :system do
       expect(Item.last).to have_attributes(product: veiller, barcode: "9782378803759")
       expect(Item.last.item_detailable).to have_attributes(publisher: "l'Iconoclaste", pages: 580, isbn: "9782378803759",
                                                            description: "Roman de Jean-Baptiste Andrea")
+    end
+  end
+
+  describe "recherche de livre : touche Entrée et messages" do
+    before do
+      visit new_collection_item_path(collection_of("books"))
+      find("[data-type='BookDetail']").click
+    end
+
+    it "Entrée lance la recherche sans envoyer le formulaire" do
+      allow(BnfService).to receive(:search_books).and_return([])
+      within("[data-form='BookDetail']") do
+        fill_in placeholder: "Titre ou ISBN...", with: "Titre introuvable"
+        find("[data-book-search-target='query']").send_keys(:enter)
+        expect(page).to have_content("Aucun livre trouvé à la BnF pour « Titre introuvable »")
+      end
+      expect(Item.count).to eq(0)
+    end
+
+    it "BnF qui ne répond pas : message « réessaie »" do
+      allow(BnfService).to receive(:search_books).and_raise(BnfService::Unavailable, "timeout")
+      within("[data-form='BookDetail']") do
+        fill_in placeholder: "Titre ou ISBN...", with: "Fourth wing"
+        click_on "Chercher"
+        expect(page).to have_content("La BnF ne répond pas pour le moment")
+        expect(page).to have_button("Chercher", disabled: false)
+      end
     end
   end
 

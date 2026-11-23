@@ -11,6 +11,8 @@ class Api::SearchController < ApplicationController
   rescue_from StandardError, with: :render_internal_error
   rescue_from ExternalApi::Error, HTTP::Error, JSON::ParserError, with: :render_external_error
 
+  BNF_UNAVAILABLE = "La BnF ne répond pas pour le moment : réessaie dans quelques instants, ou complète la fiche à la main.".freeze
+
   def game_barcode
     ean = params[:ean].to_s.strip
     return render json: { error: "Barcode manquant" }, status: :unprocessable_entity if ean.blank?
@@ -86,23 +88,15 @@ class Api::SearchController < ApplicationController
     render json: { games: games.map { |game| igdb_game_json(game, summary: game["summary"]) } }
   end
 
+  # Livres par titre : éditions cataloguées à la BnF avec un ISBN (Licence Ouverte), toutes ouvrables ensuite
+  # en fiche (book_detail). Lancée au bouton « Chercher » : la BnF peut mettre plusieurs secondes à répondre
   def book
     query = params[:query].to_s.strip
     return render json: [] if query.blank?
 
-    search_query = query.match?(/^\d{10,13}$/) ? "isbn:#{query}" : query
-    Rails.logger.info("[book] search_query: #{search_query}")
-
-    data = ExternalApi.google_books(q: search_query, maxResults: 5, langRestrict: "fr")
-
-    # Affichage seulement (titre, auteur) : la fiche du livre choisi vient ensuite de la BnF par son ISBN (book_detail).
-    # Google interdit d'en garder des copies : rien de Google Books n'est enregistré
-    results = data["items"]&.map do |item|
-      info = item["volumeInfo"]
-      { id: item["id"], title: info["title"], author: info["authors"]&.join(", "),
-        isbn: info["industryIdentifiers"]&.find { |i| i["type"] == "ISBN_13" }&.dig("identifier") }
-    end
-    render json: results || []
+    render json: BnfService.search_books(query)
+  rescue BnfService::Unavailable
+    render json: { error: BNF_UNAVAILABLE }, status: :service_unavailable
   end
 
   # Fiche d'un livre par son ISBN (choisi dans la recherche ou scanné) : notice de la BnF (Licence Ouverte),
@@ -111,8 +105,7 @@ class Api::SearchController < ApplicationController
     box = begin
       BarcodeService.lookup(params[:isbn], kind: :book, bnf_only: true)
     rescue BnfService::Unavailable
-      return render json: { error: "La BnF ne répond pas pour le moment : réessaie dans quelques instants, ou complète la fiche à la main.",
-                            fallback: true }, status: :service_unavailable
+      return render json: { error: BNF_UNAVAILABLE, fallback: true }, status: :service_unavailable
     end
     unless box
       return render json: { error: "Livre introuvable à la BnF : complète la fiche à la main.", fallback: true }, status: :not_found

@@ -61,7 +61,7 @@ RSpec.describe "API de recherche", type: :request do
 
     it "API trop lente : 502 au lieu d'attendre indéfiniment" do
       stub_http { raise HTTP::TimeoutError, "Read timed out" }
-      get "/api/search/book", params: { query: "dune" }
+      get "/api/search/movie", params: { query: "dune" }
       expect(response).to have_http_status(502)
     end
 
@@ -93,9 +93,9 @@ RSpec.describe "API de recherche", type: :request do
       end
     end
 
-    it "recherches gratuites (dont le scan de livre par ISBN) : accessibles" do
-      stub_http { fake_response(200, { items: [] }) }
-      get "/api/search/book", params: { query: "9782070360024" }
+    it "recherches gratuites (dont les livres, à la BnF) : accessibles" do
+      allow(BnfService).to receive(:search_books).and_return([])
+      get "/api/search/book", params: { query: "L'Étranger" }
       expect(response).to have_http_status(200)
     end
   end
@@ -257,15 +257,32 @@ RSpec.describe "API de recherche", type: :request do
     end
   end
 
-  describe "livres : liste de Google Books (affichage), fiche de la BnF" do
-    it "la liste ne renvoie de Google que le titre, l'auteur et l'ISBN" do
-      stub_http do
-        fake_response(200, { items: [ { id: "g1", volumeInfo: { title: "Veiller sur elle", authors: [ "Jean-Baptiste Andrea" ], description: "Texte Google",
-                                                                 publisher: "L'Iconoclaste", pageCount: 580,
-                                                                 industryIdentifiers: [ { type: "ISBN_13", identifier: "9782378803759" } ] } } ] })
-      end
-      get "/api/search/book", params: { query: "veiller sur elle" }
-      expect(json).to eq([ { "id" => "g1", "title" => "Veiller sur elle", "author" => "Jean-Baptiste Andrea", "isbn" => "9782378803759" } ])
+  describe "livres : liste et fiche de la BnF" do
+    let(:fourth_wing) { { isbn: "9782755673135", title: "Fourth wing", volume: nil, author: "Rebecca Yarros", publisher: "Hugo roman", year: 2024 } }
+
+    it "la liste vient de la BnF : éditions avec ISBN, titre, tome, auteur, éditeur, année" do
+      expect(BnfService).to receive(:search_books).with("Fourth wing").and_return([ fourth_wing ])
+      get "/api/search/book", params: { query: " Fourth wing " }
+      expect(json).to eq([ fourth_wing.stringify_keys ])
+    end
+
+    it "aucun appel à Google Books" do
+      allow(BnfService).to receive(:search_books).and_return([])
+      expect(ExternalApi).not_to receive(:google_books)
+      get "/api/search/book", params: { query: "Fourth wing" }
+    end
+
+    it "recherche vide : [] sans appeler la BnF" do
+      expect(BnfService).not_to receive(:search_books)
+      get "/api/search/book", params: { query: "  " }
+      expect(json).to eq([])
+    end
+
+    it "BnF qui ne répond pas : 503 et « réessaie »" do
+      allow(BnfService).to receive(:search_books).and_raise(BnfService::Unavailable, "HTTP::TimeoutError")
+      get "/api/search/book", params: { query: "Fourth wing" }
+      expect(response).to have_http_status(:service_unavailable)
+      expect(json["error"]).to start_with("La BnF ne répond pas pour le moment")
     end
 
     it "fiche par ISBN : notice de la BnF (gratuite pour tous, sans EAN-DB ni Claude), œuvre et résumé du catalogue" do

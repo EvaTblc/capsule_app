@@ -6,10 +6,16 @@
   <div class="relative mb-4">
     <label class="text-sm font-semibold text-gray-600 mb-1 block">Recherche</label>
     <div class="flex gap-2">
+      <%# Entrée lance la recherche (sans envoyer le formulaire) ; pas de recherche à chaque lettre : la BnF peut être lente %>
       <input data-book-search-target="query"
-            data-action="input->book-search#search"
-            placeholder="Rechercher un livre..."
-            class="flex-1 border border-purple-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+            data-action="keydown.enter->book-search#search:prevent"
+            placeholder="Titre ou ISBN..."
+            enterkeyhint="search"
+            class="flex-1 min-w-0 border border-purple-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+      <button type="button"
+              data-book-search-target="searchButton"
+              data-action="click->book-search#search"
+              class="h-12 px-4 bg-purple-600 text-white text-sm font-semibold rounded-xl shrink-0 disabled:opacity-60">Chercher</button>
       <button type="button"
               data-action="click->book-search#startScan"
               class="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center shrink-0">
