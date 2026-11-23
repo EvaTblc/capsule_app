@@ -2,12 +2,31 @@ import { Controller } from "@hotwired/stimulus"
 
 // Connects to data-controller="collection-filter"
 export default class extends Controller {
-  static targets = ["search", "pills", "list"]
+  static targets = ["search", "pills", "list", "gridButton", "listButton"]
   static values = { category: String }
 
   connect() {
     this.activeFilters = {};
+    if (!this.hasListTarget) return // collection vide : ni filtres ni affichage à choisir
     this.buildPills();
+    this.applyView(this.savedView())
+  }
+
+  // Grille ou liste : choix retenu par ce navigateur, pour toutes les collections
+  showGrid() { this.applyView("grid", { save: true }) }
+  showList() { this.applyView("list", { save: true }) }
+
+  applyView(view, { save = false } = {}) {
+    this.listTarget.dataset.view = view
+    if (this.hasGridButtonTarget) this.gridButtonTarget.setAttribute("aria-pressed", view === "grid")
+    if (this.hasListButtonTarget) this.listButtonTarget.setAttribute("aria-pressed", view === "list")
+    if (save) {
+      try { localStorage.setItem("capsule:collection-view", view) } catch (e) { /* navigation privée : non retenu */ }
+    }
+  }
+
+  savedView() {
+    try { return localStorage.getItem("capsule:collection-view") === "list" ? "list" : "grid" } catch (e) { return "grid" }
   }
 
   toggleDisplay(e) {
@@ -153,10 +172,10 @@ export default class extends Controller {
       if (visibleCount === 0) {
         if (!emptyMsg) {
           emptyMsg = document.createElement("div")
-          emptyMsg.className = "no-results py-12 text-center"
+          emptyMsg.className = "no-results col-span-full py-12 text-center"
           emptyMsg.innerHTML = `
             <p class="text-sm font-semibold text-gray-500">Aucun résultat</p>
-            <p class="text-xs text-gray-400 mt-1">Essaie d'autres filtres</p>
+            <p class="text-xs text-gray-500 mt-1">Essaie d'autres mots ou d'autres filtres</p>
           `
           this.listTarget.appendChild(emptyMsg)
         }

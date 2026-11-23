@@ -1,15 +1,6 @@
 <div class="p-4 pb-24">
 
   <% style = Collection::CATEGORY_STYLES[@collection.category] %>
-  <% type_to_icon = {
-    "BookDetail"      => "book",
-    "VideoGameDetail" => "video_games",
-    "MovieDetail"     => "movies",
-    "MusicDetail"     => "music",
-    "FigurineDetail"  => "figurines",
-    "TcgDetail"       => "trading_cards",
-    "BoardGameDetail" => "board_games"
-  } %>
 
   <div class="rounded-3xl mt-14 mb-4 relative overflow-hidden <%= @collection.cover_image.attached? ? 'h-48' : style %>"
       style="<%= @collection.cover_image.attached? ? "background-image: url('#{url_for(@collection.cover_image)}'); background-size: cover; background-position: center;" : "" %>">
@@ -63,15 +54,29 @@
   <div data-controller="collection-filter"
       data-collection-filter-category-value="<%= @collection.category %>">
 
-    <div class="relative mb-3">
-      <input type="text"
-            placeholder="Rechercher..."
-            data-collection-filter-target="search"
-            data-action="input->collection-filter#filter"
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
+    <%# Recherche (instantanée, dans la page) et choix grille / liste, retenu par le navigateur %>
+    <div class="flex items-center gap-2 mb-3">
+      <label class="flex-1 min-w-0 h-11 rounded-xl bg-gray-100 flex items-center gap-2 px-3">
+        <svg class="w-[18px] h-[18px] text-gray-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input type="search"
+              placeholder="Chercher dans <%= @collection.title %>…"
+              aria-label="Chercher dans la collection"
+              data-collection-filter-target="search"
+              data-action="input->collection-filter#filter"
+              class="flex-1 min-w-0 bg-transparent border-0 p-0 text-[15px] text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0">
+      </label>
+      <div class="flex rounded-xl bg-gray-100 p-[3px] gap-0.5 shrink-0" role="group" aria-label="Affichage">
+        <button type="button" aria-label="Vue grille" aria-pressed="true"
+                data-collection-filter-target="gridButton" data-action="collection-filter#showGrid"
+                class="w-[38px] h-[38px] rounded-[9px] flex items-center justify-center text-gray-500 aria-pressed:bg-white aria-pressed:text-purple-700 aria-pressed:shadow-sm">
+          <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+        </button>
+        <button type="button" aria-label="Vue liste" aria-pressed="false"
+                data-collection-filter-target="listButton" data-action="collection-filter#showList"
+                class="w-[38px] h-[38px] rounded-[9px] flex items-center justify-center text-gray-500 aria-pressed:bg-white aria-pressed:text-purple-700 aria-pressed:shadow-sm">
+          <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
+        </button>
+      </div>
     </div>
 
     <div class="mb-3" data-action="click->collection-filter#toggleDisplay">
@@ -106,45 +111,11 @@
 
       </div>
     <% else %>
-      <div data-collection-filter-target="list" class="flex flex-col gap-2 mb-6">
+      <%# Grille par défaut (3 colonnes), ou liste compacte : data-view, changé par collection-filter %>
+      <div data-collection-filter-target="list" data-view="grid"
+           class="group mb-6 data-[view=grid]:grid data-[view=grid]:grid-cols-3 data-[view=grid]:gap-x-2.5 data-[view=grid]:gap-y-4 data-[view=list]:flex data-[view=list]:flex-col">
         <% @items.each do |item| %>
-          <%= link_to collection_item_path(@collection, item),
-              data: {
-                title: item.title.downcase,
-                condition: item.condition.to_s.downcase,
-                platform: item.item_detailable.respond_to?(:platform) ? item.item_detailable.platform.to_s.downcase : "",
-                genre: item.item_detailable.respond_to?(:genre) ? item.item_detailable.genre.to_s.downcase : "",
-                format: item.item_detailable.respond_to?(:format) ? item.item_detailable.format.to_s.downcase : "",
-                completed: item.item_detailable.respond_to?(:completed?) ? item.item_detailable.completed?.to_s : ""
-              } do %>
-            <div class="bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-center gap-3 active:scale-95 transition-transform duration-150">
-              <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
-                <%= render "collections/icons/#{type_to_icon[item.item_detailable_type]}" %>
-              </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold truncate"><%= item.title %></p>
-              <div class="flex items-center gap-2">
-                <% if item.item_detailable.respond_to?(:completed?) %>
-                  <% if item.item_detailable.completed? %>
-                    <svg width="14" height="14" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="24" cy="24" r="21" stroke="#7C3AED" stroke-width="2"/>
-                      <path d="M14 24L21 31L34 17" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  <% else %>
-                    <svg width="14" height="14" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="24" cy="24" r="21" stroke="#EF4444" stroke-width="2"/>
-                      <path d="M16 16L32 32M32 16L16 32" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round"/>
-                    </svg>
-                  <% end %>
-                <p class="text-xs text-gray-400"><%= item.condition %></p>
-                <% end %>
-              </div>
-            </div>
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          <% end %>
+          <%= render "collections/item_card", item: item, collection: @collection %>
         <% end %>
       </div>
     <% end %>

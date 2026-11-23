@@ -33,4 +33,41 @@ RSpec.describe "Interface (navigateur)", type: :system do
       expect(page).to have_css("[data-controller='flash']", text: "va arriver dans quelques minutes")
     end
   end
+
+  describe "page d'une collection : grille ou liste, recherche instantanée" do
+    let(:user) { create(:user) }
+    let(:games) do
+      Collection.create!(title: "Mes jeux", category: "video_games").tap do |c|
+        UserCollection.create!(user: user, collection: c, role: "owner")
+        Item.create!(title: "Mario Kart 8 Deluxe", collection: c, item_detailable: VideoGameDetail.create!(platform: "Switch", completed: true))
+        Item.create!(title: "Elden Ring", collection: c, item_detailable: VideoGameDetail.create!(platform: "PS5"))
+      end
+    end
+
+    before { sign_in user }
+
+    it "grille par défaut ; la liste choisie est retenue d'une visite à l'autre" do
+      visit collection_path(games)
+      expect(page).to have_css("[data-collection-filter-target='list'][data-view='grid']")
+      expect(page).to have_css("button[aria-label='Vue grille'][aria-pressed='true']")
+
+      find("button[aria-label='Vue liste']").click
+      expect(page).to have_css("[data-collection-filter-target='list'][data-view='list']")
+      expect(page).to have_content("Complet")
+
+      visit collection_path(games)
+      expect(page).to have_css("[data-collection-filter-target='list'][data-view='list']")
+      expect(page).to have_css("button[aria-label='Vue liste'][aria-pressed='true']")
+    end
+
+    it "la recherche filtre les items pendant la frappe" do
+      visit collection_path(games)
+      fill_in placeholder: "Chercher dans Mes jeux…", with: "mario"
+      expect(page).to have_link(href: %r{/items/}, text: "Mario Kart 8 Deluxe", count: 1)
+      expect(page).not_to have_text("Elden Ring")
+
+      fill_in placeholder: "Chercher dans Mes jeux…", with: "zelda"
+      expect(page).to have_content("Aucun résultat")
+    end
+  end
 end

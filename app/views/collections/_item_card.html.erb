@@ -1,0 +1,43 @@
+<%# Un item de la collection, en grille ET en liste : le conteneur (data-view="grid" | "list", classe group)
+    affiche l'une ou l'autre sans recharger. Les data-* servent à la recherche et aux filtres (collection-filter).
+    Locals : item, collection %>
+<% detail = item.item_detailable %>
+<% subtitle = item_tile_subtitle(item) %>
+<% badge = item_tile_badge(item) %>
+<%= link_to collection_item_path(collection, item),
+    class: "block min-w-0 active:scale-95 transition-transform duration-150",
+    data: {
+      title: item.title.downcase,
+      condition: item.condition.to_s.downcase,
+      platform: detail.respond_to?(:platform) ? detail.platform.to_s.downcase : "",
+      genre: detail.respond_to?(:genre) ? detail.genre.to_s.downcase : "",
+      format: detail.respond_to?(:format) ? detail.format.to_s.downcase : "",
+      completed: detail.respond_to?(:completed?) ? detail.completed?.to_s : ""
+    } do %>
+
+  <%# Grille : la vignette, le titre sur deux lignes, l'info utile %>
+  <div class="group-data-[view=list]:hidden flex flex-col gap-1.5">
+    <%= render "items/tile", item: item %>
+    <p class="text-[13px] font-bold leading-tight text-gray-900 line-clamp-2 break-words"><%= item.title %></p>
+    <% if subtitle %>
+      <p class="text-xs text-gray-500 truncate -mt-0.5"><%= subtitle %></p>
+    <% end %>
+  </div>
+
+  <%# Liste compacte : petite vignette, titre, info utile et badge %>
+  <div class="hidden group-data-[view=list]:flex items-center gap-3 py-2.5 border-b border-gray-100">
+    <div class="w-11 shrink-0"><%= render "items/tile", item: item, compact: true %></div>
+    <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+      <p class="text-[15px] font-bold text-gray-900 truncate"><%= item.title %></p>
+      <div class="flex items-center gap-1.5 min-w-0">
+        <% if subtitle %>
+          <span class="text-[13px] text-gray-500 truncate"><%= subtitle %></span>
+        <% end %>
+        <% if badge %>
+          <span class="shrink-0 bg-purple-100 text-purple-800 text-[11px] font-bold px-1.5 py-0.5 rounded-lg"><%= badge %></span>
+        <% end %>
+      </div>
+    </div>
+    <svg class="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+  </div>
+<% end %>

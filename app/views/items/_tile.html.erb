@@ -1,9 +1,15 @@
 <%# Vignette d'un item, au format 3:4 et à la largeur de son conteneur : ta photo, sinon la vignette générique
-    de son type (items/tiles/_xxx). Badge seulement pour une info positive (« Complet »). Locals : item %>
-<% badge = item_tile_badge(item) %>
-<div class="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-gray-100">
+    de son type (items/tiles/_xxx). Badge seulement pour une info positive (« Complet »).
+    Locals : item ; compact (liste, ~44 px de large) : sans texte, juste la couleur et l'icône du type %>
+<% compact = local_assigns.fetch(:compact, false) %>
+<% badge = item_tile_badge(item) unless compact %>
+<div class="relative w-full aspect-[3/4] <%= compact ? 'rounded-lg' : 'rounded-xl' %> overflow-hidden bg-gray-100">
   <% if item.images.attached? %>
     <%= image_tag item.images.first, alt: "", loading: "lazy", class: "absolute inset-0 w-full h-full object-cover" %>
+  <% elsif compact %>
+    <div class="absolute inset-0 flex items-center justify-center <%= Item::ITEM_TYPE_STYLES[item.item_detailable_type] %>">
+      <%= render "collections/icons/#{Item::TYPE_TO_ICON.fetch(item.item_detailable_type, 'other')}" %>
+    </div>
   <% else %>
     <% type = item.item_detailable_type.to_s.delete_suffix("Detail").underscore %>
     <% if lookup_context.exists?("items/tiles/#{type}", [], true) %>
