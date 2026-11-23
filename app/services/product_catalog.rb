@@ -111,11 +111,26 @@ class ProductCatalog
       details: product.details.merge(
         "summary_en" => summary_en,
         "genres" => game["genres"].to_a.pluck("name"),
-        "platforms" => game["platforms"].to_a.pluck("name")
+        "platforms" => game["platforms"].to_a.pluck("name"),
+        "cover_image_id" => game.dig("cover", "image_id") || product.details["cover_image_id"]
       ),
       fetched_at: Time.current
     )
     product
   end
+  # Jaquettes des jeux du catalogue qui n'en ont pas encore (jeux enregistrés avant qu'on les garde), en une requête
+  # IGDB par tranche de 500. Mode essai par défaut. Renvoie { trouvees:, sans_jaquette: } ; nil si IGDB ne répond pas
+  def self.fill_game_covers(apply: false)
+    products = Product.where(kind: "game").where.not(igdb_id: nil).where("NOT (details ? 'cover_image_id')")
+    covers = IgdbService.cover_ids(products.pluck(:igdb_id))
+    return nil unless covers
+
+    found = products.select { |product| covers[product.igdb_id] }
+    if apply
+      found.each { |product| product.update!(details: product.details.merge("cover_image_id" => covers[product.igdb_id])) }
+    end
+    { trouvees: found.size, sans_jaquette: products.size - found.size }
+  end
+
   private_class_method :positive_id, :save_game, :save_movie, :save_book
 end

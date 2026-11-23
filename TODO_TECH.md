@@ -20,7 +20,8 @@ Dernière mise à jour : 2026-11-23
 - [ ] **Doublons** : s'appuyer sur `items.product_id` (même œuvre) et `items.barcode` (même édition).
 - [ ] **Séries incomplètes** : numéro de tome et série à lire dans les notices BnF (zones 225 / 461), ou Wikidata.
 - [ ] **Cote réelle** : choisir une source de prix (PriceCharting pour les jeux ?) et vérifier ses conditions d'utilisation.
-- [ ] **Jaquette** : télécharger seulement depuis les domaines d'IGDB / Wikimedia (risque SSRF), attacher à `item.images`.
+- [x] **Jaquettes des jeux** : affichées depuis le serveur d'images d'IGDB (rien téléchargé chez nous, donc pas de
+      risque SSRF), identifiant gardé dans `products.details`. Jeux déjà au catalogue : `products:igdb_covers APPLY=1`.
 - [ ] **Musique** : vérifier les conditions de Discogs avant de stocker quoi que ce soit (même démarche que TMDB).
 
 ## Avant de facturer le Premium (juridique)

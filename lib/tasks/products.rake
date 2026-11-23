@@ -1,4 +1,14 @@
 namespace :products do
+  desc "Récupère chez IGDB la jaquette des jeux du catalogue enregistrés sans elle. " \
+       "Mode essai par défaut (rien n'est enregistré) ; APPLY=1 pour écrire"
+  task igdb_covers: :environment do
+    apply = ENV["APPLY"] == "1"
+    puts apply ? "Mode réel : les jaquettes sont enregistrées." : "Mode essai : rien n'est enregistré (APPLY=1 pour écrire)."
+    result = ProductCatalog.fill_game_covers(apply: apply)
+    abort "IGDB ne répond pas : rien n'a été fait, relance plus tard." unless result
+    puts "Jaquettes trouvées : #{result[:trouvees]} ; jeux sans jaquette chez IGDB : #{result[:sans_jaquette]}"
+  end
+
   desc "Relie les items existants à leurs œuvres du catalogue et retire les données TMDB / Google Books. " \
        "Mode essai par défaut (rien n'est enregistré) ; APPLY=1 pour écrire"
   task backfill: :environment do

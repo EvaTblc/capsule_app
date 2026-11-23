@@ -4,7 +4,7 @@ class IgdbService
   CACHE_KEY = "igdb_access_token"
 
   # Champs demandés pour chaque jeu, en recherche comme pour le catalogue
-  GAME_FIELDS = %w[name cover.url platforms.name summary genres.name first_release_date
+  GAME_FIELDS = %w[name cover.url cover.image_id platforms.name summary genres.name first_release_date
                    alternative_names.name alternative_names.comment game_type total_rating_count
                    involved_companies.company.name involved_companies.developer
                    release_dates.date release_dates.release_region].freeze
@@ -85,6 +85,30 @@ class IgdbService
   # Un jeu par son identifiant IGDB, nil s'il est inconnu ou si IGDB ne répond pas
   def self.game(id)
     post("games", "fields #{GAME_FIELDS.join(',')}; where id = #{Integer(id)};")&.first
+  end
+
+  # Jaquettes de plusieurs jeux en une requête : { igdb_id => image_id } (jeux sans jaquette absents), nil si IGDB
+  # ne répond pas. IGDB accepte 500 identifiants par requête
+  def self.cover_ids(igdb_ids)
+    ids = igdb_ids.map { |id| Integer(id) }.uniq
+    return {} if ids.empty?
+
+    result = {}
+    ids.each_slice(500) do |slice|
+      games = post("games", "fields cover.image_id; where id = (#{slice.join(',')}); limit 500;")
+      return nil unless games
+
+      games.each { |game| result[game["id"]] = game.dig("cover", "image_id") if game.dig("cover", "image_id") }
+    end
+    result
+  end
+
+  # Adresse d'une jaquette sur le serveur d'images d'IGDB (affichage direct, comme le prévoit leur documentation).
+  # Tailles : cover_small (90 × 128) pour la liste, cover_big (264 × 374) pour la grille. nil si l'identifiant est douteux
+  def self.cover_url(image_id, size: :cover_big)
+    return nil unless image_id.to_s.match?(/\A[a-z0-9]+\z/)
+
+    "https://images.igdb.com/igdb/image/upload/t_#{size}/#{image_id}.jpg"
   end
 
   # Titre français officiel référencé par IGDB, s'il existe

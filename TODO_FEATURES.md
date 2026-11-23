@@ -16,7 +16,9 @@ Décidé le 2026-11-23. Le design web sera repris tel quel dans l'appli native :
 - [ ] **Scan en rafale** (voir Priorité 1).
 - [ ] **Finitions** : textes en français et pluriels (fait le 2026-11-23) ; ✕ rouge trompeur dans les listes,
       icône de « Mon Carnet », largeur maximale sur ordinateur.
-- [ ] **Montrer les objets** : vignettes dans les listes, vue en grille de photos, « Récemment ajouté » avec images.
+- [x] **Montrer les objets** (2026-11-23) : grille ou liste au choix, vignette par type quand il n'y a pas de photo
+      (tranche, boîtier, pochette…), jaquettes IGDB des jeux, filtres rapides, tri, recherche sans accents.
+      RESTE : couvertures de livres (aucune source libre trouvée : écrire à servicepro@bnf.fr ?), n° de tome des livres.
 - [ ] **Préparation au natif** : un titre par page, en-tête et barre d'onglets masquables dans l'appli, plus d'`alert()`,
       zones protégées de l'écran (encoche).
 - [ ] **Scan sur iPhone** (voir Priorité 1).

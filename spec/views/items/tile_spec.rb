@@ -34,6 +34,19 @@ RSpec.describe "items/_tile", type: :view do
     expect(rendered).not_to include("NINTENDO DS", "Nintendo DS")
   end
 
+  it "jeu relié au catalogue sans photo : sa jaquette IGDB ; avec photo : la photo d'abord" do
+    product = create(:product, igdb_id: 1560, details: { "cover_image_id" => "co2a8w" })
+    item = Item.create!(title: "Pokémon Diamant", collection: collection, product: product,
+                        item_detailable: VideoGameDetail.create!(platform: "Nintendo DS"))
+    render partial: "items/tile", locals: { item: item }
+    expect(rendered).to include("https://images.igdb.com/igdb/image/upload/t_cover_big/co2a8w.jpg")
+    expect(rendered).not_to include("NINTENDO DS", "Nintendo DS")
+
+    item.images.attach(io: File.open(Rails.root.join("spec/fixtures/files/figurine.jpg")), filename: "photo.jpg", content_type: "image/jpeg")
+    render partial: "items/tile", locals: { item: item }
+    expect(rendered).not_to include("images.igdb.com")
+  end
+
   it "badge « Complet » pour un jeu complet, rien pour un jeu incomplet" do
     expect(tile_for(VideoGameDetail.create!(completed: true))).to include("Complet")
     expect(tile_for(VideoGameDetail.create!(completed: false))).not_to include("Complet")

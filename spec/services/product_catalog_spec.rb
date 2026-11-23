@@ -9,7 +9,8 @@ RSpec.describe ProductCatalog do
       "alternative_names" => [ { "name" => "Pokémon Diamant", "comment" => "French title" } ],
       "involved_companies" => [ { "developer" => true, "company" => { "name" => "Game Freak" } },
                                 { "developer" => false, "company" => { "name" => "Nintendo" } } ],
-      "genres" => [ { "name" => "Role-playing (RPG)" } ], "platforms" => [ { "name" => "Nintendo DS" } ] }
+      "genres" => [ { "name" => "Role-playing (RPG)" } ], "platforms" => [ { "name" => "Nintendo DS" } ],
+      "cover" => { "image_id" => "co2a8w" } }
   end
 
   describe ".game" do
@@ -20,7 +21,7 @@ RSpec.describe ProductCatalog do
       expect(product).to have_attributes(kind: "game", igdb_id: 1560, title: "Pokémon Diamant",
                                          original_title: "Pokémon Diamond Version", release_year: 2007, creator: "Game Freak")
       expect(product.details).to include("summary_en" => "Catch them all", "genres" => [ "Role-playing (RPG)" ],
-                                         "platforms" => [ "Nintendo DS" ])
+                                         "platforms" => [ "Nintendo DS" ], "cover_image_id" => "co2a8w")
     end
 
     it "déjà au catalogue et récent : renvoyé sans appeler IGDB" do
@@ -126,6 +127,30 @@ RSpec.describe ProductCatalog do
       create(:product, :movie, wikidata_id: "Q595")
       allow(WikimediaService).to receive(:book).with("Q595").and_return(nil) # Intouchables n'a pas d'auteur (P50)
       expect(described_class.book("Q595")).to be_nil
+    end
+  end
+
+  describe ".fill_game_covers (jeux enregistrés avant qu'on garde la jaquette)" do
+    let!(:sans_jaquette) { create(:product, igdb_id: 1560, details: { "summary_en" => "x" }) }
+    let!(:introuvable) { create(:product, igdb_id: 77, details: {}) }
+    let!(:deja_faite) { create(:product, igdb_id: 9, details: { "cover_image_id" => "co1" }) }
+
+    it "mode essai : compte sans rien écrire, ne demande que les jeux sans jaquette" do
+      expect(IgdbService).to receive(:cover_ids).with(match_array([ 1560, 77 ])).and_return(1560 => "co2a8w")
+      expect(described_class.fill_game_covers).to eq(trouvees: 1, sans_jaquette: 1)
+      expect(sans_jaquette.reload.details).not_to have_key("cover_image_id")
+    end
+
+    it "APPLY : enregistre la jaquette sans toucher au reste" do
+      allow(IgdbService).to receive(:cover_ids).and_return(1560 => "co2a8w")
+      described_class.fill_game_covers(apply: true)
+      expect(sans_jaquette.reload.details).to eq("summary_en" => "x", "cover_image_id" => "co2a8w")
+    end
+
+    it "IGDB ne répond pas : nil, rien d'écrit" do
+      allow(IgdbService).to receive(:cover_ids).and_return(nil)
+      expect(described_class.fill_game_covers(apply: true)).to be_nil
+      expect(sans_jaquette.reload.details).not_to have_key("cover_image_id")
     end
   end
 end

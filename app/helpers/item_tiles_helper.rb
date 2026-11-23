@@ -24,6 +24,13 @@ module ItemTilesHelper
     FORMAT_BANDS.fetch(format.to_s, DEFAULT_BAND)
   end
 
+  # Jaquette IGDB d'un jeu relié au catalogue (après ta photo, avant la vignette générique), nil sinon
+  def item_cover_url(item, size: :cover_big)
+    return nil unless item.item_detailable_type == "VideoGameDetail" && item.product&.game?
+
+    IgdbService.cover_url(item.product.details["cover_image_id"], size: size)
+  end
+
   # Badge sur la vignette : seulement une info positive (« Complet »), jamais un manque
   def item_tile_badge(item)
     detail = item.item_detailable

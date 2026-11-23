@@ -25,6 +25,16 @@ RSpec.describe ItemTilesHelper, type: :helper do
     expect(helper.item_tile_subtitle(item_with(BoardGameDetail.new))).to be_nil
   end
 
+  it "jaquette IGDB : seulement pour un jeu relié au catalogue qui en a une" do
+    game = build(:product, igdb_id: 1560, details: { "cover_image_id" => "co2a8w" })
+    item = item_with(VideoGameDetail.new).tap { |i| i.product = game }
+    expect(helper.item_cover_url(item)).to eq("https://images.igdb.com/igdb/image/upload/t_cover_big/co2a8w.jpg")
+    expect(helper.item_cover_url(item, size: :cover_small)).to include("/t_cover_small/")
+    expect(helper.item_cover_url(item_with(VideoGameDetail.new))).to be_nil
+    game.details = { "cover_image_id" => "../x" }
+    expect(helper.item_cover_url(item)).to be_nil
+  end
+
   it "badge : seulement une info positive" do
     expect(helper.item_tile_badge(item_with(VideoGameDetail.new(completed: true)))).to eq("Complet")
     expect(helper.item_tile_badge(item_with(VideoGameDetail.new(completed: false)))).to be_nil

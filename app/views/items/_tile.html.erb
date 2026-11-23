@@ -1,13 +1,17 @@
-<%# Vignette d'un item, au format 3:4 et à la largeur de son conteneur : ta photo, sinon la vignette générique
-    de son type (items/tiles/_xxx). Badge seulement pour une info positive (« Complet »).
+<%# Vignette d'un item, au format 3:4 et à la largeur de son conteneur : ta photo, sinon la jaquette IGDB (jeu relié
+    au catalogue), sinon la vignette générique de son type (items/tiles/_xxx). Badge seulement pour une info positive.
     Locals : item ; compact (liste, ~44 px de large) : sans texte, juste la couleur et l'icône du type %>
 <% compact = local_assigns.fetch(:compact, false) %>
+<% cover = item_cover_url(item, size: compact ? :cover_small : :cover_big) %>
 <% badge = item_tile_badge(item) unless compact %>
 <div class="relative w-full aspect-[3/4] <%= compact ? 'rounded-lg' : 'rounded-xl' %> overflow-hidden bg-gray-100">
   <% if item.images.attached? %>
     <% photo = item.images.first %>
     <%# Vignette réduite (Item :thumb) ; photo d'origine seulement si son format ne se redimensionne pas %>
     <%= image_tag photo.variable? ? photo.variant(:thumb) : photo, alt: "", loading: "lazy", class: "absolute inset-0 w-full h-full object-cover" %>
+  <% elsif cover %>
+    <%# Jaquette IGDB du jeu (catalogue), affichée depuis leur serveur d'images %>
+    <%= image_tag cover, alt: "", loading: "lazy", referrerpolicy: "no-referrer", class: "absolute inset-0 w-full h-full object-cover" %>
   <% elsif compact %>
     <div class="absolute inset-0 flex items-center justify-center <%= Item::ITEM_TYPE_STYLES[item.item_detailable_type] %>">
       <%= render "collections/icons/#{Item::TYPE_TO_ICON.fetch(item.item_detailable_type, 'other')}" %>
