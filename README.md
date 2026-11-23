@@ -95,10 +95,9 @@ l'affichage. Toutes sont citées sur la [page crédits](https://www.capsule.clic
 | Source | Utilisée pour | Ce qui est conservé |
 |---|---|---|
 | [IGDB](https://www.igdb.com) | jeux vidéo | fiche du jeu (stockage autorisé) |
-| [BnF](https://www.bnf.fr) (Licence Ouverte) | codes-barres, notices de livres, jeux et films | notice de la boîte |
+| [BnF](https://www.bnf.fr) (Licence Ouverte) | recherche de livres par titre, codes-barres, notices de livres, jeux et films | notice de la boîte |
 | [Wikidata](https://www.wikidata.org) (CC0) et [Wikipédia](https://fr.wikipedia.org) (CC BY-SA) | œuvres, films et livres, résumés | fiche de l'œuvre, avec la source du résumé |
 | [TMDB](https://www.themoviedb.org) | recherche de films | **rien** : liste de résultats affichée seulement |
-| [Google Books](https://books.google.com) | recherche de livres par titre | **rien** : liste de résultats affichée seulement |
 | [Discogs](https://www.discogs.com) | musique | rien côté catalogue |
 | [UPCitemdb](https://www.upcitemdb.com), [EAN-DB](https://ean-db.com) | titre brut d'un code-barres inconnu de la BnF | la boîte |
 | [Claude](https://www.anthropic.com) (Anthropic) | lecture des annonces, estimation, identification, traductions | le résultat, jamais la photo envoyée |

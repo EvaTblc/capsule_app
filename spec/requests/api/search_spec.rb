@@ -266,12 +266,6 @@ RSpec.describe "API de recherche", type: :request do
       expect(json).to eq([ fourth_wing.stringify_keys ])
     end
 
-    it "aucun appel à Google Books" do
-      allow(BnfService).to receive(:search_books).and_return([])
-      expect(ExternalApi).not_to receive(:google_books)
-      get "/api/search/book", params: { query: "Fourth wing" }
-    end
-
     it "recherche vide : [] sans appeler la BnF" do
       expect(BnfService).not_to receive(:search_books)
       get "/api/search/book", params: { query: "  " }

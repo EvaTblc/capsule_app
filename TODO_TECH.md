@@ -27,8 +27,9 @@ Dernière mise à jour : 2026-11-23
 
 - [ ] **TMDB** : accord commercial écrit (licence actuelle non commerciale ; ~149 $/mois, source secondaire).
 - [ ] **IGDB** : demander le partenariat pour projet monétisé (partner@igdb.com), attribution visible.
-- [ ] **Google Books** : « You may not charge users any fee for the use of your application ». Remplacer la recherche
-      de livres par titre (aujourd'hui Google) par la recherche de la BnF, ou trouver une autre source.
+- [x] **Google Books** : « You may not charge users any fee for the use of your application ». Recherche de livres par
+      titre remplacée par celle de la BnF (bouton « Chercher »), le 2026-11-23. Google n'est plus appelé que par la tâche
+      `products:backfill`, pour repérer et effacer ses anciennes données dans les items d'avant le catalogue.
 - [ ] Paiement (Stripe ?), puis le rôle `premium` mis à jour par le paiement.
 
 ## Qualité des données
@@ -46,6 +47,8 @@ Dernière mise à jour : 2026-11-23
 
 ## Exploitation
 
+- [ ] **BnF** : réponses de 12 à 16 s le 2026-11-23 (moins de 1 s en octobre), au-delà de notre délai de 10 s.
+      Remesurer ; si ça dure, envisager un délai plus long pour la recherche (attention : 3 threads Puma seulement).
 - [x] **CSP** : deux causes corrigées (script en ligne du service worker le 2026-10-29, bouton Google chargé par Turbo
       le 2026-11-16), puis aucun rapport en prod (logs + visite complète le 2026-11-23) : passée en mode bloquant
       le 2026-11-23. Les violations restent loguées (`heroku logs | grep "\[CSP\]"`).

@@ -32,7 +32,7 @@ RSpec.describe "Pages publiques", type: :request do
       get credits_path
       expect(response.body).to include("credits/tmdb", # logo TMDB obligatoire
                                        "This product uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.",
-                                       "IGDB.com", "Google Books", "Discogs", "UPCitemdb", "EAN-DB", "OpenStreetMap", "Anthropic")
+                                       "IGDB.com", "catalogue général de la BnF", "Discogs", "UPCitemdb", "EAN-DB", "OpenStreetMap", "Anthropic")
     end
 
     it "est accessible depuis l'accueil et depuis le profil" do
