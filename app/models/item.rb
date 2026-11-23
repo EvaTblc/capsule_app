@@ -23,7 +23,7 @@ class Item < ApplicationRecord
   "MovieDetail"     => "bg-red-50 shadow-red-100",
   "MusicDetail"     => "bg-pink-50 shadow-pink-100",
   "FigurineDetail"  => "bg-orange-50 shadow-orange-100",
-  "TcgDetail"       => "bg-green-50 shadow-green-100",
+  "TcgDetail"       => "bg-yellow-50 shadow-yellow-100",
   "BoardGameDetail" => "bg-purple-50 shadow-purple-100"
   }
 

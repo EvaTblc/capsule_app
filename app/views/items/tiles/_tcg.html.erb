@@ -1,0 +1,14 @@
+<%# Carte sans photo : une carte dans son cadre doré %>
+<div class="absolute inset-0 bg-yellow-100 p-2 flex">
+  <span class="grow rounded-lg bg-white border-2 border-yellow-400 p-2 flex flex-col justify-between min-w-0">
+    <span class="text-xs font-extrabold leading-tight text-yellow-950 line-clamp-4 break-words hyphens-auto"><%= item.title %></span>
+    <span class="flex flex-col">
+      <% if detail.card_set.present? %>
+        <span class="text-[10px] text-yellow-800 truncate"><%= detail.card_set %></span>
+      <% end %>
+      <% if detail.card_number.present? %>
+        <span class="text-[11px] font-extrabold text-yellow-700 truncate"><%= detail.card_number %></span>
+      <% end %>
+    </span>
+  </span>
+</div>

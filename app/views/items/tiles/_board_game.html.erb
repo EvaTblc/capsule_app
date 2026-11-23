@@ -1,0 +1,6 @@
+<%# Jeu de société sans photo : un couvercle de boîte (éditeur, titre, nombre de joueurs) %>
+<div class="absolute inset-0 bg-purple-100 border-b-8 border-purple-300 p-2.5 flex flex-col justify-between items-center text-center">
+  <span class="text-[10px] font-bold text-purple-800 truncate max-w-full"><%= detail.publisher %></span>
+  <span class="text-sm font-black leading-tight text-purple-950 line-clamp-4 break-words hyphens-auto"><%= item.title %></span>
+  <span class="text-[10px] font-bold text-purple-800"><%= board_game_players(detail) %></span>
+</div>

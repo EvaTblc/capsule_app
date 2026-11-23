@@ -9,7 +9,7 @@ class CollectionsController < ApplicationController
     # Un seul COUNT groupé au lieu d'un par collection
     @item_counts = Item.where(collection: @collections).group(:collection_id).count
     # Seulement les 6 derniers items, au lieu de charger tous ceux de toutes les collections
-    @recent_items = current_user.items.includes(collection: { cover_image_attachment: :blob }).with_attached_images.order(created_at: :desc).limit(6)
+    @recent_items = current_user.items.includes(:collection, :item_detailable).with_attached_images.order(created_at: :desc).limit(6)
   end
 
   def show

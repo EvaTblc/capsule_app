@@ -1,0 +1,8 @@
+<%# Figurine sans photo : une boîte à fenêtre (fabricant, nom, puis la fenêtre ; le badge « Complète » s'y pose) %>
+<div class="absolute inset-0 bg-orange-100 p-2 flex flex-col gap-1">
+  <span class="text-[9px] font-extrabold tracking-widest uppercase text-orange-800 truncate min-h-3"><%= [ detail.manufacturer, detail.line ].compact_blank.first %></span>
+  <span class="text-xs font-extrabold leading-tight text-orange-950 line-clamp-2 break-words hyphens-auto"><%= item.title %></span>
+  <span class="grow rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center" aria-hidden="true">
+    <svg class="w-7 h-7 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5 21c1-4 3.5-6 7-6s6 2 7 6"/></svg>
+  </span>
+</div>

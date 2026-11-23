@@ -1,0 +1,15 @@
+<%# Musique sans photo : une pochette d'où dépasse le disque %>
+<div class="absolute inset-0 bg-pink-100 p-2.5 flex flex-col justify-between overflow-hidden">
+  <span class="absolute -right-5 top-2 w-[64px] h-[64px] rounded-full bg-gray-900 flex items-center justify-center" aria-hidden="true">
+    <span class="w-[42px] h-[42px] rounded-full border border-gray-700 flex items-center justify-center">
+      <span class="w-[16px] h-[16px] rounded-full bg-pink-400"></span>
+    </span>
+  </span>
+  <span class="relative text-[10px] font-extrabold tracking-widest uppercase text-pink-800"><%= detail.format %></span>
+  <span class="relative flex flex-col gap-0.5">
+    <span class="text-[13px] font-extrabold leading-tight text-pink-950 line-clamp-3 break-words hyphens-auto"><%= item.title %></span>
+    <% if detail.artist.present? %>
+      <span class="text-[11px] text-pink-800 truncate"><%= detail.artist %></span>
+    <% end %>
+  </span>
+</div>

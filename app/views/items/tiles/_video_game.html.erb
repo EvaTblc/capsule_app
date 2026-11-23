@@ -1,0 +1,11 @@
+<%# Jeu sans photo : un boîtier, bandeau à la couleur de la plateforme %>
+<div class="absolute inset-0 bg-blue-50 border border-blue-100 rounded-xl overflow-hidden flex flex-col">
+  <% if detail.platform.present? %>
+    <span class="h-[22px] shrink-0 px-2 flex items-center text-white text-[9px] font-extrabold tracking-wider uppercase truncate"
+          style="background: <%= platform_band_color(detail.platform) %>"><%= detail.platform %></span>
+  <% end %>
+  <span class="grow p-2.5 flex flex-col justify-between">
+    <span class="text-[13px] font-extrabold leading-tight text-blue-900 line-clamp-4 break-words hyphens-auto"><%= item.title %></span>
+    <%= render "collections/icons/video_games" %>
+  </span>
+</div>

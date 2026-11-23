@@ -1,0 +1,12 @@
+<%# Livre sans photo : une tranche (titre, tome s'il y en a, auteur) %>
+<div class="absolute inset-0 bg-emerald-100 border-l-[6px] border-emerald-300 p-2.5 flex flex-col justify-between">
+  <span class="text-[13px] font-extrabold leading-tight text-emerald-950 line-clamp-4 break-words hyphens-auto"><%= item.title %></span>
+  <span class="flex flex-col gap-0.5">
+    <% if detail.respond_to?(:volume) && detail.volume.present? %>
+      <span class="text-[22px] font-black leading-none text-emerald-700"><%= detail.volume %></span>
+    <% end %>
+    <% if detail.author.present? %>
+      <span class="text-[11px] text-emerald-800 truncate"><%= detail.author %></span>
+    <% end %>
+  </span>
+</div>

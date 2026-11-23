@@ -25,19 +25,9 @@
         <div style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none;">
           <% @recent_items.each do |item| %>
             <%= link_to collection_item_path(item.collection, item), style: "flex-shrink: 0; width: 112px; text-decoration: none;" do %>
-              <div style="width: 112px; height: 144px; border-radius: 16px; overflow: hidden; background: #f3f4f6; margin-bottom: 8px;">
-                <% if item.images.attached? %>
-                  <%= image_tag item.images.first, style: "width: 112px; height: 144px; object-fit: cover; display: block;" %>
-                <% elsif item.collection.cover_image.attached? %>
-                  <%= image_tag item.collection.cover_image, style: "width: 112px; height: 144px; object-fit: cover; object-position: top; display: block;" %>
-                <% else %>
-                  <div style="width: 100%; height: 100%; background: #ede9fe; display: flex; align-items: flex-end; padding: 8px; box-sizing: border-box;">
-                    <p style="font-size: 11px; font-weight: 700; color: #4b5563; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;"><%= item.title %></p>
-                  </div>
-                <% end %>
-              </div>
+              <div class="mb-2"><%= render "items/tile", item: item %></div>
               <p style="font-size: 11px; font-weight: 600; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 112px;"><%= item.title %></p>
-              <p style="font-size: 11px; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 112px;"><%= item.collection.title %></p>
+              <p style="font-size: 11px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 112px;"><%= item.collection.title %></p>
             <% end %>
           <% end %>
         </div>

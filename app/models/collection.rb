@@ -14,7 +14,7 @@ class Collection < ApplicationRecord
   "music"         => "bg-pink-50 shadow-pink-100",
   "video_games"   => "bg-blue-50 shadow-blue-100",
   "figurines"     => "bg-orange-50 shadow-orange-100",
-  "trading_cards" => "bg-green-50 shadow-green-100",
+  "trading_cards" => "bg-yellow-50 shadow-yellow-100",
   "board_games"   => "bg-purple-50 shadow-purple-100",
   "books"         => "bg-emerald-50 shadow-emerald-100",
   "mixed"         => "bg-purple-50 shadow-violet-100",

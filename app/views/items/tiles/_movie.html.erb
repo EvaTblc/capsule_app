@@ -1,0 +1,14 @@
+<%# Film sans photo : un boîtier sombre façon affiche, bandeau du support (Blu-ray, DVD...) %>
+<div class="absolute inset-0 bg-gray-800 flex flex-col">
+  <% if detail.format.present? %>
+    <span class="h-[22px] shrink-0 flex items-center justify-center text-white text-[9px] font-extrabold tracking-widest uppercase"
+          style="background: <%= format_band_color(detail.format) %>"><%= detail.format %></span>
+  <% end %>
+  <span class="grow p-2.5 flex flex-col justify-end gap-1">
+    <span class="text-xs font-extrabold leading-tight text-white line-clamp-4 break-words hyphens-auto"><%= item.title %></span>
+    <% sub = [ detail.year, detail.director ].compact_blank.join(" · ") %>
+    <% if sub.present? %>
+      <span class="text-[11px] text-gray-300 truncate"><%= sub %></span>
+    <% end %>
+  </span>
+</div>
