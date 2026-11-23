@@ -2,7 +2,7 @@
 
 Technique des fonctionnalités, exploitation, juridique et dette. Les fonctionnalités sont dans [TODO_FEATURES.md](TODO_FEATURES.md).
 
-Dernière mise à jour : 2026-11-16
+Dernière mise à jour : 2026-11-23
 
 ## Mise en production en cours
 
@@ -38,16 +38,17 @@ Dernière mise à jour : 2026-11-16
 - [x] Fiches orphelines (sans item) : 12 jeux, tous d'avant le correctif du 2026-10-21, supprimés en prod le
       2026-10-29 ; aucun film ni livre.
 - [ ] Jeux reliés sans description française : option de traduction une fois par œuvre (coût Claude à estimer).
-- [ ] Recherche IGDB en français sensible aux accents (« Pokemon Epee » ne trouve rien).
+- [x] Recherche IGDB en français sensible aux accents (« Pokemon Epee » ne trouve rien) : titres français d'IGDB
+      gardés en base et comparés sans accents, le 2026-11-16.
 - [ ] Plateforme absente de certaines notices BnF (« 1 cartouche informatique ») : la chercher aussi dans les notes (zone 300).
 - [x] Libellé erroné sur Wikidata : « John Wick: Chaptire », corrigé sur Wikidata le 2026-11-16.
 - [ ] Jeux ajoutés par l'ajout rapide avant le correctif du résumé : résumé perdu.
 
 ## Exploitation
 
-- [ ] **CSP** : deux causes corrigées et déployées : script en ligne du service worker (2026-10-29), bouton Google
-      chargé par Turbo (2026-11-16, v105). RESTE : relire les logs de prod après quelques jours
-      (`heroku logs -n 1500 | grep "\[CSP\]"`), puis `content_security_policy_report_only = false`.
+- [x] **CSP** : deux causes corrigées (script en ligne du service worker le 2026-10-29, bouton Google chargé par Turbo
+      le 2026-11-16), puis aucun rapport en prod (logs + visite complète le 2026-11-23) : passée en mode bloquant
+      le 2026-11-23. Les violations restent loguées (`heroku logs | grep "\[CSP\]"`).
 - [x] **Connexion Google** en POST hors de Turbo, GET refusé (CVE-2015-9284) ; « Rester connecté » 4 semaines
       renouvelées à chaque visite (Google et formulaire), le 2026-11-16.
 - [x] **Profil** : 203 → 16 requêtes, ~5 fois plus rapide (N+1 sur les fiches, les compteurs et les amitiés) ; plus de

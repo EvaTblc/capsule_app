@@ -41,7 +41,8 @@ Rails.application.configure do
   config.content_security_policy_nonce_generator = ->(request) { SecureRandom.base64(16) }
   config.content_security_policy_nonce_directives = %w[script-src]
 
-  # MODE RAPPORT : le navigateur ne bloque rien, il signale seulement les violations.
-  # Quand les logs ne montrent plus de « [CSP] » légitime, passer à false pour bloquer réellement.
-  config.content_security_policy_report_only = true
+  # MODE BLOQUANT (depuis le 2026-11-23, après plusieurs semaines en mode rapport sans violation légitime) :
+  # le navigateur bloque ce qui n'est pas autorisé ET le signale (« [CSP] » dans les logs).
+  # Une nouvelle source externe (script, API appelée en JS...) doit être ajoutée ci-dessus, sinon elle sera bloquée.
+  config.content_security_policy_report_only = false
 end

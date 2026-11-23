@@ -7,11 +7,11 @@ RSpec.describe "Content Security Policy", type: :request do
     get collections_path
   end
 
-  def policy = response.headers["Content-Security-Policy-Report-Only"]
+  def policy = response.headers["Content-Security-Policy"]
 
-  it "est envoyée en mode rapport (rien n'est bloqué tant qu'on n'a pas validé)" do
+  it "est envoyée en mode bloquant, et les violations sont toujours signalées" do
     expect(policy).to include("default-src 'self'", "object-src 'none'", "frame-ancestors 'none'", "report-uri /csp-violations")
-    expect(response.headers["Content-Security-Policy"]).to be_nil
+    expect(response.headers["Content-Security-Policy-Report-Only"]).to be_nil
   end
 
   it "chaque script en ligne porte le nonce de la page (sinon il serait bloqué)" do
