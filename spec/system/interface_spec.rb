@@ -69,5 +69,40 @@ RSpec.describe "Interface (navigateur)", type: :system do
       fill_in placeholder: "Chercher dans Mes jeux…", with: "zelda"
       expect(page).to have_content("Aucun résultat")
     end
+
+    it "recherche sans accents, aussi sur la plateforme" do
+      Item.create!(title: "Pokémon Épée", collection: games, item_detailable: VideoGameDetail.create!(platform: "Switch"))
+      visit collection_path(games)
+      fill_in placeholder: "Chercher dans Mes jeux…", with: "pokemon epee"
+      expect(page).to have_text("Pokémon Épée")
+      expect(page).not_to have_text("Mario Kart")
+
+      fill_in placeholder: "Chercher dans Mes jeux…", with: "ps5"
+      expect(page).to have_text("Elden Ring")
+      expect(page).not_to have_text("Pokémon Épée")
+    end
+
+    it "filtres rapides (plateforme, Complets), compteur, et tri retenu" do
+      visit collection_path(games)
+      expect(page).to have_text("2 items")
+
+      click_on "PS5"
+      expect(page).to have_text("Elden Ring")
+      expect(page).not_to have_text("Mario Kart")
+      expect(page).to have_text("1 item sur 2")
+
+      click_on "Tous"
+      click_on "Complets"
+      expect(page).to have_text("Mario Kart")
+      expect(page).not_to have_text("Elden Ring")
+
+      click_on "Complets"
+      select "Plateforme", from: "Trier par"
+      titles = all("[data-collection-filter-target='list'] a").map { |card| card["href"] }
+      expect(titles.first).to include("/items/#{games.items.find_by(title: 'Elden Ring').id}") # « ps5 » avant « switch »
+
+      visit collection_path(games)
+      expect(page).to have_select("Trier par", selected: "Plateforme")
+    end
   end
 end

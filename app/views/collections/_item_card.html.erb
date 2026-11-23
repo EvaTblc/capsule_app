@@ -1,18 +1,17 @@
 <%# Un item de la collection, en grille ET en liste : le conteneur (data-view="grid" | "list", classe group)
-    affiche l'une ou l'autre sans recharger. Les data-* servent à la recherche et aux filtres (collection-filter).
-    Locals : item, collection %>
-<% detail = item.item_detailable %>
+    affiche l'une ou l'autre sans recharger. Les data-* servent à la recherche, aux filtres et au tri
+    (collection-filter, valeurs calculées par CollectionFiltersHelper). Locals : item, collection, position (tri par titre) %>
 <% subtitle = item_tile_subtitle(item) %>
 <% badge = item_tile_badge(item) %>
 <%= link_to collection_item_path(collection, item),
     class: "block min-w-0 active:scale-95 transition-transform duration-150",
     data: {
-      title: item.title.downcase,
-      condition: item.condition.to_s.downcase,
-      platform: detail.respond_to?(:platform) ? detail.platform.to_s.downcase : "",
-      genre: detail.respond_to?(:genre) ? detail.genre.to_s.downcase : "",
-      format: detail.respond_to?(:format) ? detail.format.to_s.downcase : "",
-      completed: detail.respond_to?(:completed?) ? detail.completed?.to_s : ""
+      search: item_search_text(item),
+      facet: item_facet(item, collection.category).to_s,
+      complete: badge.present?.to_s,
+      position: position,
+      added: item.created_at.to_i,
+      secondary: item_secondary_sort(item, collection.category)
     } do %>
 
   <%# Grille : la vignette, le titre sur deux lignes, l'info utile %>

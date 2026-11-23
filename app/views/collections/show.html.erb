@@ -51,8 +51,7 @@
     MES COLLECTIONS
   <% end %>
 
-  <div data-controller="collection-filter"
-      data-collection-filter-category-value="<%= @collection.category %>">
+  <div data-controller="collection-filter">
 
     <%# Recherche (instantanée, dans la page) et choix grille / liste, retenu par le navigateur %>
     <div class="flex items-center gap-2 mb-3">
@@ -79,12 +78,39 @@
       </div>
     </div>
 
-    <div class="mb-3" data-action="click->collection-filter#toggleDisplay">
-      <button class="mb-3 px-2 py-1 border rounded-xl border-gray-200 text-xs text-gray-400 uppercase">
-        Recherche par filtres
-      </button>
-      <div data-collection-filter-target="pills" class="flex flex-col mb-4 hidden"></div>
-    </div>
+    <% unless @items.empty? %>
+      <%# Filtres rapides : un seul choix à la fois (« Tous » pour revenir), plus « Complets » qui s'y ajoute %>
+      <% facets = collection_facets(@items, @collection.category) %>
+      <% completable = collection_completable?(@items) %>
+      <% chip = "h-8 px-3.5 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 border border-gray-200 bg-white text-gray-700 aria-pressed:bg-purple-700 aria-pressed:border-purple-700 aria-pressed:text-white" %>
+      <% if facets.any? || completable %>
+        <div class="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 mb-2 [scrollbar-width:none]" role="group" aria-label="Filtres rapides">
+          <button type="button" class="<%= chip %>" aria-pressed="true"
+                  data-collection-filter-target="facetChip" data-facet="" data-action="collection-filter#pickFacet">Tous</button>
+          <% facets.each do |facet| %>
+            <button type="button" class="<%= chip %>" aria-pressed="false"
+                    data-collection-filter-target="facetChip" data-facet="<%= facet %>" data-action="collection-filter#pickFacet"><%= facet %></button>
+          <% end %>
+          <% if completable %>
+            <button type="button" class="<%= chip %>" aria-pressed="false"
+                    data-collection-filter-target="completeChip" data-action="collection-filter#toggleComplete">Complets</button>
+          <% end %>
+        </div>
+      <% end %>
+
+      <%# Nombre d'items affichés, et tri (retenu par le navigateur) %>
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <span class="text-[13px] text-gray-500" data-collection-filter-target="count" aria-live="polite"><%= items_count(@items.size) %></span>
+        <label class="flex items-center gap-1 text-[13px] font-semibold text-gray-700">
+          <span class="sr-only">Trier par</span>
+          <select data-collection-filter-target="sort" data-action="collection-filter#sort"
+                  class="appearance-none bg-transparent border-0 p-0 pr-5 text-[13px] font-semibold text-gray-700 text-right focus:outline-none focus:ring-0 bg-no-repeat bg-right"
+                  style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E&quot;); background-size: 14px;">
+            <%= options_for_select(collection_sort_options(@collection.category), "title") %>
+          </select>
+        </label>
+      </div>
+    <% end %>
 
     <% if @items.empty? %>
       <div class="flex flex-col items-center justify-center py-16 gap-4 text-center">
@@ -114,8 +140,8 @@
       <%# Grille par défaut (3 colonnes), ou liste compacte : data-view, changé par collection-filter %>
       <div data-collection-filter-target="list" data-view="grid"
            class="group mb-6 data-[view=grid]:grid data-[view=grid]:grid-cols-3 data-[view=grid]:gap-x-2.5 data-[view=grid]:gap-y-4 data-[view=list]:flex data-[view=list]:flex-col">
-        <% @items.each do |item| %>
-          <%= render "collections/item_card", item: item, collection: @collection %>
+        <% @items.each_with_index do |item, position| %>
+          <%= render "collections/item_card", item: item, collection: @collection, position: position %>
         <% end %>
       </div>
     <% end %>
