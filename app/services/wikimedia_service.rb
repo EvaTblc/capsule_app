@@ -23,11 +23,14 @@ class WikimediaService
     entity = entities([ qid ], props: "labels|claims|sitelinks")&.dig(qid)
     return nil unless entity
 
+    title = label(entity)
+    return nil if title.blank? # sans titre, l'œuvre ne pourrait pas être enregistrée au catalogue
+
     claims = entity["claims"]
     names = labels(item_ids(claims, "P57") + item_ids(claims, "P272"))
     {
       wikidata_id: qid,
-      title: label(entity),
+      title: title,
       original_title: claims.dig("P1476", 0, "mainsnak", "datavalue", "value", "text"),
       release_year: release_year(claims),
       directors: item_ids(claims, "P57").filter_map { |id| names[id] },
@@ -72,6 +75,7 @@ class WikimediaService
 
     claims = entity["claims"]
     return nil if item_ids(claims, "P50").empty? || (item_ids(claims, "P31") & NOT_A_BOOK_WORK).any?
+    return nil if label(entity).blank?
 
     names = labels(item_ids(claims, "P50") + item_ids(claims, "P136"))
     {
@@ -96,7 +100,7 @@ class WikimediaService
   end
 
   def self.entities(ids, props:)
-    get_json(WIKIDATA_API, action: "wbgetentities", ids: ids.join("|"), props: props, languages: "fr|en",
+    get_json(WIKIDATA_API, action: "wbgetentities", ids: ids.join("|"), props: props, languages: "fr|en|mul",
                            sitefilter: "frwiki", format: "json")&.dig("entities")
   end
 
@@ -112,8 +116,10 @@ class WikimediaService
     (entities(ids.uniq.first(50), props: "labels") || {}).transform_values { |entity| label(entity) }
   end
 
+  # Français, sinon anglais, sinon « mul » : depuis 2024, Wikidata range sous « mul » (multilingue) les noms identiques
+  # dans toutes les langues et supprime les doublons fr / en (ex. « The Mask », noms de personnes)
   def self.label(entity)
-    entity.dig("labels", "fr", "value") || entity.dig("labels", "en", "value")
+    %w[fr en mul].lazy.filter_map { |language| entity.dig("labels", language, "value").presence }.first
   end
 
   # Année de sortie en France si Wikidata la connaît (qualificatif P291 = France), sinon la plus ancienne

@@ -57,6 +57,23 @@ RSpec.describe WikimediaService do
       )
     end
 
+    it "titre et noms rangés par Wikidata sous « mul » (identiques dans toutes les langues) : utilisés en dernier recours" do
+      entity = inception.merge("labels" => { "mul" => { "value" => "The Mask" } })
+      wikidata_returns(search: [ { "title" => "Q25188" } ], entity: entity)
+      expect(described_class.movie(854)).to include(title: "The Mask")
+    end
+
+    it "demande aussi les libellés « mul » à Wikidata" do
+      wikidata_returns(search: [ { "title" => "Q25188" } ])
+      described_class.movie(27205)
+      expect(http).to have_received(:get).with(WikimediaService::WIKIDATA_API, params: hash_including(languages: "fr|en|mul")).at_least(:once)
+    end
+
+    it "film sans aucun titre sur Wikidata : nil (fiche indisponible) plutôt qu'un plantage à l'enregistrement" do
+      wikidata_returns(search: [ { "title" => "Q25188" } ], entity: inception.merge("labels" => {}))
+      expect(described_class.movie(854)).to be_nil
+    end
+
     it "année de sortie en France plutôt que la plus ancienne" do
       entity = inception.deep_merge("claims" => { "P577" => [ date_claim("+2011-11-02T00:00:00Z", "Q142"), date_claim("+2010-09-11T00:00:00Z", "Q16") ] })
       wikidata_returns(search: [ { "title" => "Q25188" } ], entity: entity)
