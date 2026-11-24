@@ -20,9 +20,16 @@ RSpec.describe VideoGameDetail, type: :model do
       expect(detail).to be_valid
     end
 
-    it "est invalide avec une année avant 1900" do
-      detail = build(:video_game_detail, release_date: 1850)
-      expect(detail).not_to be_valid
+    it "est invalide avec une année avant le premier jeu vidéo (1950) ou trop loin dans le futur" do
+      expect(build(:video_game_detail, release_date: 1850)).not_to be_valid
+      expect(build(:video_game_detail, release_date: Date.current.year + 10)).not_to be_valid
+      expect(build(:video_game_detail, release_date: Date.current.year + 1)).to be_valid
+    end
+
+    it "un seul message, en français et en phrase complète" do
+      detail = build(:video_game_detail, release_date: 24)
+      detail.validate
+      expect(detail.errors.map(&:message)).to eq([ "L'année de sortie doit être une année à 4 chiffres (par exemple 2007)." ])
     end
 
     it "est invalide avec un nombre qui n'est pas sur 4 chiffres" do
@@ -45,6 +52,12 @@ RSpec.describe VideoGameDetail, type: :model do
     it "est valide sans plateforme" do
       expect(build(:video_game_detail, platform: nil)).to be_valid
       expect(build(:video_game_detail, platform: "")).to be_valid
+    end
+
+    it "message en français, sans le nom technique du champ" do
+      detail = build(:video_game_detail, platform: "Nintendo Switch")
+      detail.validate
+      expect(detail.errors.map(&:message).first).to start_with("Cette plateforme n'est pas dans la liste")
     end
 
     it "est invalide avec un nom IGDB ou une liste de plateformes" do

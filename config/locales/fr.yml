@@ -31,6 +31,8 @@ fr:
       models:
         item:
           attributes:
+            base:
+              type_unavailable: "Ce type d'item n'est pas disponible pour le moment."
             title:
               blank: "Le titre ne peut pas être vide"
             condition:
@@ -40,6 +42,25 @@ fr:
           attributes:
             title:
               blank: "Le titre ne peut pas être vide"
+            category:
+              inclusion: "Choisis une catégorie."
+              unavailable: "Cette catégorie n'est pas disponible pour le moment."
+        # Détails des items : phrases complètes, affichées sans le nom du champ (ItemSaver#collect_errors)
+        video_game_detail:
+          attributes:
+            platform:
+              inclusion: "Cette plateforme n'est pas dans la liste : choisis-en une parmi les boutons ou la liste."
+            release_date:
+              not_a_number: "L'année de sortie doit être une année à 4 chiffres (par exemple 2007)."
+              not_an_integer: "L'année de sortie doit être une année à 4 chiffres (par exemple 2007)."
+              greater_than_or_equal_to: "L'année de sortie doit être une année à 4 chiffres (par exemple 2007)."
+              less_than_or_equal_to: "L'année de sortie doit être une année à 4 chiffres (par exemple 2007)."
+        figurine_detail:
+          attributes:
+            edition:
+              inclusion: "Choisis une édition dans la liste."
+            condition_box:
+              inclusion: "Choisis l'état de la boîte dans la liste."
         note:
           attributes:
             title:

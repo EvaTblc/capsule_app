@@ -31,6 +31,10 @@ class Item < ApplicationRecord
   "BoardGameDetail" => "bg-purple-50 shadow-purple-100"
   }
 
+  # Types en cours de refonte : plus proposés ni acceptés à la création (pas de nouvelles fiches incomplètes en base).
+  # Les items existants de ce type restent visibles et modifiables. Figurine : formulaire à revoir (2026-11-24)
+  HIDDEN_TYPES = %w[FigurineDetail].freeze
+
   TYPE_TO_ICON = {
     "BookDetail"      => "book",
     "VideoGameDetail" => "video_games",

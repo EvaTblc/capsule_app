@@ -9,9 +9,8 @@
     <%# Type %>
     <label class="text-sm font-semibold text-gray-600 mb-3 block">Type</label>
     <div class="grid grid-cols-3 gap-2 mb-6">
-      <% [["BookDetail", "book"], ["VideoGameDetail", "video_games"], ["MovieDetail", "movies"],
-          ["MusicDetail", "music"], ["FigurineDetail", "figurines"], ["TcgDetail", "trading_cards"],
-          ["BoardGameDetail", "board_games"]].each do |type, icon| %>
+      <%# Types masqués (Item::HIDDEN_TYPES) : proposés seulement pour modifier un item qui l'est déjà %>
+      <% Item::TYPE_TO_ICON.reject { |type, _| Item::HIDDEN_TYPES.include?(type) && @item.item_type != type }.each do |type, icon| %>
         <div data-item-type-target="card"
              data-type="<%= type %>"
              data-action="click->item-type#select"

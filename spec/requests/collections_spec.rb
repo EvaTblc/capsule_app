@@ -99,6 +99,32 @@ RSpec.describe "Collections", type: :request do
       expect(response).to redirect_to(collection_path(Collection.last))
       expect(owner.user_collections.find_by(collection: Collection.last).role).to eq("owner")
     end
+
+    it "catégorie masquée (figurines, en refonte) : plus proposée, et refusée si la requête est fabriquée" do
+      sign_in owner
+      get new_collection_path
+      expect(response.body).not_to include('data-category="figurines"')
+      expect { post collections_path, params: { collection: { title: "Mes Funko", category: "figurines" } } }
+        .not_to change(Collection, :count)
+      expect(response.body).to include("Cette catégorie n&#39;est pas disponible pour le moment.")
+    end
+
+    it "sans titre : le formulaire affiche l'erreur" do
+      sign_in owner
+      post collections_path, params: { collection: { title: "", category: "books" } }
+      expect(response).to have_http_status(422)
+      expect(response.body).to include("Le titre ne peut pas être vide")
+    end
+
+    it "une collection de figurines existante garde sa catégorie à la modification" do
+      sign_in owner
+      collection = Collection.new(title: "Funko", category: "figurines").tap { |c| c.save!(validate: false) }
+      UserCollection.create!(user: owner, collection: collection, role: "owner")
+      get edit_collection_path(collection)
+      expect(response.body).to include('data-category="figurines"')
+      patch collection_path(collection), params: { collection: { title: "Mes Funko" } }
+      expect(collection.reload.title).to eq("Mes Funko")
+    end
   end
 
   describe "DELETE /collections/:id" do

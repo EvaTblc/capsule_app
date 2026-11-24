@@ -23,6 +23,15 @@ class Collection < ApplicationRecord
 
   validates :title, presence: true
   validates :category, inclusion: { in: CATEGORIES }
+  validate :category_available, on: :create
+
+  # Catégories des types d'items masqués (Item::HIDDEN_TYPES) : plus proposées pour une nouvelle collection,
+  # les collections existantes les gardent
+  HIDDEN_CATEGORIES = %w[figurines].freeze
+
+  def self.available_categories(current = nil)
+    CATEGORIES.reject { |category| HIDDEN_CATEGORIES.include?(category) && category != current }
+  end
 
   # Ce que user peut consulter : ses collections, plus les collections publiques (en lecture seule)
   scope :visible_to, ->(user) { where(public: true).or(where(id: user.collections.select(:id))) }
@@ -51,5 +60,9 @@ class Collection < ApplicationRecord
 
   def generate_invite_token
     self.invite_token = self.class.new_invite_token
+  end
+
+  def category_available
+    errors.add(:category, :unavailable) if HIDDEN_CATEGORIES.include?(category)
   end
 end

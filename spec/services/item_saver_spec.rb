@@ -47,9 +47,15 @@ RSpec.describe ItemSaver do
 
     it "échec : rien n'est créé, les erreurs de l'item et du détail sont réunies" do
       expect {
-        expect(save(item, type: "FigurineDetail", detail: { "edition" => "Bidon" }, item_attributes: { title: "" })).to be false
-      }.not_to change(FigurineDetail, :count)
-      expect(item.errors.full_messages).to include(a_string_including("titre"), a_string_including("Edition"))
+        expect(save(item, type: "VideoGameDetail", detail: { "platform" => "Bidon" }, item_attributes: { title: "" })).to be false
+      }.not_to change(VideoGameDetail, :count)
+      expect(item.errors.full_messages).to include(a_string_including("titre"), a_string_including("Cette plateforme n'est pas dans la liste"))
+    end
+
+    it "type masqué (figurine) : refusé avant toute construction, message en français" do
+      expect(save(item, type: "FigurineDetail", detail: { "edition" => "Standard", "condition_box" => "Neuf" })).to be false
+      expect(item.errors.full_messages).to eq([ "Ce type d'item n'est pas disponible pour le moment." ])
+      expect(FigurineDetail.count).to eq(0)
     end
   end
 

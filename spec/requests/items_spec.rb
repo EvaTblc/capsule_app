@@ -52,10 +52,10 @@ RSpec.describe "Items", type: :request do
     it "détail invalide : formulaire avec l'erreur (et non plus une 500), rien de créé" do
       expect {
         post collection_items_path(games),
-             params: { item: { title: "Goku", item_type: "FigurineDetail" }, figurine_detail: { edition: "Bidon", condition_box: "Neuf" } }
-      }.not_to change(FigurineDetail, :count)
+             params: { item: { title: "Okami", item_type: "VideoGameDetail" }, video_game_detail: { release_date: "24" } }
+      }.not_to change(VideoGameDetail, :count)
       expect(response).to have_http_status(422)
-      expect(response.body).to include("Edition")
+      expect(response.body).to include("L&#39;année de sortie doit être une année à 4 chiffres")
     end
 
     it "ajout rapide : le résumé anglais envoyé dans summary_en est conservé et mis en traduction" do
@@ -166,10 +166,19 @@ RSpec.describe "Items", type: :request do
     it "changement de type vers un détail invalide : 422 et l'ancien détail est intact" do
       old_detail = item.item_detailable
       patch collection_item_path(books, item),
-            params: { item: { title: "Dune", item_type: "FigurineDetail" }, figurine_detail: { edition: "Bidon" } }
+            params: { item: { title: "Dune", item_type: "VideoGameDetail" }, video_game_detail: { platform: "Bidon" } }
       expect(response).to have_http_status(422)
+      expect(response.body).to include("Cette plateforme n&#39;est pas dans la liste")
+      expect(response.body).not_to include("Platform n")
       expect(item.reload.item_detailable).to eq(old_detail)
       expect(BookDetail.exists?(old_detail.id)).to be true
+    end
+
+    it "changement de type vers un type masqué (figurine) : refusé, l'ancien détail est intact" do
+      patch collection_item_path(books, item),
+            params: { item: { title: "Dune", item_type: "FigurineDetail" }, figurine_detail: { edition: "Standard" } }
+      expect(response).to have_http_status(422)
+      expect(item.reload.item_detailable_type).to eq("BookDetail")
     end
 
     it "ajouter une image conserve les images existantes" do
@@ -178,6 +187,35 @@ RSpec.describe "Items", type: :request do
         item: { title: "Dune", item_type: "BookDetail", images: [ Rack::Test::UploadedFile.new(StringIO.new("b"), "image/jpeg", original_filename: "b.jpg") ] }
       }
       expect(item.reload.images.count).to eq(2)
+    end
+  end
+
+  describe "type masqué (figurine, en refonte)" do
+    let(:mixed) { collection_of("mixed") }
+
+    it "le formulaire ne le propose plus" do
+      get new_collection_item_path(mixed)
+      expect(response.body).not_to include('data-type="FigurineDetail"')
+      expect(response.body).to include('data-type="VideoGameDetail"')
+    end
+
+    it "une requête fabriquée ne crée rien" do
+      expect {
+        post collection_items_path(mixed), params: { item: { title: "Pikachu", item_type: "FigurineDetail" },
+                                                    figurine_detail: { edition: "Standard", condition_box: "Neuf" } }
+      }.not_to change(Item, :count)
+      expect(response).to have_http_status(422)
+      expect(response.body).to include("Ce type d&#39;item n&#39;est pas disponible pour le moment.")
+      expect(FigurineDetail.count).to eq(0)
+    end
+
+    it "une figurine déjà en base reste visible et modifiable" do
+      detail = FigurineDetail.new(edition: "Standard", condition_box: "Neuf").tap { |d| d.save!(validate: false) }
+      figurine = Item.create!(title: "Pikachu", collection: mixed, item_detailable: detail)
+      get edit_collection_item_path(mixed, figurine)
+      expect(response.body).to include('data-type="FigurineDetail"')
+      patch collection_item_path(mixed, figurine), params: { item: { title: "Pikachu Pop!", item_type: "FigurineDetail" } }
+      expect(figurine.reload.title).to eq("Pikachu Pop!")
     end
   end
 end

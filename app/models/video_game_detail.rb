@@ -31,6 +31,8 @@ class VideoGameDetail < ApplicationRecord
 
   has_one :item, as: :item_detailable
 
-  validates :release_date, comparison: { greater_than: 1900 }, length: { is: 4 }, numericality: { only_integer: true }, allow_nil: true
+  # Une seule règle (un seul message) : une année à 4 chiffres, du premier jeu vidéo à aujourd'hui (+ annonces)
+  validates :release_date, numericality: { only_integer: true, greater_than_or_equal_to: 1950, less_than_or_equal_to: ->(_) { Date.current.year + 5 } },
+                           allow_nil: true
   validates :platform, inclusion: { in: PLATFORMS }, allow_blank: true
 end

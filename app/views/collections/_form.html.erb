@@ -2,6 +2,7 @@
   <h1 class="text-2xl font-black tracking-tight mb-6">Nouvelle collection</h1>
 
   <%= form_with model: @collection, local: false do |f| %>
+    <%= render "shared/form_errors", record: collection %>
     <div class="flex flex-col gap-4">
 
       <div>
@@ -32,7 +33,7 @@
           "other"         => "other"
         } %>
         <div class="grid grid-cols-3 gap-2">
-          <% Collection::CATEGORIES.each do |cat| %>
+          <% Collection.available_categories(collection.category_was).each do |cat| %>
             <div data-category-target="card"
                 data-category="<%= cat %>"
                 data-action="click->category#select"

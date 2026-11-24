@@ -41,6 +41,11 @@ class ItemSaver
   end
 
   def save
+    if new_detail? && Item::HIDDEN_TYPES.include?(@detail_type)
+      item.errors.add(:base, :type_unavailable)
+      return false
+    end
+
     build_detail
     # Assigné après build_detail (qui compare avec l'ancien type) et avant l'enregistrement :
     # en cas d'échec, l'item reste cohérent avec son nouveau détail pour réafficher le formulaire
@@ -57,11 +62,16 @@ class ItemSaver
 
   private
 
+  # Création, ou changement de type : un nouveau détail sera construit
+  def new_detail?
+    item.new_record? || @detail_type != item.item_detailable_type
+  end
+
   def build_detail
     @replaced_detail = nil
     @translate = false
 
-    if item.new_record? || @detail_type != item.item_detailable_type
+    if new_detail?
       # Nouveau détail : création, ou changement de type (l'ancien n'est supprimé qu'après succès)
       @replaced_detail = item.item_detailable
       item.item_detailable = self.class.detail_class(@detail_type).new(prepare_new_detail(@detail_attributes))
@@ -140,9 +150,10 @@ class ItemSaver
     end
   end
 
-  # Si le détail a échoué en premier, l'item n'a pas encore été validé : on le valide pour tout afficher
+  # Si le détail a échoué en premier, l'item n'a pas encore été validé : on le valide pour tout afficher.
+  # Messages des détails rédigés en phrases complètes (fr.yml) : affichés tels quels, sans le nom technique du champ
   def collect_errors
     item.validate
-    item.item_detailable.errors.each { |error| item.errors.add(:base, error.full_message) }
+    item.item_detailable.errors.each { |error| item.errors.add(:base, error.message) }
   end
 end

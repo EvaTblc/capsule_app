@@ -262,9 +262,15 @@ RSpec.describe "Items (navigateur)", type: :system do
     end
   end
 
-  describe "identification de figurine par photo" do
-    let(:figurines) { collection_of("figurines") }
+  # Type figurine masqué à la création (Item::HIDDEN_TYPES) : l'identification reste testée sur une figurine existante
+  def edit_existing_figurine
+    collection = collection_of("mixed")
+    detail = FigurineDetail.new(edition: "Standard", condition_box: "Neuf").tap { |d| d.save!(validate: false) }
+    item = Item.create!(title: "Figurine", collection: collection, item_detailable: detail)
+    visit edit_collection_item_path(collection, item)
+  end
 
+  describe "identification de figurine par photo" do
     # Dimensions d'un JPEG lues dans son en-tête (marqueur SOF), sans librairie d'image
     def jpeg_size(bytes)
       index = 2
@@ -284,8 +290,7 @@ RSpec.describe "Items (navigateur)", type: :system do
         { "name" => "Goku", "series" => "Dragon Ball" }
       end
 
-      visit new_collection_item_path(figurines)
-      find("[data-type='FigurineDetail']").click
+      edit_existing_figurine
       attach_file "figurine-identify-input", Rails.root.join("spec/fixtures/files/figurine.jpg"), make_visible: true
 
       expect(page).to have_field(with: "Goku")
@@ -296,8 +301,7 @@ RSpec.describe "Items (navigateur)", type: :system do
     it "figurine non reconnue : un message s'affiche (et non plus un formulaire vide, ni un chargement sans fin)" do
       allow(FigurineIdentificationService).to receive(:identify).and_return({})
 
-      visit new_collection_item_path(figurines)
-      find("[data-type='FigurineDetail']").click
+      edit_existing_figurine
       attach_file "figurine-identify-input", Rails.root.join("spec/fixtures/files/figurine.jpg"), make_visible: true
 
       expect(page).to have_css("[data-figurine-identify-target='loader']", text: "Figurine non reconnue")
@@ -332,8 +336,7 @@ RSpec.describe "Items (navigateur)", type: :system do
     end
 
     it "identification de figurine : bouton cadenassé, pas de champ photo" do
-      visit new_collection_item_path(collection_of("figurines"))
-      find("[data-type='FigurineDetail']").click
+      edit_existing_figurine
 
       within("[data-form='FigurineDetail']") do
         expect(page).not_to have_css("#figurine-identify-input", visible: :all)

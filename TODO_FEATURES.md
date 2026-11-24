@@ -12,6 +12,14 @@ Décidé le 2026-11-23. Le design web sera repris tel quel dans l'appli native :
 
 - [ ] **Tous les types d'items parfaitement fonctionnels** (livre, jeu vidéo, film, musique, figurine, carte, jeu de
       société) : ajout, recherche, scan quand il existe, fiche, modification.
+      Méthode (2026-11-24) : un type à la fois, fini à 100 % avant le suivant. Ordre : jeux vidéo d'abord.
+      Audit du 2026-11-24 : parcours complet OK pour 6 types (spec/system/item_types_spec.rb). Figurine MASQUÉE
+      (Item::HIDDEN_TYPES) : formulaire cassé (édition jamais enregistrée, état de la boîte en texte libre).
+      À reprendre pour les autres types : ordre des champs sur les fiches, champs fantômes (état des cartes, édition
+      limitée des figurines), formats en texte libre (films, musique), recherche Discogs (titre avec l'artiste, format
+      en anglais), libellé « Set » des cartes.
+      Jeux vidéo à 100 % : [x] messages d'erreur en français ; [ ] scan sur iPhone ; [ ] jaquette en tête de fiche ;
+      [ ] ordre des champs de la fiche ; [ ] fiche rafraîchie après traduction ; [ ] résumés manquants.
 - [ ] **Liste de souhaits** (voir Priorité 1).
 - [ ] **Scan en rafale** (voir Priorité 1).
 - [x] **Finitions** : textes en français et pluriels (2026-11-23) ; plus de ✕ ni de rouge pour « incomplet »,
