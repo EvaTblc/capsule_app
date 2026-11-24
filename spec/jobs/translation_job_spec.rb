@@ -31,4 +31,23 @@ RSpec.describe TranslationJob do
     described_class.perform_now(item.id)
     expect(detail.reload.description).to eq("Ma description")
   end
+
+  describe "fiche ouverte : rafraîchie dès que la traduction est enregistrée" do
+    let(:stream) { item.to_gid_param } # nom du canal de l'item, celui de turbo_stream_from @item
+
+    it "après une traduction par Claude" do
+      allow(TranslationService).to receive(:translate_batch).and_return([ "Attrapez-les tous" ])
+      expect { described_class.perform_now(item.id) }.to have_broadcasted_to(stream).with(a_string_including('action="refresh"'))
+    end
+
+    it "après la reprise de la traduction de l'œuvre" do
+      item.update!(product: create(:product, description: "Attrapez-les tous"))
+      expect { described_class.perform_now(item.id) }.to have_broadcasted_to(stream).with(a_string_including('action="refresh"'))
+    end
+
+    it "rien d'enregistré (Claude n'a rien renvoyé) : pas de rafraîchissement" do
+      allow(TranslationService).to receive(:translate_batch).and_return([ nil ])
+      expect { described_class.perform_now(item.id) }.not_to have_broadcasted_to(stream)
+    end
+  end
 end

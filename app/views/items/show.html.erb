@@ -1,5 +1,5 @@
 <div class="min-h-screen p-4 pt-20 pb-24">
-
+  <%= turbo_stream_from @item %>
   <% style = Item::ITEM_TYPE_STYLES[@item.item_detailable_type] %>
   <% icon = Item::TYPE_TO_ICON[@item.item_detailable_type] %>
   <% header_image = @item.images.attached? ? url_for(@item.images.first) : item_cover_url(@item, size: :cover_big_2x) %>

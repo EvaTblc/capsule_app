@@ -66,7 +66,8 @@ Dernière mise à jour : 2026-11-23
 - [ ] **Logs** : conservation plus longue (module gratuit type Better Stack) — action en prod, à décider.
 - [x] **Mémoire du dyno** : graphique Metrics vérifié le 2026-11-16, rien d'anormal (aucune alerte R14/R15) ;
       si elle remonte un jour, dyno worker séparé.
-- [ ] Fiche d'item rafraîchie automatiquement à la fin de la traduction / du résumé (`broadcast_refresh`, Solid Cable déjà en place).
+- [ ] Fiche d'item rafraîchie automatiquement : FAIT pour la traduction des jeux (TranslationJob, 2026-11-24) ;
+      RESTE le résumé des livres (BookDescriptionJob), à faire avec les livres.
 - [ ] Test manuel de Claude Haiku 5.5 : estimation de prix OK (2026-11-16) ; RESTE le résumé de livre (aucun livre dans l'appli).
 - [ ] Outils locaux : Chrome 131 (stable : 156, dépôt Google apt à configurer) ; Heroku CLI 10 → 11.
 

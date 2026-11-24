@@ -250,6 +250,15 @@ RSpec.describe "Items", type: :request do
     end
   end
 
+  it "GET fiche : la page est abonnée aux mises à jour de son item (rafraîchie après la traduction)" do
+    games = collection_of("video_games")
+    item = Item.create!(title: "Okami", collection: games, item_detailable: VideoGameDetail.create!)
+    get collection_item_path(games, item)
+    source = Nokogiri::HTML(response.body).at_css("turbo-cable-stream-source")
+    expect(source).to be_present
+    expect(Turbo::StreamsChannel.verified_stream_name(source["signed-stream-name"])).to eq(item.to_gid_param)
+  end
+
   describe "GET fiche : ordre des champs" do
     def labels
       Nokogiri::HTML(response.body).css("div.bg-white.border p.uppercase").map { |label| label.text.strip }
