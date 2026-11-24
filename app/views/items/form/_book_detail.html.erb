@@ -35,7 +35,8 @@
       <button type="button" data-action="click->book-search#stopScan" class="text-white text-2xl">✕</button>
     </div>
     <div id="book-scanner-viewport" class="flex-1 relative">
-      <video id="book-scanner-video" class="w-full h-full object-cover"></video>
+      <%# playsinline + muted : sans eux, l'iPhone ouvre la vidéo en plein écran ou ne la lance pas %>
+      <video id="book-scanner-video" class="w-full h-full object-cover" playsinline muted autoplay></video>
       <div class="absolute inset-0 flex items-center justify-center">
         <div class="border-2 border-purple-400 w-64 h-32 rounded-lg"></div>
       </div>

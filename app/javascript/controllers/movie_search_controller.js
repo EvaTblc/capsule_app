@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import BarcodeScanner from "lib/barcode_scanner"
 
 export default class extends Controller {
   static targets = ["query", "results", "title", "year", "description", "director", "studio", "format", "edition", "barcode", "tmdbId", "scanner"]
@@ -25,55 +26,30 @@ export default class extends Controller {
       })
   }
 
-    async startScan() {
+  async startScan() {
     this.scannerTarget.classList.remove("hidden")
-    const video = document.getElementById("movie-scanner-video")
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
-      })
-      video.srcObject = stream
-      video.play()
-      this.stream = stream
-      this.detectBarcode(video)
-    } catch(err) {
-      alert("Impossible d'accéder à la caméra")
-      this.stopScan()
-    }
-  }
-
-  async detectBarcode(video) {
-    if (!("BarcodeDetector" in window)) {
-      alert("Ton navigateur ne sait pas lire les codes-barres : tape le titre du film à la place.")
-      this.stopScan()
-      return
-    }
-
-    const detector = new BarcodeDetector({ formats: ["ean_13", "ean_8"] })
-    this.scanInterval = setInterval(async () => {
-      try {
-        const barcodes = await detector.detect(video)
-        if (barcodes.length > 0) {
-          const ean = barcodes[0].rawValue
-          this.stopScan()
-          this.searchByBarcode(ean)
-        }
-      } catch(err) {
-        console.log(err)
+    // Caméra et lecture du code : module commun (lecteur du navigateur, sinon lecteur de secours pour iPhone)
+    this.scanner = new BarcodeScanner(document.getElementById("movie-scanner-video"), {
+      onDetect: code => {
+        this.scannerTarget.classList.add("hidden")
+        this.searchByBarcode(code)
+      },
+      onError: message => {
+        this.scannerTarget.classList.add("hidden")
+        this.showMessage(message, true)
       }
-    }, 500)
+    })
+    this.scanner.start()
   }
 
   stopScan() {
     this.scannerTarget.classList.add("hidden")
-    if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop())
-      this.stream = null
-    }
-    if (this.scanInterval) {
-      clearInterval(this.scanInterval)
-      this.scanInterval = null
-    }
+    this.scanner?.stop()
+  }
+
+  // Formulaire quitté (Turbo) scanner ouvert : la caméra est rendue
+  disconnect() {
+    this.scanner?.stop()
   }
 
   searchByBarcode(ean) {

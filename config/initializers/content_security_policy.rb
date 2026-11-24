@@ -11,7 +11,9 @@ Rails.application.configure do
     # Scripts : l'appli (importmap + nonce pour les scripts en ligne), Mapbox GL, Lottie (version figée + SRI),
     # jspm (modules mapbox-gl et process pinnés dans config/importmap.rb).
     # report-sample : le rapport de violation contient le début du script fautif (logué par CspReportsController)
-    policy.script_src :self, "https://api.mapbox.com", "https://unpkg.com", "https://ga.jspm.io", :report_sample
+    # wasm-unsafe-eval : compiler du WebAssembly (lecteur de codes-barres de secours, public/zxing), et rien d'autre :
+    # eval() et new Function restent interdits, et le fichier .wasm ne peut venir que de l'appli (connect-src)
+    policy.script_src :self, "https://api.mapbox.com", "https://unpkg.com", "https://ga.jspm.io", :wasm_unsafe_eval, :report_sample
     # Styles : unsafe-inline nécessaire pour les attributs style= et les styles injectés par Turbo et Mapbox
     policy.style_src :self, :unsafe_inline, "https://api.mapbox.com"
     # Images : couvertures (Cloudinary, IGDB, TMDB), avatars Google, aperçus locaux (data:, blob:)

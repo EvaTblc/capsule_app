@@ -68,6 +68,9 @@
       <p class="text-sm text-gray-700">
         Produits identifiés grâce à <%= link_to "UPCitemdb", "https://www.upcitemdb.com", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>
         et <%= link_to "EAN-DB", "https://ean-db.com", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>.
+        Lecture des codes-barres sur les navigateurs qui ne savent pas le faire (Safari, Firefox) :
+        <%= link_to "ZXing", "https://github.com/zxing-cpp/zxing-cpp", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %>
+        (licence Apache 2.0), via <%= link_to "barcode-detector", "https://github.com/Sec-ant/barcode-detector", target: "_blank", rel: "noopener", class: "text-purple-600 font-semibold" %> (MIT).
       </p>
     </section>
 
