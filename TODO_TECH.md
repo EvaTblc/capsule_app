@@ -43,12 +43,15 @@ Dernière mise à jour : 2026-11-23
       (2 noms IGDB corrigés, 6 listes reprises à la main, bilan : ok 154), puis validation de la plateforme.
 - [x] Fiches orphelines (sans item) : 12 jeux, tous d'avant le correctif du 2026-10-21, supprimés en prod le
       2026-10-29 ; aucun film ni livre.
-- [ ] Jeux reliés sans description française : option de traduction une fois par œuvre (coût Claude à estimer).
+- [x] Jeux reliés sans description française : diagnostic `games:summaries_report` (prod, 2026-11-24 : 158 jeux,
+      0 traduction en attente, 18 sans résumé mais reliés, 10 sans résumé ni lien) ; `games:recover_summaries APPLY=1`.
 - [x] Recherche IGDB en français sensible aux accents (« Pokemon Epee » ne trouve rien) : titres français d'IGDB
       gardés en base et comparés sans accents, le 2026-11-16.
 - [ ] Plateforme absente de certaines notices BnF (« 1 cartouche informatique ») : la chercher aussi dans les notes (zone 300).
 - [x] Libellé erroné sur Wikidata : « John Wick: Chaptire », corrigé sur Wikidata le 2026-11-16.
-- [ ] Jeux ajoutés par l'ajout rapide avant le correctif du résumé : résumé perdu.
+- [x] Jeux ajoutés par l'ajout rapide avant le correctif du résumé : résumé rendu par `games:recover_summaries`.
+- [ ] Détails orphelins (fiche de détail sans item, anciens bugs) : 26 jeux, 17 livres, 18 films… en local. Compter en prod,
+      puis nettoyer si besoin.
 
 ## Exploitation
 
