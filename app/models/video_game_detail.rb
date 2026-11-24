@@ -2,6 +2,9 @@ class VideoGameDetail < ApplicationRecord
   # Boutons du formulaire complet et de l'ajout rapide : les plateformes actuelles
   MAIN_PLATFORMS = [ "Switch 2", "Switch", "PS5", "Xbox Series", "Nintendo 3DS" ].freeze
 
+  # Ordre de display des champs pour la show JV
+  SHOW_ORDER = [ "platform", "edition", "completed", "release_date", "developer", "genre", "description" ].freeze
+
   # Liste déroulante « Autres plateformes », par marque, de la plus récente à la plus ancienne
   PLATFORM_GROUPS = {
     "Nintendo" => [ "Nintendo DS", "Wii U", "Wii", "Gamecube", "Nintendo 64", "Super Nintendo",

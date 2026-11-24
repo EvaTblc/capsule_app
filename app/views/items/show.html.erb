@@ -44,7 +44,9 @@
     <% attributes = @item.item_detailable.attributes.except("id", "created_at", "updated_at") %>
     <% english_only = attributes["description"].blank? && attributes["summary_en"].present? %>
     <% attributes["description"] = attributes["summary_en"] if english_only %>
-    <% attributes.except("summary_en").each do |key, value| %>
+    <% fields = attributes.except("summary_en") %>
+    <% fields = fields.sort_by { |key, _value| VideoGameDetail::SHOW_ORDER.index(key) || VideoGameDetail::SHOW_ORDER.size } if @item.item_detailable.is_a?(VideoGameDetail) %>
+    <% fields.each do |key, value| %>
       <% next if value.nil? || (value == "" ) %>
 
       <% if key == "description" %>

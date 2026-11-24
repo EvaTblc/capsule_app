@@ -249,4 +249,24 @@ RSpec.describe "Items", type: :request do
       expect(header_html).to include("bg-emerald-50")
     end
   end
+
+  describe "GET fiche : ordre des champs" do
+    def labels
+      Nokogiri::HTML(response.body).css("div.bg-white.border p.uppercase").map { |label| label.text.strip }
+    end
+
+    it "jeu : plateforme, édition, complet, année, développeur, genre, puis la description en dernier" do
+      games = collection_of("video_games")
+      detail = VideoGameDetail.create!(platform: "PS5", genre: "Aventure", developer: "Clover", release_date: 2006,
+                                       description: "Amaterasu…", completed: true, edition: "Standard")
+      item = Item.create!(title: "Okami", collection: games, item_detailable: detail)
+      get collection_item_path(games, item)
+      expect(labels.first(7)).to eq([ "Plateforme", "Édition", "Jeu complet", "Année de sortie", "Développeur", "Genre", "Description" ])
+    end
+
+    it "jeu : chaque champ affichable a sa place dans l'ordre (aucun oublié en fin de fiche)" do
+      shown = VideoGameDetail.column_names - %w[id created_at updated_at summary_en]
+      expect(shown - VideoGameDetail::SHOW_ORDER).to be_empty
+    end
+  end
 end

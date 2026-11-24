@@ -20,7 +20,7 @@ Décidé le 2026-11-23. Le design web sera repris tel quel dans l'appli native :
       en anglais), libellé « Set » des cartes.
       Jeux vidéo à 100 % : [x] messages d'erreur en français ; [x] scan sur iPhone (lecteur de secours, testé
       dans Firefox Android, jamais sur un vrai iPhone) ; [x] jaquette en tête de fiche (recadrée au centre ; idée : jaquette entière sur fond flouté) ;
-      [ ] ordre des champs de la fiche ; [ ] fiche rafraîchie après traduction ; [ ] résumés manquants.
+      [x] ordre des champs de la fiche ; [ ] fiche rafraîchie après traduction ; [ ] résumés manquants.
 - [ ] **Liste de souhaits** (voir Priorité 1).
 - [ ] **Scan en rafale** (voir Priorité 1).
 - [x] **Finitions** : textes en français et pluriels (2026-11-23) ; plus de ✕ ni de rouge pour « incomplet »,
