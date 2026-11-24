@@ -218,4 +218,35 @@ RSpec.describe "Items", type: :request do
       expect(figurine.reload.title).to eq("Pikachu Pop!")
     end
   end
+
+  describe "GET fiche : image d'en-tête" do
+    let(:games) { collection_of("video_games") }
+    let(:diamant) { create(:product, igdb_id: 1560, details: { "cover_image_id" => "co1zht" }) }
+    let(:cover_url) { "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1zht.jpg" }
+
+    def header_html
+      Nokogiri::HTML(response.body).at_css("h1").ancestors("div.rounded-3xl").first.to_html
+    end
+
+    it "jeu sans photo relié au catalogue : sa jaquette IGDB (grand format), voile sombre et texte blanc" do
+      item = Item.create!(title: "Pokémon Diamant", collection: games, product: diamant, item_detailable: VideoGameDetail.create!)
+      get collection_item_path(games, item)
+      expect(header_html).to include("background-image: url('#{cover_url}')", "bg-black opacity-40", "text-white")
+    end
+
+    it "avec photo : la photo passe avant la jaquette" do
+      item = Item.create!(title: "Pokémon Diamant", collection: games, product: diamant, item_detailable: VideoGameDetail.create!)
+      item.images.attach(io: File.open(Rails.root.join("spec/fixtures/files/figurine.jpg")), filename: "photo.jpg", content_type: "image/jpeg")
+      get collection_item_path(games, item)
+      expect(header_html).to include("background-image", "/rails/active_storage/")
+      expect(header_html).not_to include("images.igdb.com")
+    end
+
+    it "sans photo ni jaquette (livre) : fond coloré du type, sans image" do
+      item = create(:item, collection: collection_of("books"))
+      get collection_item_path(item.collection, item)
+      expect(header_html).not_to include("background-image", "text-white")
+      expect(header_html).to include("bg-emerald-50")
+    end
+  end
 end

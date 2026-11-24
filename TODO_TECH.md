@@ -14,8 +14,12 @@ Dernière mise à jour : 2026-11-23
 
 ## Technique des fonctionnalités (voir TODO_FEATURES.md)
 
-- [ ] **Scan sur iPhone** : bibliothèque de lecture en secours quand `BarcodeDetector` est absent (ZXing par exemple),
-      dans les trois contrôleurs Stimulus de scan ; vérifier aussi `playsinline` / `muted` sur la balise `<video>`.
+- [x] **Scan sur iPhone** : `barcode-detector` 3.2.3 + moteur ZXing (zxing-wasm 3.1.6), copiés dans `vendor/javascript`
+      et `public/zxing`, module commun `app/javascript/lib/barcode_scanner.js` (2026-11-24).
+- [ ] **Surveiller `barcode-detector` et `zxing-wasm`** : copiés à la main, `bin/importmap audit` ne les voit pas.
+      Mise à jour : télécharger les deux paquets npm (versions assorties, voir la dépendance de barcode-detector),
+      recopier `dist/es/ponyfill.js` (modifier son import) et `dist/es/zxing-exported.js`, renommer le `.wasm` avec la
+      version et changer `ZXING_WASM_URL` ; vérifier l'empreinte (`ZXING_WASM_SHA256`) ; lancer spec/system/barcode_scanner_spec.rb.
 - [ ] **Scan en rafale** : file de codes côté navigateur, `BarcodeService.lookup` pour chacun, écran de vérification.
 - [ ] **Doublons** : s'appuyer sur `items.product_id` (même œuvre) et `items.barcode` (même édition).
 - [ ] **Séries incomplètes** : numéro de tome et série à lire dans les notices BnF (zones 225 / 461), ou Wikidata.

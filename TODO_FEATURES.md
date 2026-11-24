@@ -18,7 +18,8 @@ Décidé le 2026-11-23. Le design web sera repris tel quel dans l'appli native :
       À reprendre pour les autres types : ordre des champs sur les fiches, champs fantômes (état des cartes, édition
       limitée des figurines), formats en texte libre (films, musique), recherche Discogs (titre avec l'artiste, format
       en anglais), libellé « Set » des cartes.
-      Jeux vidéo à 100 % : [x] messages d'erreur en français ; [ ] scan sur iPhone ; [ ] jaquette en tête de fiche ;
+      Jeux vidéo à 100 % : [x] messages d'erreur en français ; [x] scan sur iPhone (lecteur de secours, testé
+      dans Firefox Android, jamais sur un vrai iPhone) ; [x] jaquette en tête de fiche (recadrée au centre ; idée : jaquette entière sur fond flouté) ;
       [ ] ordre des champs de la fiche ; [ ] fiche rafraîchie après traduction ; [ ] résumés manquants.
 - [ ] **Liste de souhaits** (voir Priorité 1).
 - [ ] **Scan en rafale** (voir Priorité 1).
@@ -30,7 +31,8 @@ Décidé le 2026-11-23. Le design web sera repris tel quel dans l'appli native :
       RESTE : couvertures de livres (aucune source libre trouvée : écrire à servicepro@bnf.fr ?), n° de tome des livres.
 - [ ] **Préparation au natif** : un titre par page, en-tête et barre d'onglets masquables dans l'appli, plus d'`alert()`,
       zones protégées de l'écran (encoche).
-- [ ] **Scan sur iPhone** (voir Priorité 1).
+- [x] **Scan sur iPhone** (2026-11-24) : lecteur de secours ZXing quand le navigateur n'en a pas. Même chemin que
+      Firefox (testé sur Android : caméra OK). RESTE : un essai sur un vrai iPhone dès que possible.
 - [ ] **Identité** : icône de l'appli, logo, couleur principale (nécessaires pour les stores).
 
 ## Priorité 1

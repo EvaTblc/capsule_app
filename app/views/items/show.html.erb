@@ -2,23 +2,23 @@
 
   <% style = Item::ITEM_TYPE_STYLES[@item.item_detailable_type] %>
   <% icon = Item::TYPE_TO_ICON[@item.item_detailable_type] %>
+  <% header_image = @item.images.attached? ? url_for(@item.images.first) : item_cover_url(@item, size: :cover_big_2x) %>
+<div class="rounded-3xl mb-4 flex flex-col justify-end relative overflow-hidden <%= header_image ? 'h-48' : style + ' p-6' %>"
+     style="<%= header_image ? "background-image: url('#{header_image}'); background-size: cover; background-position: center;" : "" %>">
 
-<div class="rounded-3xl mb-4 flex flex-col justify-end relative overflow-hidden <%= @item.images.attached? ? 'h-48' : style + ' p-6' %>"
-     style="<%= @item.images.attached? ? "background-image: url('#{url_for(@item.images.first)}'); background-size: cover; background-position: center;" : "" %>">
-
-  <% if @item.images.attached? %>
+  <% if header_image %>
     <div class="absolute inset-0 bg-black opacity-40 rounded-3xl"></div>
   <% end %>
 
-  <div class="relative z-10 <%= @item.images.attached? ? 'p-6' : '' %> h-full flex flex-col justify-between">
+  <div class="relative z-10 <%= header_image ? 'p-6' : '' %> h-full flex flex-col justify-between">
     <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm">
       <%= render "collections/icons/#{icon}" %>
     </div>
     <div class="flex flex-col gap-1">
-      <p class="text-xs font-semibold uppercase tracking-widest <%= @item.images.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= item_type_label(@item.item_type) %></p>
-      <p class="text-xs <%= @item.images.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @item.condition %></p>
+      <p class="text-xs font-semibold uppercase tracking-widest <%= header_image ? 'text-white opacity-75' : 'text-gray-400' %>"><%= item_type_label(@item.item_type) %></p>
+      <p class="text-xs <%= header_image ? 'text-white opacity-75' : 'text-gray-400' %>"><%= @item.condition %></p>
       <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-black tracking-tight <%= @item.images.attached? ? 'text-white' : '' %>"><%= @item.title %></h1>
+        <h1 class="text-3xl font-black tracking-tight <%= header_image ? 'text-white' : '' %>"><%= @item.title %></h1>
         <% if @member %>
         <%= link_to edit_collection_item_path(@collection, @item), class: "w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0" do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -27,8 +27,6 @@
         <% end %>
         <% end %>
       </div>
-      <% link_color = @item.images.attached? ? 'text-white opacity-75' : 'text-gray-400' %>
-
     </div>
   </div>
 </div>
