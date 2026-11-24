@@ -72,16 +72,17 @@
       <% elsif key == "completed" %>
         <div class="flex justify-between items-center border-b border-gray-50 pb-2">
           <p class="text-xs font-semibold text-gray-400 uppercase"><%= t("show.#{@item.item_type.underscore}.#{key}", default: key.humanize) %></p>
+          <%# « Oui » mis en valeur, « Non » neutre : un jeu incomplet n'est pas une erreur %>
           <% if value == true %>
-            <svg width="28" height="28" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="24" cy="24" r="21" stroke="#7C3AED" stroke-width="2"/>
-              <path d="M14 24L21 31L34 17" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <span class="flex items-center gap-1.5 text-sm font-semibold text-purple-700">
+              <svg class="w-5 h-5" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                <circle cx="24" cy="24" r="21" stroke="currentColor" stroke-width="2.5"/>
+                <path d="M14 24L21 31L34 17" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Oui
+            </span>
           <% else %>
-            <svg width="28" height="28" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="24" cy="24" r="21" stroke="#EF4444" stroke-width="2"/>
-              <path d="M16 16L32 32M32 16L16 32" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round"/>
-            </svg>
+            <span class="text-sm font-medium text-gray-500">Non</span>
           <% end %>
         </div>
 

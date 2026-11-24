@@ -198,8 +198,8 @@
                 <p class="text-sm font-black text-purple-600"><%= completed %></p>
                 <p class="text-xs text-gray-400">Complets</p>
               </div>
-              <div class="flex-1 bg-red-50 rounded-xl px-3 py-3 text-center">
-                <p class="text-sm font-black text-red-400"><%= incomplete %></p>
+              <div class="flex-1 bg-gray-50 rounded-xl px-3 py-3 text-center">
+                <p class="text-sm font-black text-gray-600"><%= incomplete %></p>
                 <p class="text-xs text-gray-400">Incomplets</p>
               </div>
               <% platforms = collection.items.map { |i| i.item_detailable.try(:platform) }.compact.uniq.count %>

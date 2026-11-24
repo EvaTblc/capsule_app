@@ -14,8 +14,9 @@ Décidé le 2026-11-23. Le design web sera repris tel quel dans l'appli native :
       société) : ajout, recherche, scan quand il existe, fiche, modification.
 - [ ] **Liste de souhaits** (voir Priorité 1).
 - [ ] **Scan en rafale** (voir Priorité 1).
-- [ ] **Finitions** : textes en français et pluriels (fait le 2026-11-23) ; ✕ rouge trompeur dans les listes,
-      icône de « Mon Carnet », largeur maximale sur ordinateur.
+- [x] **Finitions** : textes en français et pluriels (2026-11-23) ; plus de ✕ ni de rouge pour « incomplet »,
+      icône de carnet pour « Mon Carnet », onglet de la page en cours signalé (2026-11-24). Largeur maximale sur
+      ordinateur : reportée, à décider à la fin de la v1 avec le passage en natif.
 - [x] **Montrer les objets** (2026-11-23) : grille ou liste au choix, vignette par type quand il n'y a pas de photo
       (tranche, boîtier, pochette…), jaquettes IGDB des jeux, filtres rapides, tri, recherche sans accents.
       RESTE : couvertures de livres (aucune source libre trouvée : écrire à servicepro@bnf.fr ?), n° de tome des livres.
