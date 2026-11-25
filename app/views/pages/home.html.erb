@@ -1,13 +1,15 @@
 <% content_for :entry_footer do %>
-  <%= link_to "Crédits", credits_path, class: "relative mt-6 py-2 font-sans text-xs text-[#6b6478] hover:text-purple-800" %>
+  <%= link_to "Crédits", credits_path, class: "self-center mb-6 py-2 text-xs text-gray-500 hover:text-purple-800" %>
 <% end %>
 
-<%= render layout: "shared/entry", locals: { tagline: "Jeux, BD, vinyles, figurines… toute ta collec' au même endroit." } do %>
-  <h1 class="text-[27px] font-extrabold leading-tight">Ta collec' dans ta poche</h1>
-  <p class="font-sans text-sm text-[#3b3450]">Range, retrouve et partage tout ce que tu collectionnes.</p>
+<%= render layout: "shared/entry" do %>
+  <h1 class="text-[32px] font-extrabold tracking-tight leading-[1.05]">Toute ta collec',<br>au même endroit.</h1>
+  <p class="text-[15px] text-stone-600">Jeux, BD, vinyles, figurines : range, retrouve et partage tout ce que tu collectionnes.</p>
 
-  <%= link_to "Connexion", new_user_session_path, class: "#{entry_button_class} mt-1 flex items-center justify-center" %>
-  <p class="mt-1 text-center text-[15px] font-semibold text-[#3b3450]">
-    Nouveau ici ? <%= link_to "Crée ta capsule", new_user_registration_path, class: entry_link_class %>
+  <%= link_to new_user_session_path, class: "#{entry_button_class} mt-2" do %>
+    <%= entry_button_content("Connexion") %>
+  <% end %>
+  <p class="mt-1 text-center text-sm text-stone-600">
+    Nouveau ici&nbsp;? <%= link_to "Crée ta capsule", new_user_registration_path, class: entry_link_class %>
   </p>
 <% end %>

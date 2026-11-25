@@ -1,31 +1,26 @@
-<%= render layout: "shared/entry", locals: { tagline: "Jeux, BD, vinyles, figurines… toute ta collec' au même endroit." } do %>
-  <h1 class="text-[27px] font-extrabold leading-tight">On reprend la collec' ?</h1>
+<%= render layout: "shared/entry", locals: { tagline: "Jeux, BD, vinyles, figurines : toute ta collec'." } do %>
+  <h1 class="text-[28px] font-extrabold tracking-tight leading-tight">On reprend la collec'&nbsp;?</h1>
 
   <%= render "devise/shared/google_button" %>
 
-  <%= form_with(model: resource, as: resource_name, url: session_path(resource_name), local: true, class: "flex flex-col gap-3") do |f| %>
-    <label class="<%= entry_field_class %>">
-      <span class="<%= entry_label_class %>">E-mail</span>
+  <%= form_with(model: resource, as: resource_name, url: session_path(resource_name), local: true, class: "flex flex-col gap-3.5") do |f| %>
+    <div>
+      <%= f.label :email, "E-mail", class: entry_label_class %>
       <%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "toi@exemple.fr", class: entry_input_class %>
-    </label>
-
-    <%= render "devise/shared/password_field", f: f, field: :password, label: "Mot de passe", autocomplete: "current-password" %>
-
-    <div class="flex items-center justify-between gap-2 font-sans">
-      <label class="flex items-center gap-2 min-h-10 text-[13px] font-semibold text-[#3b3450] whitespace-nowrap">
-        <%= f.check_box :remember_me, checked: true, class: "w-[18px] h-[18px] accent-purple-700" %>
-        Rester connecté
-      </label>
-      <%= link_to "Mot de passe oublié ?", new_user_password_path, class: "text-[13px] py-2.5 whitespace-nowrap #{entry_link_class}" %>
     </div>
 
-    <%= f.button type: "submit", class: "#{entry_button_class} mt-1 flex items-center justify-center gap-2" do %>
-      Ouvrir ma capsule
-      <svg aria-hidden="true" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-    <% end %>
+    <%= render "devise/shared/password_field", f: f, field: :password, label: "Mot de passe", autocomplete: "current-password",
+               hint: link_to("Oublié ?", new_user_password_path, class: entry_link_class) %>
+
+    <label class="flex items-center gap-2 min-h-10 text-sm text-stone-700">
+      <%= f.check_box :remember_me, checked: true, class: "w-[18px] h-[18px] accent-purple-700" %>
+      Rester connecté
+    </label>
+
+    <%= entry_submit(f, "Ouvrir ma capsule") %>
   <% end %>
 
-  <p class="mt-2 text-center text-[15px] font-semibold text-[#3b3450]">
-    Nouveau ici ? <%= link_to "Crée ta capsule", new_user_registration_path, class: entry_link_class %>
+  <p class="mt-1 text-center text-sm text-stone-600">
+    Nouveau ici&nbsp;? <%= link_to "Crée ta capsule", new_user_registration_path, class: entry_link_class %>
   </p>
 <% end %>

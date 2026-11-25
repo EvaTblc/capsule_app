@@ -1,25 +1,25 @@
-<%= render layout: "shared/entry", locals: { tagline: "Jeux, BD, vinyles, figurines… toute ta collec' au même endroit." } do %>
-  <h1 class="text-[27px] font-extrabold leading-tight">Crée ta capsule</h1>
+<%= render layout: "shared/entry", locals: { tagline: "Jeux, BD, vinyles, figurines : toute ta collec'." } do %>
+  <h1 class="text-[28px] font-extrabold tracking-tight leading-tight">Crée ta capsule</h1>
 
   <%= render "devise/shared/google_button" %>
 
-  <%= form_with(model: resource, as: resource_name, url: registration_path(resource_name), local: true, class: "flex flex-col gap-3") do |f| %>
+  <%= form_with(model: resource, as: resource_name, url: registration_path(resource_name), local: true, class: "flex flex-col gap-3.5") do |f| %>
     <%= render "shared/form_errors", record: resource %>
 
-    <label class="<%= entry_field_class %>">
-      <span class="<%= entry_label_class %>">E-mail</span>
+    <div>
+      <%= f.label :email, "E-mail", class: entry_label_class %>
       <%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "toi@exemple.fr", class: entry_input_class %>
-    </label>
+    </div>
 
     <%= render "devise/shared/password_field", f: f, field: :password, label: "Mot de passe", autocomplete: "new-password",
                hint: ("#{@minimum_password_length} caractères minimum" if @minimum_password_length) %>
     <%= render "devise/shared/password_field", f: f, field: :password_confirmation, label: "Confirme le mot de passe",
                autocomplete: "new-password" %>
 
-    <%= f.submit "Créer mon compte", class: "#{entry_button_class} mt-1" %>
+    <%= entry_submit(f, "Créer mon compte") %>
   <% end %>
 
-  <p class="mt-2 text-center text-[15px] font-semibold text-[#3b3450]">
-    Déjà un compte ? <%= link_to "Se connecter", new_user_session_path, class: entry_link_class %>
+  <p class="mt-1 text-center text-sm text-stone-600">
+    Déjà un compte&nbsp;? <%= link_to "Se connecter", new_user_session_path, class: entry_link_class %>
   </p>
 <% end %>

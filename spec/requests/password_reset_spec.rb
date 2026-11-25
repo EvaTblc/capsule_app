@@ -47,7 +47,7 @@ RSpec.describe "Pages du mot de passe oublié", type: :request do
 
   it "la page de demande est en français, dans le style de la connexion" do
     get new_user_password_path
-    expect(response.body).to include("Mot de passe oublié ? Pas de panique.", "Recevoir le lien", "Se connecter")
+    expect(response.body).to include("Mot de passe oublié&nbsp;? Pas de panique.", "Recevoir le lien", "Se connecter")
     expect(response.body).not_to include("Forgot your password?")
   end
 

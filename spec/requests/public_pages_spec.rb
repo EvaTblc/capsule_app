@@ -57,7 +57,7 @@ RSpec.describe "Pages publiques", type: :request do
   describe "inscription" do
     it "est en français, dans le style de la connexion" do
       get new_user_registration_path
-      expect(response.body).to include("Créer mon compte", "Continuer avec Google", "Déjà un compte ?")
+      expect(response.body).to include("Créer mon compte", "Continuer avec Google", "Déjà un compte&nbsp;?")
       expect(response.body).not_to include("Sign up")
     end
 

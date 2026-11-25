@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
-/* Identité Capsule (logo, écrans d'entrée) : police ronde, encre presque noire, fond lilas */
+/* Identité Capsule : police ronde du logo (seulement le mot « capsule »), encre, fond blanc cassé chaud, lilas */
 @theme {
   --font-display: "Baloo 2", system-ui, sans-serif;
   --color-ink: #1e1b2e;
-  --color-lilac: #efe6ff;
+  --color-paper: #faf9f7;
+  --color-lilac: #ede9fe;
 }
 
 @utility line-clamp-3 {

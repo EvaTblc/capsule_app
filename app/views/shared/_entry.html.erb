@@ -1,19 +1,21 @@
-<%# Cadre des écrans d'entrée : fond lilas à pois, autocollants d'objets de collection, logo, puis la carte du formulaire.
+<%# Cadre des écrans d'entrée : bloc lilas avec le logo, puis le contenu de l'écran sur fond blanc cassé.
     Usage : render layout: "shared/entry", locals: { tagline: "…" } do … end %>
 <% tagline = local_assigns.fetch(:tagline, nil) %>
-<div class="relative min-h-dvh overflow-x-hidden bg-lilac font-display text-ink">
-  <div aria-hidden="true" class="absolute inset-0 bg-[radial-gradient(#d8c4fb_1.5px,transparent_1.5px)] bg-size-[18px_18px]"></div>
+<div class="min-h-dvh bg-paper text-ink">
+  <div class="mx-auto w-full max-w-sm flex flex-col">
+    <div class="relative mx-4 mt-4 h-[250px] rounded-[32px] bg-lilac overflow-hidden flex flex-col items-center justify-center gap-1">
+      <%# Deux capsules en fond, rappel de la forme du logo %>
+      <div aria-hidden="true" class="absolute w-[280px] h-[120px] rounded-full bg-purple-200/60 -rotate-[14deg] top-9 -left-[70px]"></div>
+      <div aria-hidden="true" class="absolute w-[200px] h-[90px] rounded-full bg-purple-200/60 -rotate-[14deg] bottom-2 -right-14"></div>
 
-  <div class="relative mx-auto w-full max-w-sm px-4 pt-[74px] pb-8 flex flex-col items-center">
-    <%= render "shared/entry_stickers" %>
+      <%= image_tag "logo.svg", alt: "", class: "relative w-[92px] h-[92px] -rotate-[8deg]" %>
+      <p class="relative font-display text-[44px] font-extrabold leading-[0.9]">capsule</p>
+      <% if tagline %>
+        <p class="relative mt-1.5 px-4 text-[13px] font-medium text-[#4c3d6b] text-center"><%= tagline %></p>
+      <% end %>
+    </div>
 
-    <%= image_tag "logo.svg", alt: "", class: "relative w-[104px] h-[104px] -rotate-[8deg]" %>
-    <p class="relative text-[50px] font-extrabold leading-[0.9] mt-0.5 tracking-[-0.01em]">capsule</p>
-    <% if tagline %>
-      <p class="relative mt-2 text-base font-semibold text-[#4c3d6b] text-center"><%= tagline %></p>
-    <% end %>
-
-    <div class="relative mt-7 w-full bg-white border-[2.5px] border-ink rounded-[26px] shadow-[6px_6px_0_var(--color-ink)] px-5 pt-5 pb-5 flex flex-col gap-3">
+    <div class="px-6 pt-6 pb-5 flex flex-col gap-3.5">
       <%= yield %>
     </div>
     <%= content_for(:entry_footer) %>

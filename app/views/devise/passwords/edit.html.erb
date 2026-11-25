@@ -1,7 +1,7 @@
 <%= render layout: "shared/entry" do %>
-  <h1 class="text-[27px] font-extrabold leading-tight">Choisis ton nouveau mot de passe</h1>
+  <h1 class="text-[28px] font-extrabold tracking-tight leading-tight">Choisis ton nouveau mot de passe</h1>
 
-  <%= form_with(model: resource, as: resource_name, url: password_path(resource_name), method: :put, local: true, class: "flex flex-col gap-3") do |f| %>
+  <%= form_with(model: resource, as: resource_name, url: password_path(resource_name), method: :put, local: true, class: "flex flex-col gap-3.5") do |f| %>
     <%= render "shared/form_errors", record: resource %>
     <%= f.hidden_field :reset_password_token %>
 
@@ -10,10 +10,10 @@
     <%= render "devise/shared/password_field", f: f, field: :password_confirmation, label: "Confirme le mot de passe",
                autocomplete: "new-password" %>
 
-    <%= f.submit "Enregistrer mon mot de passe", class: "#{entry_button_class} mt-1" %>
+    <%= entry_submit(f, "Enregistrer mon mot de passe") %>
   <% end %>
 
-  <p class="mt-2 text-center text-[15px] font-semibold text-[#3b3450]">
+  <p class="mt-1 text-center text-sm text-stone-600">
     <%= link_to "Retour à la connexion", new_user_session_path, class: entry_link_class %>
   </p>
 <% end %>

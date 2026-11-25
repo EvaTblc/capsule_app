@@ -1,19 +1,29 @@
-# Écrans d'entrée (accueil, connexion, inscription, mot de passe) : style « autocollants » de l'identité Capsule
-# (contours encre, ombres franches). Classes communes, pour que les formulaires restent identiques d'un écran à l'autre
+# Écrans d'entrée (accueil, connexion, inscription, mot de passe) : style « Pilule » de l'identité Capsule
+# (fond blanc cassé, champs arrondis, boutons en forme de capsule). Classes communes, pour que les formulaires restent
+# identiques d'un écran à l'autre
 module EntryHelper
-  ENTRY_FIELD = "block border-[2.5px] border-ink rounded-[14px] bg-[#faf7ff] px-3.5 pt-1.5 pb-1 " \
-                "focus-within:border-purple-700 focus-within:ring-2 focus-within:ring-purple-300".freeze
-  ENTRY_LABEL = "block text-xs font-extrabold text-purple-800 leading-tight".freeze
-  ENTRY_INPUT = "block w-full h-[28px] border-0 bg-transparent p-0 font-sans text-base text-ink " \
-                "placeholder:text-[#6b6478] focus:outline-none focus:ring-0".freeze
-  ENTRY_BUTTON = "w-full h-14 border-[2.5px] border-ink rounded-2xl bg-purple-700 text-white text-[19px] font-extrabold " \
-                 "shadow-[4px_4px_0_var(--color-ink)] cursor-pointer transition-transform " \
-                 "active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0_var(--color-ink)]".freeze
-  ENTRY_LINK = "font-extrabold text-purple-800 hover:text-purple-950".freeze
+  ENTRY_LABEL = "block mb-1.5 px-1 text-[13px] font-semibold text-stone-700".freeze
+  ENTRY_INPUT = "block w-full h-[50px] rounded-2xl border-[1.5px] border-stone-200 bg-white px-4 text-base text-ink " \
+                "placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200".freeze
+  ENTRY_BUTTON = "w-full h-14 rounded-full bg-ink text-white text-[17px] font-bold cursor-pointer hover:bg-black " \
+                 "flex items-center justify-center gap-2.5".freeze
+  ENTRY_LINK = "font-bold text-ink underline-offset-2 hover:text-purple-800 hover:underline".freeze
 
-  def entry_field_class = ENTRY_FIELD
+  ARROW = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" ' \
+          'stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'.html_safe.freeze
+
   def entry_label_class = ENTRY_LABEL
   def entry_input_class = ENTRY_INPUT
   def entry_button_class = ENTRY_BUTTON
   def entry_link_class = ENTRY_LINK
+
+  # Texte du bouton principal, suivi de la pastille violette à flèche (signature des boutons Capsule)
+  def entry_button_content(label)
+    safe_join([ label, tag.span(ARROW, aria: { hidden: true },
+                                class: "w-[30px] h-[30px] rounded-full bg-purple-700 flex items-center justify-center") ])
+  end
+
+  def entry_submit(form, label)
+    form.button(type: "submit", class: entry_button_class) { entry_button_content(label) }
+  end
 end
