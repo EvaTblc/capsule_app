@@ -121,7 +121,6 @@ RSpec.describe "API de recherche", type: :request do
       box = create(:barcode_product, raw_title: raw_title, source: source, **box_attributes)
       allow(BarcodeService).to receive(:lookup).with("123", kind: :game).and_return(box)
       allow(BarcodeService).to receive(:product_details).with(raw_title, kind: :game).and_return(names: names, platform: nil, edition: nil)
-      allow(TranslationService).to receive(:translate_batch) { |texts| texts }
       get "/api/search/game_barcode", params: { ean: "123" }
       box
     end
@@ -192,6 +191,13 @@ RSpec.describe "API de recherche", type: :request do
       expect(json["name"]).to eq("Professeur Layton et l'Appel du Spectre")
     end
 
+    it "résumé renvoyé en anglais, sans attendre Claude : il est traduit en arrière-plan après l'enregistrement" do
+      allow(IgdbService).to receive(:search).and_return([ { "id" => 1, "name" => "Zelda", "summary" => "An epic adventure" } ])
+      expect(TranslationService).not_to receive(:translate_batch)
+      scan("Zelda - Nintendo Switch", [ "Zelda" ])
+      expect(json["summary"]).to eq("An epic adventure")
+    end
+
     it "IGDB indisponible : 503" do
       allow(IgdbService).to receive(:search).and_return(nil)
       scan("Zelda - Nintendo Switch", [ "Zelda" ])
@@ -202,9 +208,8 @@ RSpec.describe "API de recherche", type: :request do
       allow(BarcodeService).to receive(:lookup).and_return(create(:barcode_product, source: "upcitemdb", raw_title: "Zelda - Nintendo Switch"))
       allow(BarcodeService).to receive(:product_details).and_raise(BarcodeService::Error, "API surchargée")
       expect(IgdbService).to receive(:search).with("Zelda", limit: 3).and_return([ game ])
-      allow(TranslationService).to receive(:translate_batch).and_return([ "Un jeu" ])
       get "/api/search/game_barcode", params: { ean: "123" }
-      expect(json).to include("name" => "Zelda", "summary" => "Un jeu", "platforms" => "Switch",
+      expect(json).to include("name" => "Zelda", "summary" => "A game", "platforms" => "Switch",
                               "release_date" => 2017, "cover_url" => "https://img/t_cover_big/x.jpg")
       expect(json["metadata"]).to include("release_date" => "2017-03-03", "genres" => "RPG")
     end

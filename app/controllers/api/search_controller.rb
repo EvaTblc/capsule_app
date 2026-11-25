@@ -36,15 +36,8 @@ class Api::SearchController < ApplicationController
     end
     return render json: { error: "Jeu non trouvé", fallback: true }, status: :not_found unless game
 
-    summary = begin
-      TranslationService.translate_batch([ game["summary"].to_s ]).first
-    rescue TranslationService::Error => e
-      Rails.logger.warn("[game_barcode] Traduction impossible, résumé laissé en anglais : #{e.message}")
-      game["summary"]
-    end
-
     # La boîte dit sur quelle plateforme est le jeu possédé, et son édition ; le code-barres est gardé avec l'item
-    json = igdb_game_json(game, summary: summary)
+    json = igdb_game_json(game, summary: game["summary"])
     render json: json.merge(platform: box.platform || json[:platform], edition: box.edition, barcode: box.barcode)
   end
 

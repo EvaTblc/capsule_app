@@ -267,6 +267,19 @@
             <div data-games-search-target="results"
                 class="hidden z-20 w-full bg-white border border-gray-100 rounded-xl shadow-lg max-h-48 overflow-y-auto"></div>
           </div>
+        <%# Scan en rafale : UPCitemdb, payant au-delà de l'essai → verrouillé pour un compte free %>
+        <% if current_user.paid_features? %>
+          <button type="button" data-game-pile-target="scanButton" data-action="game-pile#startScan"
+                  class="w-full border border-purple-300 text-purple-700 py-3 rounded-xl font-semibold text-sm mb-4">
+            📷 Scanner des boîtes
+          </button>
+          <div data-game-pile-target="scanner" class="hidden mb-4">
+            <%# playsinline + muted : sans eux, l'iPhone ouvre la vidéo en plein écran ou ne la lance pas %>
+            <video data-game-pile-target="video" class="w-full h-48 object-cover rounded-xl bg-black" playsinline muted autoplay></video>
+            <button type="button" data-action="game-pile#stopScan"
+                    class="w-full mt-2 text-sm font-semibold text-gray-600">Terminer le scan</button>
+          </div>
+        <% end %>
       </div>
     </div>
   <% end %>

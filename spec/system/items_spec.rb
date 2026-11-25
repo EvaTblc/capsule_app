@@ -132,6 +132,69 @@ RSpec.describe "Items (navigateur)", type: :system do
       expect(games.items.count).to eq(2)
     end
 
+    describe "scan en rafale" do
+      let!(:box) { create(:barcode_product, barcode: "0045496420246", raw_title: "Zelda Switch", platform: "Switch", edition: "Collector") }
+
+      before do
+        allow(BarcodeService).to receive(:lookup) { |ean, kind:| box if ean == box.barcode }
+        allow(BarcodeService).to receive(:names_for).and_return([ "The Legend of Zelda" ])
+      end
+
+      # Code lu par la caméra : remplacé ici par un appel direct (pas de caméra dans le navigateur de test)
+      def scan(code)
+        page.execute_script(<<~JS, code)
+          Stimulus.getControllerForElementAndIdentifier(document.querySelector("[data-controller~='game-pile']"), "game-pile").scan(arguments[0])
+        JS
+      end
+
+      it "boîte scannée : la ligne se remplit (plateforme de la boîte), puis l'envoi garde le code-barres et l'édition" do
+        open_pile
+        scan(box.barcode)
+
+        expect(pile).to have_content("The Legend of Zelda")
+        expect(pile.find("select").value).to eq("Switch")
+        click_on "Ajouter le jeu"
+
+        expect(page).to have_no_css("[data-game-pile-target='list'] div")
+        item = games.items.last
+        expect(item).to have_attributes(title: "The Legend of Zelda", barcode: box.barcode)
+        expect(item.item_detailable).to have_attributes(platform: "Switch", edition: "Collector")
+        expect(box.reload.product).to eq(item.product) # boîte confirmée pour les prochains scans
+      end
+
+      it "code introuvable : ligne en rouge avec la raison, ignorée à l'envoi (les autres jeux partent)" do
+        open_pile
+        choose_game("Zelda", "The Legend of Zelda")
+        scan("123")
+
+        expect(pile).to have_css("div.text-red-600", text: "Jeu introuvable pour ce code")
+        click_on "Ajouter les 2 jeux"
+
+        expect(pile).to have_no_content("The Legend of Zelda")
+        expect(pile).to have_css("div.text-red-600", text: "Code 123")
+        expect(games.items.count).to eq(1)
+      end
+
+      it "recherche interrompue par la fermeture du panneau : relancée à la réouverture ; envoi bloqué pendant la recherche" do
+        visit collection_path(games)
+        page.execute_script("localStorage.setItem('game-pile-#{games.id}', JSON.stringify([ { barcode: '#{box.barcode}', searching: true } ]))")
+        allow(BarcodeService).to receive(:lookup) { sleep 1; box } # recherche lente : on voit la ligne en attente
+        visit collection_path(games)
+        find("[data-action='click->quick-add#open']").click
+
+        expect(pile).to have_content("Recherche du code #{box.barcode}")
+        expect(find("[data-game-pile-target='submit']")).to be_disabled
+        expect(pile).to have_content("The Legend of Zelda")
+        expect(find("[data-game-pile-target='submit']")).not_to be_disabled
+      end
+
+      it "compte free : pas de bouton de scan" do
+        user.update!(role: "free")
+        open_pile
+        expect(page).to have_no_button("Scanner des boîtes")
+      end
+    end
+
     it "envoi refusé par le serveur : le jeu reste dans la pile, en rouge, avec la raison du refus" do
       open_pile
       choose_game("Zelda", "The Legend of Zelda")

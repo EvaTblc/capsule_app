@@ -33,11 +33,13 @@ export function barcodeDetectorClass() {
 }
 
 export default class BarcodeScanner {
-  // onDetect(code) : un code lu (le scanner est déjà arrêté) ; onError(message) : message à afficher, scanner arrêté
-  constructor(video, { onDetect, onError }) {
+  // onDetect(code) : un code lu (scanner arrêté, sauf en mode continu : il continue de lire)
+  // onError(message) : message à afficher, scanner arrêté
+  constructor(video, { onDetect, onError, continuous = false }) {
     this.video = video
     this.onDetect = onDetect
     this.onError = onError
+    this.continuous = continuous
   }
 
   async start() {
@@ -73,9 +75,15 @@ export default class BarcodeScanner {
       const codes = await this.detector.detect(this.video)
       if (this.running && codes.length > 0) {
         const code = codes[0].rawValue
-        this.stop()
-        this.onDetect(code)
-        return
+        if (!this.continuous) {
+          this.stop()
+          this.onDetect(code)
+          return
+        }
+        const now = Date.now()
+        if (code !== this.lastCode || now - this.lastSeen > 3000) this.onDetect(code)
+        this.lastCode = code
+        this.lastSeen = now
       }
     } catch (e) { /* image pas encore prête : on réessaie */ }
     this.timer = setTimeout(() => this.tick(), 250)
