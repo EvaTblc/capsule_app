@@ -24,21 +24,12 @@ class ItemsController < ApplicationController
 
     if save_item
       if quick_add?
-        # Ajout rapide : on reste dans le panneau pour enchaîner les jeux
-        render turbo_stream: [
-          turbo_stream.prepend("quick-add-list", partial: "items/quick_add_message",
-                                                 locals: { message: "✓ #{@item.title}", error: false }),
-          turbo_stream.replace("quick-add-form", helpers.tag.form(id: "quick-add-form"))
-        ]
+        render json: { id: @item.id }, status: :created
       else
-        # Formulaire complet : direction la fiche du nouvel item
         redirect_to collection_item_path(@collection, @item), notice: "Item ajouté !"
       end
     elsif quick_add?
-      # Le message s'affiche dans le panneau, le formulaire reste rempli
-      render turbo_stream: turbo_stream.prepend("quick-add-list", partial: "items/quick_add_message",
-                                                                  locals: { message: @item.errors.map(&:message).join(" · "), error: true }),
-             status: :unprocessable_entity
+      render json: { error: @item.errors.map(&:message).join(" · ") }, status: :unprocessable_entity
     else
       render :new, status: :unprocessable_entity
     end
@@ -104,8 +95,6 @@ class ItemsController < ApplicationController
     params.require(:item).permit(:title, :description, :acquired_at, :condition, :barcode, :comment, images: [])
   end
 
-  # Turbo envoie les deux formulaires avec le même en-tête Accept (Turbo Stream accepté) :
-  # c'est le champ caché du panneau d'ajout rapide qui permet de choisir la bonne réponse
   def quick_add?
     params[:quick_add].present?
   end

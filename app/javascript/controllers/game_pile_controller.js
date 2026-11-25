@@ -62,7 +62,13 @@ export default class extends Controller {
       remove.textContent = "✕"
       remove.type = "button"
       line.className = "flex items-center justify-between text-sm"
-      if (game.error) line.classList.add("text-red-600")
+      if (game.error) {
+        line.classList.add("text-red-600")
+        const errorMessage = document.createElement("p")
+        errorMessage.className = "text-xs"
+        errorMessage.textContent = game.error
+        line.appendChild(errorMessage)
+      }
       this.listTarget.appendChild(line)
       remove.addEventListener("click", () => {
         this.games.splice(index, 1)
@@ -85,7 +91,8 @@ export default class extends Controller {
         this.ownedValue = owned
         this.games = this.games.filter(other => other !== game)
       } else {
-        game.error = true
+        const data = await response?.json().catch(() => null)
+        game.error = data?.error || "Pas ajouté : vérifie ta connexion et réessaie."
       }
       this.save()
       this.render()

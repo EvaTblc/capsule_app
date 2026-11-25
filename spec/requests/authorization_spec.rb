@@ -110,12 +110,12 @@ RSpec.describe "Autorisations", type: :request do
       expect(response).to have_http_status(400)
     end
 
-    it "le titre de l'ajout rapide est échappé (XSS)" do
-      post collection_items_path(collection), as: :turbo_stream, params: {
-        quick_add: "1", item: { title: "<img src=x onerror=alert(1)>", item_type: "BookDetail" }, book_detail: { description: "x" }
+    it "pile d'ajout : la réponse est du JSON, jamais du HTML (rien d'interprété par le navigateur)" do
+      post collection_items_path(collection), params: {
+        quick_add: "1", item: { title: "", item_type: "BookDetail" }, book_detail: { description: "<img src=x onerror=alert(1)>" }
       }
-      expect(response.body).to include("&lt;img src=x")
-      expect(response.body).not_to include("<img src=x")
+      expect(response.media_type).to eq("application/json")
+      expect(response.body).not_to include("<img")
     end
   end
 end

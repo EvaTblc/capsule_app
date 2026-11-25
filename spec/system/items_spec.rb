@@ -68,7 +68,8 @@ RSpec.describe "Items (navigateur)", type: :system do
       open_pile
       choose_game("Zelda", "The Legend of Zelda")
 
-      # Jeu sorti sur une seule plateforme : elle est déjà choisie
+      # Champ vidé pour chercher le jeu suivant ; jeu sorti sur une seule plateforme : elle est déjà choisie
+      expect(find_field(placeholder: "Rechercher un jeu...").value).to eq("")
       expect(pile.find("select").value).to eq("Switch")
       click_on "Ajouter le jeu"
 
@@ -131,13 +132,17 @@ RSpec.describe "Items (navigateur)", type: :system do
       expect(games.items.count).to eq(2)
     end
 
-    it "envoi refusé par le serveur : le jeu reste dans la pile, en rouge" do
+    it "envoi refusé par le serveur : le jeu reste dans la pile, en rouge, avec la raison du refus" do
       open_pile
       choose_game("Zelda", "The Legend of Zelda")
-      allow_any_instance_of(ItemSaver).to receive(:save).and_return(false)
+      allow_any_instance_of(ItemSaver).to receive(:save) do |saver|
+        saver.item.errors.add(:base, "Plateforme inconnue")
+        false
+      end
       click_on "Ajouter le jeu"
 
       expect(pile).to have_css("div.text-red-600", text: "The Legend of Zelda")
+      expect(pile).to have_css("div.text-red-600 p", text: "Plateforme inconnue")
       expect(games.items).to be_empty
     end
   end

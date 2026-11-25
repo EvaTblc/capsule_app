@@ -3,7 +3,8 @@ import BarcodeScanner from "lib/barcode_scanner"
 
 export default class extends Controller {
   static targets = ["query", "results", "platform", "genre", "releaseDate", "developer", "edition", "barcode", "igdbId", "description", "scanner", "title", "platformList"]
-
+  static values = { clearAfterChoice: Boolean }
+  
   connect() {
     this.closeResults = (e) => {
       if (!this.element.contains(e.target)) {
@@ -168,5 +169,9 @@ export default class extends Controller {
 
     this.resultsTarget.classList.add("hidden")
     this.dispatch("chosen", { detail: game })
+    if (this.clearAfterChoiceValue) {
+      this.queryTarget.value = ""
+      this.queryTarget.focus()
+    }
   }
 }
