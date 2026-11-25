@@ -111,12 +111,16 @@ class BnfService
   # Désignation du support (200$b), quand l'en-tête ne suffit pas
   DESIGNATIONS = { "Ressource électronique" => "game", "Images animées" => "movie", "Texte imprimé" => "book" }.freeze
 
-  # Type de produit : 7e caractère de l'en-tête. Notices anciennes à l'en-tête incomplet (« \s\s\s\s\sa\s\s\s\s22… ») :
-  # le type est décalé d'un caractère. En dernier recours, la désignation du support (200$b)
+  # Type de produit : 7e caractère de l'en-tête. Notices à l'en-tête incomplet (« \s\s\s\s\sa\s\s\s\s22… »), livres
+  # anciens comme jeux récents : ce « a » ne dit rien du type. On regarde alors les zones codées propres au support
+  # (135 : ressource électronique, 115 : vidéo), puis la désignation du support (200$b), et le « a » en dernier recours
   def self.kind(record)
     leader = record.at_xpath("mxc:leader", NS)&.text.to_s
-    type = leader[6].to_s.strip.presence || leader[5].to_s.strip
-    KINDS[type] || DESIGNATIONS[subfield(record, "200", "b")]
+    return KINDS[leader[6]] if KINDS.key?(leader[6])
+    return "game" if record.at_xpath("mxc:datafield[@tag='135']", NS)
+    return "movie" if record.at_xpath("mxc:datafield[@tag='115']", NS)
+
+    DESIGNATIONS[subfield(record, "200", "b")] || KINDS[leader[5].to_s.strip]
   end
 
   # ISBN à 10 chiffres d'un EAN de livre en 978 (9782070360024 → 2070360024), nil sinon.

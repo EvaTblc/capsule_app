@@ -55,6 +55,12 @@ RSpec.describe BnfService do
                                                                      creators: hash_including("070" => [ "Albert Camus" ]))
   end
 
+  it "jeu récent à l'en-tête incomplet (Mario Kart 8 Deluxe, 2026) : reconnu comme jeu par sa zone 135, et non comme livre" do
+    bnf_returns("mario_kart_en_tete_incomplet")
+    expect(described_class.find_by_ean("0045496420246")).to include(kind: "game", title: "Mario Kart 8 Deluxe",
+                                                                     support: "1 cartouche informatique")
+  end
+
   describe "requête" do
     it "cherche le code sous ses deux formes (12 et 13 chiffres), en EAN et en ISBN" do
       expect(http).to receive(:get)
