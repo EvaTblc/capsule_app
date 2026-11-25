@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="fr">
   <head>
-    <title><%= content_for(:title) || "Capsule App" %></title>
+    <title><%= content_for(:title) || "Capsule" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Capsule App">
+    <meta name="application-name" content="Capsule">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -32,14 +32,17 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-icon-180x180.png">
     <link rel="msapplication-TileImage" content="/assets/ms-icon-144x144.png">
 
+    <%# Logo vectoriel (navigateurs récents), sinon les PNG ci-dessus et favicon.ico %>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="apple-touch-icon" href="/favicon.ico">
     <%= render 'shared/ios_pwa_links' %>
 
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 
     <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%# Logo vectoriel (navigateurs récents), sinon les PNG ci-dessus et favicon.ico %>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "application" %>
@@ -50,7 +53,10 @@
     <% if user_signed_in? %>
       <% upcoming_reminders = current_user.events.where(reminder: true).where(date: Date.today..7.days.from_now.to_date).count %>
       <header class="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 flex justify-between items-center px-4 h-14 z-20">
-        <a href="/" class="text-xl font-black tracking-tight">Capsule</a>
+        <a href="/" class="flex items-center gap-1.5 font-display text-2xl font-extrabold leading-none text-ink">
+          <%= image_tag "logo-mark.svg", alt: "", class: "w-7 h-7 -rotate-[8deg]" %>
+          capsule
+        </a>
         <div class="flex items-center gap-2" data-controller="avatar">
           <% if upcoming_reminders > 0 %>
             <% upcoming_events = current_user.events.where(reminder: true).where(date: Date.today..7.days.from_now.to_date) %>

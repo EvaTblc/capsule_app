@@ -1,9 +1,10 @@
 require "rails_helper"
 
-# Ton de Capsule : « vous » sur les pages publiques (avant connexion), « tu » une fois dans l'appli.
-# Les messages de Devise, affichés des deux côtés, restent neutres.
+# Ton de Capsule : « tu » partout, écrans d'entrée compris (accueil, connexion, inscription, mot de passe).
+# Les messages de Devise, affichés avant et après connexion, et la page des crédits restent neutres.
 RSpec.describe "Pages publiques", type: :request do
   TUTOIEMENT = /\b(tu|ton|ta|tes|toi|te)\b|\b\w+-toi\b/i
+  VOUVOIEMENT = /\b(vous|votre|vos)\b|\b\w+-vous\b/i
 
   def visible_text(html) = Nokogiri::HTML(html).css("body").text
 
@@ -11,14 +12,23 @@ RSpec.describe "Pages publiques", type: :request do
     "accueil" => "/",
     "connexion" => "/users/sign_in",
     "inscription" => "/users/sign_up",
-    "mot de passe oublié" => "/users/password/new",
-    "crédits" => "/credits"
+    "mot de passe oublié" => "/users/password/new"
   }.each do |name, path|
-    it "#{name} : vouvoiement, aucun tutoiement" do
+    it "#{name} : tutoiement, aucun vouvoiement ; identité Capsule (logo, police servie par l'appli)" do
       get path
       expect(response).to have_http_status(200)
-      expect(visible_text(response.body)).not_to match(TUTOIEMENT)
+      text = visible_text(response.body)
+      expect(text).to match(TUTOIEMENT)
+      expect(text).not_to match(VOUVOIEMENT)
+      expect(response.body).to include("logo-").and include("capsule")
+      expect(response.body).not_to include("fonts.googleapis.com", "fonts.gstatic.com") # aucune IP de visiteur envoyée à Google
     end
+  end
+
+  it "crédits : tournures neutres, ni tu ni vous" do
+    get credits_path
+    expect(visible_text(response.body)).not_to match(TUTOIEMENT)
+    expect(visible_text(response.body)).not_to match(VOUVOIEMENT)
   end
 
   it "les messages de Devise sont neutres (ni tu, ni forme genrée)" do
@@ -32,7 +42,7 @@ RSpec.describe "Pages publiques", type: :request do
       get credits_path
       expect(response.body).to include("credits/tmdb", # logo TMDB obligatoire
                                        "This product uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.",
-                                       "IGDB.com", "catalogue général de la BnF", "Discogs", "UPCitemdb", "EAN-DB", "OpenStreetMap", "Anthropic")
+                                       "IGDB.com", "catalogue général de la BnF", "Discogs", "UPCitemdb", "EAN-DB", "OpenStreetMap", "Anthropic", "Baloo 2", "SIL Open Font License")
     end
 
     it "est accessible depuis l'accueil et depuis le profil" do

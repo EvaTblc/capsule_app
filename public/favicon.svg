@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Capsule">
+  <circle cx="54" cy="54" r="38" fill="#1e1b2e"/>
+  <path d="M12 50a38 38 0 0 1 76 0z" fill="#7e22ce" stroke="#1e1b2e" stroke-width="5"/>
+  <path d="M12 50a38 38 0 0 0 76 0z" fill="#ffffff" stroke="#1e1b2e" stroke-width="5"/>
+  <rect x="8" y="45" width="84" height="10" rx="5" fill="#1e1b2e"/>
+</svg>

@@ -1,52 +1,31 @@
-<div class="min-h-screen flex flex-col items-center justify-center bg-white px-14">
-  <div class="w-full max-w-xs">
+<%= render layout: "shared/entry", locals: { tagline: "Jeux, BD, vinyles, figurines… toute ta collec' au même endroit." } do %>
+  <h1 class="text-[27px] font-extrabold leading-tight">On reprend la collec' ?</h1>
 
-    <div class="text-center mb-10">
-      <h1 class="text-7xl font-black tracking-tight text-gray-900 mb-4">Capsule</h1>
-      <p class="text-sm text-gray-500">Vos collections dans votre poche.</p>
+  <%= render "devise/shared/google_button" %>
+
+  <%= form_with(model: resource, as: resource_name, url: session_path(resource_name), local: true, class: "flex flex-col gap-3") do |f| %>
+    <label class="<%= entry_field_class %>">
+      <span class="<%= entry_label_class %>">E-mail</span>
+      <%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "toi@exemple.fr", class: entry_input_class %>
+    </label>
+
+    <%= render "devise/shared/password_field", f: f, field: :password, label: "Mot de passe", autocomplete: "current-password" %>
+
+    <div class="flex items-center justify-between gap-2 font-sans">
+      <label class="flex items-center gap-2 min-h-10 text-[13px] font-semibold text-[#3b3450] whitespace-nowrap">
+        <%= f.check_box :remember_me, checked: true, class: "w-[18px] h-[18px] accent-purple-700" %>
+        Rester connecté
+      </label>
+      <%= link_to "Mot de passe oublié ?", new_user_password_path, class: "text-[13px] py-2.5 whitespace-nowrap #{entry_link_class}" %>
     </div>
 
-    <%= render "devise/shared/google_button" %>
-    </div>
-
-    <%= form_with(model: resource, as: resource_name, url: session_path(resource_name), local: true) do |f| %>
-      <div class="space-y-4">
-        <div>
-          <%= f.label :email, "Email", class: "block text-xs font-medium text-gray-700 mb-1.5" %>
-          <%= f.email_field :email,
-              autofocus: true,
-              autocomplete: "email",
-              placeholder: "vous@exemple.fr",
-              class: "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow" %>
-        </div>
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <%= f.label :password, "Mot de passe", class: "block text-xs font-medium text-gray-700" %>
-            <%= link_to "Mot de passe oublié ?", new_user_password_path,
-                class: "text-xs text-purple-600 hover:text-purple-700 transition-colors" %>
-          </div>
-          <%= f.password_field :password,
-              autocomplete: "current-password",
-              placeholder: "••••••••",
-              class: "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow" %>
-        </div>
-        <div class="flex items-center gap-2">
-          <%= f.check_box :remember_me, checked: true, class: "rounded border-gray-300 text-purple-600 focus:ring-purple-500" %>
-          <%= f.label :remember_me, "Rester connecté" %>
-        </div>
-      </div>
-
-      <div class="mt-6">
-        <%= f.submit "Se connecter",
-            class: "w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm transition-colors cursor-pointer" %>
-      </div>
+    <%= f.button type: "submit", class: "#{entry_button_class} mt-1 flex items-center justify-center gap-2" do %>
+      Ouvrir ma capsule
+      <svg aria-hidden="true" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     <% end %>
+  <% end %>
 
-    <p class="mt-6 text-center text-sm text-gray-500">
-      Pas encore de compte ?
-      <%= link_to "Créer un compte", new_user_registration_path,
-          class: "text-purple-600 hover:text-purple-700 font-medium transition-colors" %>
-    </p>
-
-  </div>
-</div>
+  <p class="mt-2 text-center text-[15px] font-semibold text-[#3b3450]">
+    Nouveau ici ? <%= link_to "Crée ta capsule", new_user_registration_path, class: entry_link_class %>
+  </p>
+<% end %>

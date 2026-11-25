@@ -10,6 +10,15 @@
  */
 @import url("https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css");
 
+/* Baloo 2 (SIL Open Font License, voir fonts/baloo-2-OFL.txt) : servie par l'appli, jamais par Google Fonts
+   (aucune adresse IP de visiteur envoyée à Google). Police du logo et des titres des écrans d'entrée */
+@font-face {
+  font-family: "Baloo 2";
+  src: url("baloo-2-latin.woff2") format("woff2");
+  font-weight: 400 800;
+  font-display: swap;
+}
+
  .btn-vinted {
     background-color: white;
     color: #007782;

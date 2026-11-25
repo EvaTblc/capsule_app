@@ -23,11 +23,30 @@ RSpec.describe "Interface (navigateur)", type: :system do
     end
   end
 
+  describe "écrans d'entrée" do
+    it "connexion : le bouton œil affiche puis masque le mot de passe, la police du logo est chargée" do
+      visit new_user_session_path
+      field = find_field("user_password")
+      expect(field[:type]).to eq("password")
+
+      find("button[aria-label='Afficher le mot de passe']").click
+      expect(field[:type]).to eq("text")
+      find("button[aria-label='Masquer le mot de passe']").click
+      expect(field[:type]).to eq("password")
+
+      # Police servie par l'appli (la CSP refuserait Google Fonts) : réellement chargée par le navigateur
+      expect(page.evaluate_async_script(<<~JS)).to be(true)
+        const done = arguments[0]
+        document.fonts.load("800 50px 'Baloo 2'").then(fonts => done(fonts.length > 0))
+      JS
+    end
+  end
+
   describe "mot de passe oublié" do
     it "la demande affiche la confirmation en français" do
       create(:user, email: "eva@example.com")
       visit new_user_password_path
-      fill_in "Email", with: "eva@example.com"
+      fill_in "E-mail", with: "eva@example.com"
       click_on "Recevoir le lien"
 
       expect(page).to have_css("[data-controller='flash']", text: "va arriver dans quelques minutes")

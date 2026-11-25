@@ -64,7 +64,7 @@ RSpec.describe "Pages du mot de passe oublié", type: :request do
 
     it "est en français" do
       get edit_user_password_path(reset_password_token: token)
-      expect(response.body).to include("Choisissez votre nouveau mot de passe.", "Nouveau mot de passe", "6 caractères minimum")
+      expect(response.body).to include("Choisis ton nouveau mot de passe", "Nouveau mot de passe", "6 caractères minimum")
     end
 
     it "affiche les erreurs (mot de passe trop court, confirmation différente)" do
