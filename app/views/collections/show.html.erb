@@ -244,42 +244,73 @@
     <%# Panel %>
     <div data-quick-add-target="panel" class="hidden fixed inset-0 z-50 flex flex-col justify-end">
       <div class="absolute inset-0 bg-black opacity-40" data-action="click->quick-add#close"></div>
-      <div class="relative bg-white rounded-t-3xl p-6 pb-10 z-10 overflow-y-auto max-h-[80vh]" data-controller="games-search game-pile" data-action="games-search:chosen->game-pile#add"
+      <div class="relative bg-white rounded-t-3xl flex flex-col h-[90vh]" data-controller="games-search game-pile" data-action="games-search:chosen->game-pile#add"
       data-game-pile-collection-value="<%= @collection.id %>"
       data-game-pile-platforms-value="<%= VideoGameDetail::PLATFORMS.to_json%>"
       data-game-pile-url-value="<%= collection_items_path(@collection) %>"
       data-game-pile-owned-value="<%= owned_games(@collection).to_json %>"
       data-games-search-clear-after-choice-value="true">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between px-5 pt-4 pb-3">
           <h2 class="text-lg font-black">Ajouter des jeux</h2>
           <button data-action="click->quick-add#close" class="text-gray-400 text-xl">✕</button>
         </div>
-
-        <div data-game-pile-target="list" class="flex flex-col gap-2 mb-4"></div>
-        <button type="button" data-game-pile-target="submit" data-action="game-pile#submit"
-        class="hidden w-full bg-purple-600 text-white py-3 rounded-xl font-semibold text-sm mb-4"></button>
-
-          <div class="relative">
+        <%# Recherche par titre et bouton scan, côte à côte ; la caméra prend leur place pendant un scan %>
+        <div data-game-pile-target="searchRow" class="flex gap-2 px-5">
+          <div class="relative flex-1 min-w-0">
             <input data-games-search-target="query"
                   data-action="input->games-search#search"
-                  placeholder="Rechercher un jeu..."
-                  class="w-full border border-purple-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400">
+                  placeholder="Titre du jeu…"
+                  class="w-full h-12 border border-purple-300 rounded-xl px-4 text-sm focus:outline-none focus:border-purple-400">
             <div data-games-search-target="results"
-                class="hidden z-20 w-full bg-white border border-gray-100 rounded-xl shadow-lg max-h-48 overflow-y-auto"></div>
+                class="hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg max-h-64 overflow-y-auto"></div>
           </div>
-        <%# Scan en rafale : UPCitemdb, payant au-delà de l'essai → verrouillé pour un compte free %>
+          <%# Scan en rafale : UPCitemdb, payant au-delà de l'essai → réservé aux comptes premium %>
+          <% if current_user.paid_features? %>
+            <button type="button" data-action="game-pile#startScan" aria-label="Scanner des boîtes"
+                    class="w-12 h-12 shrink-0 bg-purple-600 text-white rounded-xl flex items-center justify-center">
+              <svg aria-hidden="true" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2M8 8v8M11 8v8M14 8v8M17 8v8"/>
+              </svg>
+            </button>
+          <% end %>
+        </div>
+
         <% if current_user.paid_features? %>
-          <button type="button" data-game-pile-target="scanButton" data-action="game-pile#startScan"
-                  class="w-full border border-purple-300 text-purple-700 py-3 rounded-xl font-semibold text-sm mb-4">
-            📷 Scanner des boîtes
-          </button>
-          <div data-game-pile-target="scanner" class="hidden mb-4">
-            <%# playsinline + muted : sans eux, l'iPhone ouvre la vidéo en plein écran ou ne la lance pas %>
-            <video data-game-pile-target="video" class="w-full h-48 object-cover rounded-xl bg-black" playsinline muted autoplay></video>
-            <button type="button" data-action="game-pile#stopScan"
-                    class="w-full mt-2 text-sm font-semibold text-gray-600">Terminer le scan</button>
+          <%# Pendant un scan, la caméra prend la place de la recherche : cadre de visée, dernier jeu trouvé, « Terminer » %>
+          <div data-game-pile-target="scanner" class="hidden px-5">
+            <div class="relative h-[210px] rounded-2xl overflow-hidden bg-gray-800">
+              <%# playsinline + muted : sans eux, l'iPhone ouvre la vidéo en plein écran ou ne la lance pas %>
+              <video data-game-pile-target="video" class="absolute inset-0 w-full h-full object-cover" playsinline muted autoplay></video>
+              <div aria-hidden="true" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="w-[230px] h-[100px] border-[3px] border-white rounded-[14px] shadow-[0_0_0_999px_rgba(0,0,0,0.35)]"></div>
+              </div>
+              <p class="absolute top-3 inset-x-0 text-center text-white text-[13px] font-semibold">Vise le code-barres, boîte après boîte</p>
+              <div class="absolute bottom-3 inset-x-3 flex items-center gap-2">
+                <span data-game-pile-target="lastFound" aria-live="polite"
+                      class="hidden min-w-0 truncate h-8 leading-8 px-3 rounded-full bg-white text-green-800 text-[13px] font-bold"></span>
+                <button type="button" data-action="game-pile#stopScan"
+                        class="ml-auto shrink-0 h-9 px-3.5 rounded-full bg-white/90 text-gray-900 text-[13px] font-bold">Terminer</button>
+              </div>
+            </div>
           </div>
         <% end %>
+
+        <div class="flex items-center justify-between px-5 pt-4 pb-1 min-h-11">
+          <p class="text-[13px] font-bold text-gray-700">Ta pile</p>
+          <% if current_user.paid_features? %>
+            <%# Pendant un scan : revenir à la recherche par titre %>
+            <button type="button" data-game-pile-target="typeButton" data-action="game-pile#typeTitle"
+                    class="hidden h-10 text-purple-700 text-[13px] font-bold">Taper un titre</button>
+          <% end %>
+        </div>
+        <div data-game-pile-target="list" class="flex-1 min-h-0 overflow-y-auto px-5"></div>
+
+        <div class="px-5 pt-3 pb-7 border-t border-gray-100">
+          <button type="button" data-game-pile-target="submit" data-action="game-pile#submit"
+                  class="hidden w-full h-12 bg-purple-600 text-white rounded-xl font-semibold text-sm disabled:bg-purple-200 disabled:text-purple-800"></button>
+          <%# Pourquoi le bouton est grisé, ou quels jeux ne partiront pas %>
+          <p data-game-pile-target="summary" aria-live="polite" class="mt-1.5 text-xs text-gray-500 text-center empty:hidden"></p>
+        </div>
       </div>
     </div>
   <% end %>

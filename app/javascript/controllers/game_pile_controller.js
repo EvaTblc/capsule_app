@@ -3,7 +3,7 @@ import BarcodeScanner from "lib/barcode_scanner"
 
 // Connects to data-controller="game-pile"
 export default class extends Controller {
-  static targets = ["list", "submit", "scanButton", "scanner", "video"]
+  static targets = ["list", "submit", "scanner", "video", "searchRow", "lastFound", "typeButton", "summary"]
   static values = { collection: Number, platforms: Array, url: String, owned: Object }
 
   get storageKey() {
@@ -49,6 +49,10 @@ export default class extends Controller {
     delete game.searching
     if (response?.ok && data) {
       Object.assign(game, data)
+      if (this.hasLastFoundTarget) {
+        this.lastFoundTarget.textContent = `✓ ${game.name}`
+        this.lastFoundTarget.classList.remove("hidden")
+      }
     } else if (response?.status === 429) {
       game.error = "Trop de scans d'un coup : attends une minute, retire ce code et rescanne la boîte."
     } else if (data?.other_kind) {
@@ -66,9 +70,10 @@ export default class extends Controller {
     this.scanner?.stop()
   }
 
-  async startScan() {
+  startScan() {
+    this.searchRowTarget.classList.add("hidden")
     this.scannerTarget.classList.remove("hidden")
-    this.scanButtonTarget.classList.add("hidden")
+    this.typeButtonTarget.classList.remove("hidden")
     // Caméra et lecture du code : module commun (lecteur du navigateur, sinon lecteur de secours pour iPhone)
     this.scanner = new BarcodeScanner(this.videoTarget, {
       continuous: true,
@@ -85,54 +90,99 @@ export default class extends Controller {
 
   stopScan() {
     this.scannerTarget.classList.add("hidden")
-    this.scanButtonTarget.classList.remove("hidden")
+    this.lastFoundTarget.classList.add("hidden")
+    this.searchRowTarget.classList.remove("hidden")
+    this.typeButtonTarget.classList.add("hidden")
     this.scanner?.stop()
+  }
+
+  // « Taper un titre » pendant un scan : retour à la recherche, curseur dans le champ
+  typeTitle() {
+    this.stopScan()
+    this.element.querySelector("[data-games-search-target='query']").focus()
   }
 
   render() {
     this.listTarget.innerHTML = ""
     this.games.forEach((game, index) => {
       const line = document.createElement("div")
-      const remove = document.createElement("button")
-      line.textContent = game.name || (game.searching ? `Recherche du code ${game.barcode}…` : `Code ${game.barcode}`)
-      const select = document.createElement("select")
-      select.add(new Option("Plateforme ?", ""))
-      const choices = game.app_platforms?.length ? game.app_platforms : this.platformsValue
-      choices.forEach(platform => select.add(new Option(platform, platform)))
-      select.value = game.platform || ""
-      select.addEventListener("change", () => {
-        game.platform = select.value
-        this.save()
-        this.render()
-      })
-      line.appendChild(select)
+      line.className = "flex gap-3 py-2.5 border-b border-gray-100 items-start"
+
+      // Jaquette d'IGDB si on la connaît, sinon un emplacement gris
+      const cover = document.createElement(game.cover_url ? "img" : "div")
+      if (game.cover_url) {
+        cover.src = game.cover_url
+        cover.alt = ""
+      }
+      cover.className = "w-10 h-[54px] rounded-md bg-gray-100 object-cover shrink-0"
+      line.appendChild(cover)
+
+      // Colonne du milieu : titre, réglages, messages
+      const body = document.createElement("div")
+      body.className = "flex-1 min-w-0 flex flex-col gap-1.5"
+      line.appendChild(body)
+
+      const title = document.createElement("p")
+      title.className = "text-[15px] font-semibold truncate"
+      title.textContent = game.name || (game.searching ? `Recherche du code ${game.barcode}…` : `Code ${game.barcode}`)
+      body.appendChild(title)
+
+      // Réglages du jeu (seulement s'il a un nom : rien à régler sur « Recherche… » ou un code introuvable)
+      if (game.name) {
+        const settings = document.createElement("div")
+        settings.className = "flex items-center justify-between gap-2"
+
+        // Plateforme à gauche : en violet tant qu'elle n'est pas choisie
+        const select = document.createElement("select")
+        select.className = `h-[30px] rounded-full border px-2.5 text-[13px] ${game.platform ? "border-gray-200 bg-white text-gray-700" : "border-purple-500 bg-purple-50 text-purple-800 font-semibold"}`
+        select.add(new Option("Plateforme ?", ""))
+        const choices = game.app_platforms?.length ? game.app_platforms : this.platformsValue
+        choices.forEach(platform => select.add(new Option(platform, platform)))
+        select.value = game.platform || ""
+        select.addEventListener("change", () => {
+          game.platform = select.value
+          this.save()
+          this.render()
+        })
+        settings.appendChild(select)
+
+        // « Complet » à droite
+        const label = document.createElement("label")
+        label.className = "flex items-center gap-2 text-[13px] text-gray-700"
+        label.textContent = "Complet"
+        const checkbox = document.createElement("input")
+        checkbox.type = "checkbox"
+        checkbox.setAttribute("role", "switch")
+        checkbox.className = "appearance-none w-9 h-[22px] rounded-full bg-gray-300 relative cursor-pointer transition-colors checked:bg-purple-700 before:content-[''] before:absolute before:top-[3px] before:left-[3px] before:w-4 before:h-4 before:rounded-full before:bg-white before:transition-transform checked:before:translate-x-[14px]"
+        checkbox.checked = game.completed || false
+        checkbox.addEventListener("change", () => {
+          game.completed = checkbox.checked
+          this.save()
+        })
+        label.appendChild(checkbox)
+        settings.appendChild(label)
+
+        body.appendChild(settings)
+      }
+
+      // Sous les réglages : même jeu, même plateforme, déjà dans la collection
       const owned = this.ownedValue[game.id] || []
       if (game.platform && owned.includes(game.platform)) {
         const warning = document.createElement("p")
-        warning.className = "text-xs text-amber-600"
+        warning.className = "text-xs text-amber-700"
         warning.textContent = `Déjà dans ta collection sur ${game.platform}`
-        line.appendChild(warning)
+        body.appendChild(warning)
       }
-      const label = document.createElement("label")
-      label.textContent = "Complet"
-      const checkbox = document.createElement("input")
-      checkbox.type = "checkbox"
-      checkbox.checked = game.completed || false
-      label.appendChild(checkbox)
-      line.appendChild(label)
-      checkbox.addEventListener("change", () => {
-        game.completed = checkbox.checked
-        this.save()
-      })
+
+      const remove = document.createElement("button")
       remove.textContent = "✕"
       remove.type = "button"
-      line.className = "flex items-center justify-between text-sm"
       if (game.error) {
         line.classList.add("text-red-600")
         const errorMessage = document.createElement("p")
         errorMessage.className = "text-xs"
         errorMessage.textContent = game.error
-        line.appendChild(errorMessage)
+        body.appendChild(errorMessage)
       }
       this.listTarget.appendChild(line)
       remove.addEventListener("click", () => {
@@ -142,9 +192,18 @@ export default class extends Controller {
       })
       line.appendChild(remove)
     })
-    this.submitTarget.textContent = this.games.length <= 1 ? "Ajouter le jeu" : `Ajouter les ${this.games.length} jeux`
+    // Seuls les jeux trouvés partent ; les autres sont expliqués sous le bouton
+    const ready = this.games.filter(game => game.name).length
+    const searching = this.games.filter(game => game.searching).length
+    const missing = this.games.filter(game => !game.name && !game.searching).length
+
+    this.submitTarget.textContent = ready <= 1 ? "Ajouter le jeu" : `Ajouter les ${ready} jeux`
     this.submitTarget.classList.toggle("hidden", this.games.length === 0)
-    this.submitTarget.disabled = this.games.some(game => game.searching) || this.sending
+    this.submitTarget.disabled = ready === 0 || searching > 0 || this.sending
+    this.summaryTarget.textContent = [
+      searching > 0 && (searching === 1 ? "1 recherche en cours" : `${searching} recherches en cours`),
+      missing > 0 && (missing === 1 ? "1 code introuvable ne sera pas ajouté" : `${missing} codes introuvables ne seront pas ajoutés`)
+    ].filter(Boolean).join(" · ")
   }
 
   async submit() {

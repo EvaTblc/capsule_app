@@ -58,7 +58,7 @@ RSpec.describe "Items (navigateur)", type: :system do
     end
 
     def choose_game(query, name)
-      fill_in placeholder: "Rechercher un jeu...", with: query
+      fill_in placeholder: "Titre du jeu…", with: query
       find("[data-games-search-target='results'] div", text: name).click
     end
 
@@ -69,7 +69,7 @@ RSpec.describe "Items (navigateur)", type: :system do
       choose_game("Zelda", "The Legend of Zelda")
 
       # Champ vidé pour chercher le jeu suivant ; jeu sorti sur une seule plateforme : elle est déjà choisie
-      expect(find_field(placeholder: "Rechercher un jeu...").value).to eq("")
+      expect(find_field(placeholder: "Titre du jeu…").value).to eq("")
       expect(pile.find("select").value).to eq("Switch")
       click_on "Ajouter le jeu"
 
@@ -90,7 +90,7 @@ RSpec.describe "Items (navigateur)", type: :system do
       choose_game("Zelda", "The Legend of Zelda")
       choose_game("Hades", "Hades")
 
-      hades = pile.find("div", text: "Hades")
+      hades = pile.find(":scope > div", text: "Hades") # la ligne du jeu (elle contient d'autres div)
       expect(hades.all("select option").map(&:value)).to eq([ "", "PS5", "Xbox Series" ])
       hades.find("select").select("PS5")
       hades.check("Complet")
@@ -100,6 +100,25 @@ RSpec.describe "Items (navigateur)", type: :system do
       details = games.items.reload.to_h { |item| [ item.title, item.item_detailable ] }
       expect(details["Hades"]).to have_attributes(platform: "PS5", completed: true)
       expect(details["The Legend of Zelda"]).to have_attributes(platform: "Switch", completed: false)
+    end
+
+    it "pile longue : seule la liste défile, le bouton d'envoi reste visible en bas de l'écran" do
+      visit collection_path(games)
+      long_pile = Array.new(30) { |i| { id: i + 1, name: "Jeu #{i + 1}", platform: "Switch" } }
+      page.execute_script("localStorage.setItem('game-pile-#{games.id}', #{long_pile.to_json.to_json})")
+      visit collection_path(games)
+      find("[data-action='click->quick-add#open']").click
+
+      expect(page).to have_button("Ajouter les 30 jeux")
+      list_scrolls, button_visible = page.evaluate_script(<<~JS)
+        (() => {
+          const list = document.querySelector("[data-game-pile-target='list']")
+          const button = document.querySelector("[data-game-pile-target='submit']").getBoundingClientRect()
+          return [ list.scrollHeight > list.clientHeight, button.bottom <= window.innerHeight ]
+        })()
+      JS
+      expect(list_scrolls).to be(true)
+      expect(button_visible).to be(true)
     end
 
     it "la pile est gardée par le navigateur : fermer le panneau ne la perd pas, ✕ retire un jeu" do
@@ -162,13 +181,15 @@ RSpec.describe "Items (navigateur)", type: :system do
         expect(box.reload.product).to eq(item.product) # boîte confirmée pour les prochains scans
       end
 
-      it "code introuvable : ligne en rouge avec la raison, ignorée à l'envoi (les autres jeux partent)" do
+      it "code introuvable : ligne en rouge avec la raison, ni comptée ni envoyée (les autres jeux partent)" do
         open_pile
-        choose_game("Zelda", "The Legend of Zelda")
         scan("123")
-
         expect(pile).to have_css("div.text-red-600", text: "Jeu introuvable pour ce code")
-        click_on "Ajouter les 2 jeux"
+        expect(find("[data-game-pile-target='submit']")).to be_disabled # rien à envoyer
+
+        choose_game("Zelda", "The Legend of Zelda")
+        expect(page).to have_css("[data-game-pile-target='summary']", text: "1 code introuvable ne sera pas ajouté")
+        click_on "Ajouter le jeu"
 
         expect(pile).to have_no_content("The Legend of Zelda")
         expect(pile).to have_css("div.text-red-600", text: "Code 123")
@@ -184,8 +205,33 @@ RSpec.describe "Items (navigateur)", type: :system do
 
         expect(pile).to have_content("Recherche du code #{box.barcode}")
         expect(find("[data-game-pile-target='submit']")).to be_disabled
+        expect(page).to have_css("[data-game-pile-target='summary']", text: "1 recherche en cours")
         expect(pile).to have_content("The Legend of Zelda")
         expect(find("[data-game-pile-target='submit']")).not_to be_disabled
+        expect(page).to have_no_css("[data-game-pile-target='summary']") # phrase vide : cachée
+      end
+
+      it "la caméra prend la place de la recherche, avec le dernier jeu trouvé ; « Terminer » et « Taper un titre » y ramènent" do
+        open_pile
+        # Fausse caméra : le navigateur de test n'en a pas
+        page.execute_script("navigator.mediaDevices.getUserMedia = async () => new MediaStream()")
+        search = "[data-game-pile-target='searchRow']"
+        find("button[aria-label='Scanner des boîtes']").click
+
+        expect(page).to have_css("[data-game-pile-target='scanner']", visible: true)
+        expect(page).to have_css(search, visible: :hidden)
+        scan(box.barcode)
+        expect(page).to have_css("[data-game-pile-target='lastFound']", text: "✓ The Legend of Zelda")
+
+        click_on "Terminer"
+        expect(page).to have_css(search, visible: true)
+        expect(page).to have_css("[data-game-pile-target='scanner']", visible: :hidden)
+        expect(page).to have_no_css("[data-game-pile-target='lastFound']")
+
+        find("button[aria-label='Scanner des boîtes']").click
+        click_on "Taper un titre"
+        expect(page).to have_css(search, visible: true)
+        expect(page.evaluate_script("document.activeElement.placeholder")).to eq("Titre du jeu…")
       end
 
       it "compte free : pas de bouton de scan" do
