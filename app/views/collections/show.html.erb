@@ -244,25 +244,19 @@
     <%# Panel %>
     <div data-quick-add-target="panel" class="hidden fixed inset-0 z-50 flex flex-col justify-end">
       <div class="absolute inset-0 bg-black opacity-40" data-action="click->quick-add#close"></div>
-      <div class="relative bg-white rounded-t-3xl p-6 pb-10 z-10 overflow-y-auto max-h-[80vh]" data-controller="games-search">
+      <div class="relative bg-white rounded-t-3xl p-6 pb-10 z-10 overflow-y-auto max-h-[80vh]" data-controller="games-search game-pile" data-action="games-search:chosen->game-pile#add"
+      data-game-pile-collection-value="<%= @collection.id %>"
+      data-game-pile-platforms-value="<%= VideoGameDetail::PLATFORMS.to_json%>"
+      data-game-pile-url-value="<%= collection_items_path(@collection) %>"
+      data-game-pile-owned-value="<%= owned_games(@collection).to_json %>">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-black">Saisie rapide</h2>
+          <h2 class="text-lg font-black">Ajouter des jeux</h2>
           <button data-action="click->quick-add#close" class="text-gray-400 text-xl">✕</button>
         </div>
 
-        <div id="quick-add-list" class="flex flex-col gap-2 mb-4"></div>
-
-        <%= form_with url: collection_items_path(@collection),
-            data: { action: "turbo:submit-end->quick-add#resetForm" },
-            class: "flex flex-col gap-3" do |f| %>
-          <%# Permet à items#create de distinguer l'ajout rapide du formulaire complet (Turbo les envoie de la même façon) %>
-          <%= hidden_field_tag :quick_add, "1" %>
-          <input type="hidden" name="item[item_type]" value="VideoGameDetail">
-          <%= hidden_field_tag "video_game_detail[summary_en]", "", data: { "games-search-target": "description" } %>
-          <%= hidden_field_tag "video_game_detail[genre]", "", data: { "games-search-target": "genre" } %>
-          <%= hidden_field_tag "video_game_detail[release_date]", "", data: { "games-search-target": "releaseDate" } %>
-          <%= hidden_field_tag "video_game_detail[developer]", "", data: { "games-search-target": "developer" } %>
-          <%= hidden_field_tag "product[igdb_id]", "", id: nil, data: { "games-search-target": "igdbId" } %>
+        <div data-game-pile-target="list" class="flex flex-col gap-2 mb-4"></div>
+        <button type="button" data-game-pile-target="submit" data-action="game-pile#submit"
+        class="hidden w-full bg-purple-600 text-white py-3 rounded-xl font-semibold text-sm mb-4"></button>
 
           <div class="relative">
             <input data-games-search-target="query"
@@ -272,32 +266,6 @@
             <div data-games-search-target="results"
                 class="hidden z-20 w-full bg-white border border-gray-100 rounded-xl shadow-lg max-h-48 overflow-y-auto"></div>
           </div>
-
-          <input data-games-search-target="title" name="item[title]" type="hidden">
-          <input data-games-search-target="platform" name="video_game_detail[platform]" type="hidden">
-
-          <div class="flex flex-wrap gap-2">
-            <% VideoGameDetail::MAIN_PLATFORMS.each do |platform| %>
-              <button type="button"
-                      data-platform="<%= platform %>"
-                      data-action="click->games-search#selectPlatform"
-                      class="px-3 py-1 rounded-full text-xs font-medium border border-gray-200 text-gray-500 bg-white">
-                <%= platform %>
-              </button>
-            <% end %>
-            <select data-games-search-target="platformList" data-action="change->games-search#selectFromList" class="mt-2 w-full border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-600 bg-white focus:outline-none focus:border-purple-400">
-              <%= grouped_options_for_select(VideoGameDetail::PLATFORM_GROUPS, nil, prompt: "Autres plateformes…") %>
-            </select>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <input type="checkbox" name="video_game_detail[completed]" id="quick_completed" value="1"
-                  class="w-5 h-5 rounded accent-purple-600">
-            <label for="quick_completed" class="text-sm font-semibold text-gray-600">Jeu complet ?</label>
-          </div>
-
-          <%= f.submit "Ajouter →", class: "w-full bg-purple-600 text-white py-3 rounded-xl font-semibold text-sm" %>
-        <% end %>
       </div>
     </div>
   <% end %>

@@ -393,6 +393,15 @@ RSpec.describe "API de recherche", type: :request do
       expect(games[9]["platform"]).to be_nil
     end
 
+    it "liste des plateformes du jeu avec les noms de l'appli (choix dans la pile d'ajout)" do
+      several = sword.merge("platforms" => [ { "name" => "PlayStation 4" }, { "name" => "Xbox One" }, { "name" => "Inconnue" } ])
+      stub_igdb(games: [ several, zelda ])
+      get "/api/search/search_game", params: { query: "pokemon" }
+      games = json["games"].index_by { |game| game["id"] }
+      expect(games[1]["app_platforms"]).to eq([ "PS4", "Xbox One" ])
+      expect(games[2]["app_platforms"]).to eq([])
+    end
+
     it "année de sortie européenne quand IGDB la connaît, sinon première sortie mondiale" do
       diamond = sword.merge("first_release_date" => 1159401600, # 2006 au Japon
                             "release_dates" => [ { "date" => 1159401600, "release_region" => 5 },

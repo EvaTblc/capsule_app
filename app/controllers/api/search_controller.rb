@@ -277,6 +277,7 @@ class Api::SearchController < ApplicationController
       cover_url: cover_url,
       platforms: platforms,
       platform: (app_platforms.first if app_platforms.one?),
+      app_platforms: app_platforms,
       developer: developers.presence&.join(", "),
       release_date: release_date&.year,
       summary: summary,

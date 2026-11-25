@@ -52,35 +52,93 @@ RSpec.describe "Items (navigateur)", type: :system do
       allow(IgdbService).to receive(:game) { |id| zelda.merge("id" => id) }
     end
 
-    it "recherche, choix du jeu, ajout : confirmation dans le panneau, sans quitter la page" do
+    def open_pile
       visit collection_path(games)
       find("[data-action='click->quick-add#open']").click
-
-      fill_in placeholder: "Rechercher un jeu...", with: "Zelda"
-      find("[data-games-search-target='results'] div", text: "The Legend of Zelda").click
-      click_on "Ajouter →"
-
-      expect(page).to have_css("#quick-add-list", text: "✓ The Legend of Zelda")
-      expect(page).to have_current_path(collection_path(games))
-      expect(games.items.last.title).to eq("The Legend of Zelda")
-      # Jeu sorti sur une seule plateforme : elle est choisie (avant : « Nintendo Switch », hors liste)
-      expect(games.items.last.item_detailable.platform).to eq("Switch")
-      expect(games.items.last.product.igdb_id).to eq(1)
     end
 
-    it "jeu multiplateforme : la plateforme choisie par l'utilisateur n'est pas écrasée par le choix du jeu" do
-      multi = zelda.merge("platforms" => [ { "name" => "PlayStation 5" }, { "name" => "Xbox Series X|S" } ])
-      allow(IgdbService).to receive(:search).and_return([ multi ])
-      visit collection_path(games)
+    def choose_game(query, name)
+      fill_in placeholder: "Rechercher un jeu...", with: query
+      find("[data-games-search-target='results'] div", text: name).click
+    end
+
+    def pile = find("[data-game-pile-target='list']")
+
+    it "jeu choisi par son titre : il va dans la pile, puis l'envoi l'ajoute à la collection et vide la pile" do
+      open_pile
+      choose_game("Zelda", "The Legend of Zelda")
+
+      # Jeu sorti sur une seule plateforme : elle est déjà choisie
+      expect(pile.find("select").value).to eq("Switch")
+      click_on "Ajouter le jeu"
+
+      expect(page).to have_no_css("[data-game-pile-target='list'] div")
+      expect(page).to have_no_button("Ajouter le jeu")
+      expect(page).to have_current_path(collection_path(games))
+      item = games.items.last
+      expect(item.title).to eq("The Legend of Zelda")
+      expect(item.item_detailable.platform).to eq("Switch")
+      expect(item.item_detailable.completed).to be(false)
+      expect(item.product.igdb_id).to eq(1)
+    end
+
+    it "plusieurs jeux : plateforme (parmi celles du jeu) et « complet » choisis ligne par ligne, puis un seul envoi" do
+      multi = { "id" => 2, "name" => "Hades", "platforms" => [ { "name" => "PlayStation 5" }, { "name" => "Xbox Series X|S" } ] }
+      allow(IgdbService).to receive(:search) { |query| query.include?("Hades") ? [ multi ] : [ zelda ] }
+      open_pile
+      choose_game("Zelda", "The Legend of Zelda")
+      choose_game("Hades", "Hades")
+
+      hades = pile.find("div", text: "Hades")
+      expect(hades.all("select option").map(&:value)).to eq([ "", "PS5", "Xbox Series" ])
+      hades.find("select").select("PS5")
+      hades.check("Complet")
+      click_on "Ajouter les 2 jeux"
+
+      expect(page).to have_no_css("[data-game-pile-target='list'] div")
+      details = games.items.reload.to_h { |item| [ item.title, item.item_detailable ] }
+      expect(details["Hades"]).to have_attributes(platform: "PS5", completed: true)
+      expect(details["The Legend of Zelda"]).to have_attributes(platform: "Switch", completed: false)
+    end
+
+    it "la pile est gardée par le navigateur : fermer le panneau ne la perd pas, ✕ retire un jeu" do
+      open_pile
+      choose_game("Zelda", "The Legend of Zelda")
+      find("[data-quick-add-target='panel'] h2 + button").click # ferme et recharge la page
+
       find("[data-action='click->quick-add#open']").click
+      expect(pile).to have_content("The Legend of Zelda")
+      pile.click_on "✕"
+      expect(page).to have_no_css("[data-game-pile-target='list'] div")
+      expect(games.items).to be_empty
+    end
 
-      click_on "PS5"
-      fill_in placeholder: "Rechercher un jeu...", with: "Zelda"
-      find("[data-games-search-target='results'] div", text: "The Legend of Zelda").click
-      click_on "Ajouter →"
+    it "déjà dans la collection sur la même plateforme : alerte (sans blocage) ; autre plateforme : rien" do
+      multi = zelda.merge("platforms" => [ { "name" => "Nintendo Switch" }, { "name" => "Wii U" } ])
+      allow(IgdbService).to receive(:search).and_return([ multi ])
+      create(:item, collection: games, title: "Zelda", product: create(:product, igdb_id: 1),
+                    item_detailable_type: "VideoGameDetail", item_detailable: create(:video_game_detail, platform: "Switch"))
+      open_pile
+      choose_game("Zelda", "The Legend of Zelda")
 
-      expect(page).to have_css("#quick-add-list", text: "✓ The Legend of Zelda")
-      expect(games.items.last.item_detailable.platform).to eq("PS5")
+      pile.find("select").select("Wii U")
+      expect(pile).to have_no_content("Déjà dans ta collection")
+      pile.find("select").select("Switch")
+      expect(pile).to have_content("Déjà dans ta collection sur Switch")
+
+      click_on "Ajouter le jeu"
+      expect(page).to have_no_css("[data-game-pile-target='list'] div")
+      expect(games.items.count).to eq(2)
+    end
+
+    it "envoi refusé par le serveur : le jeu reste dans la pile, en rouge" do
+      open_pile
+      choose_game("Zelda", "The Legend of Zelda")
+      allow_any_instance_of(ItemSaver).to receive(:save).and_return(false)
+      click_on "Ajouter le jeu"
+
+      expect(pile).to have_css("div.text-red-600", text: "The Legend of Zelda")
+      expect(games.items).to be_empty
     end
   end
 
@@ -216,19 +274,6 @@ RSpec.describe "Items (navigateur)", type: :system do
                            item_detailable: create(:video_game_detail, platform: "Game Boy Advance"))
       visit edit_collection_item_path(games, item)
       expect(find("[data-form='VideoGameDetail'] [data-games-search-target='platformList']").value).to eq("Game Boy Advance")
-    end
-
-    it "ajout rapide : après un ajout, la liste revient aussi à zéro" do
-      allow(IgdbService).to receive(:search).and_return([])
-      visit collection_path(games)
-      find("[data-action='click->quick-add#open']").click
-      find("[data-games-search-target='platformList']").select("Wii")
-      find("[data-games-search-target='title']", visible: false).execute_script("this.value = 'Wii Sports'")
-      click_on "Ajouter →"
-
-      expect(page).to have_css("#quick-add-list", text: "✓ Wii Sports")
-      expect(games.items.last.item_detailable.platform).to eq("Wii")
-      expect(find("[data-games-search-target='platformList']").value).to eq("")
     end
   end
 
