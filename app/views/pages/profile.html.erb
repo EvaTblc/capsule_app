@@ -98,6 +98,23 @@
             class: "flex-1 min-w-0 h-12 rounded-full border-[1.5px] border-stone-200 bg-white px-[18px] text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200" %>
         <%= f.submit "Ajouter", class: "h-12 px-[18px] rounded-full bg-purple-700 text-white text-[15px] font-bold cursor-pointer" %>
       <% end %>
+
+      <%# Souhaits : ce que les amis voient de mes souhaits. Cadre Turbo : la page ne remonte pas en haut au changement %>
+      <%= turbo_frame_tag "wishes_visibility" do %>
+        <%= form_with model: current_user, url: update_wishes_visibility_path, method: :patch, data: { controller: "auto-submit" },
+            class: "mt-3" do |f| %>
+          <label class="flex items-center justify-between gap-4 bg-white rounded-3xl px-5 py-4 cursor-pointer shadow-[0_1px_2px_rgba(30,27,46,0.06)]">
+            <span>
+              <span class="block text-[15px] font-bold">Mes amis voient mes souhaits</span>
+              <span class="block text-xs text-stone-600">Les jeux que tu cherches : idées de cadeaux, trouvailles en brocante…</span>
+            </span>
+            <%= f.check_box :wishes_visible_to_friends, role: "switch", data: { action: "change->auto-submit#submit" },
+                class: "appearance-none shrink-0 w-11 h-[26px] rounded-full bg-gray-300 relative cursor-pointer transition-colors checked:bg-purple-700 " \
+                       "before:content-[''] before:absolute before:top-[3px] before:left-[3px] before:w-5 before:h-5 before:rounded-full before:bg-white " \
+                       "before:transition-transform checked:before:translate-x-[18px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600" %>
+          </label>
+        <% end %>
+      <% end %>
     </div>
 
     <%# Adresse : sert à trouver les vide-greniers proches (Mon Carnet) %>

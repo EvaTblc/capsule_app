@@ -37,6 +37,12 @@ class PagesController < ApplicationController
     end
   end
 
+  # Interrupteur « Mes amis voient mes souhaits » du profil
+  def update_wishes_visibility
+    current_user.update!(params.require(:user).permit(:wishes_visible_to_friends))
+    redirect_to profile_path
+  end
+
   # Attribution des sources de données, exigée par leurs conditions d'utilisation
   def credits
   end
@@ -44,6 +50,7 @@ class PagesController < ApplicationController
   def offline
     render layout: false
   end
+  
   private
 
   def address_params

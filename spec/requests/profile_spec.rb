@@ -86,4 +86,26 @@ RSpec.describe "Profil", type: :request do
     expect(user.reload.address).to eq("Nantes, Loire-Atlantique")
     expect(response).to redirect_to(profile_path)
   end
+
+  describe "interrupteur « Mes amis voient mes souhaits »" do
+    it "affiché, activé par défaut" do
+      get profile_path
+      switch = Nokogiri::HTML(response.body).css("input[type=checkbox][name='user[wishes_visible_to_friends]']").first
+      expect(switch["checked"]).to eq("checked")
+      expect(switch["role"]).to eq("switch")
+    end
+
+    it "éteint puis rallumé : enregistré, retour au profil" do
+      patch update_wishes_visibility_path, params: { user: { wishes_visible_to_friends: "0" } }
+      expect(user.reload.wishes_visible_to_friends).to be(false)
+      expect(response).to redirect_to(profile_path)
+      patch update_wishes_visibility_path, params: { user: { wishes_visible_to_friends: "1" } }
+      expect(user.reload.wishes_visible_to_friends).to be(true)
+    end
+
+    it "ne change rien d'autre du compte (rôle, adresse forgés dans la requête)" do
+      patch update_wishes_visibility_path, params: { user: { wishes_visible_to_friends: "0", role: "admin", address: "Ailleurs" } }
+      expect(user.reload).to have_attributes(role: "free", address: nil, wishes_visible_to_friends: false)
+    end
+  end
 end

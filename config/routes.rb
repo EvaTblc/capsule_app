@@ -71,4 +71,5 @@ Rails.application.routes.draw do
   post "/items/identify", to: "items#identify"
   get "profile/address/edit", to: "pages#edit_address", as: "edit_address"
   patch "profile/address", to: "pages#update_address", as: "update_address"
+  patch "profile/wishes_visibility", to: "pages#update_wishes_visibility", as: "update_wishes_visibility"
 end

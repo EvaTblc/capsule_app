@@ -186,4 +186,18 @@ RSpec.describe "Souhaits", type: :system do
       end
     end
   end
+
+  it "profil : l'interrupteur « Mes amis voient mes souhaits » s'enregistre dès qu'on le touche, sans bouton" do
+    visit profile_path
+    switch = find("input[role='switch'][name='user[wishes_visible_to_friends]']")
+    expect(switch).to be_checked
+
+    switch.click
+    expect(page).to have_css("turbo-frame#wishes_visibility input[role='switch']:not(:checked)") # cadre rechargé
+    expect(user.reload.wishes_visible_to_friends).to be(false)
+
+    find("input[role='switch'][name='user[wishes_visible_to_friends]']").click
+    expect(page).to have_css("turbo-frame#wishes_visibility input[role='switch']:checked")
+    expect(user.reload.wishes_visible_to_friends).to be(true)
+  end
 end
