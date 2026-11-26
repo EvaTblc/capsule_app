@@ -4,7 +4,7 @@ import BarcodeScanner from "lib/barcode_scanner"
 // Connects to data-controller="game-pile"
 export default class extends Controller {
   static targets = ["list", "submit", "scanner", "video", "searchRow", "lastFound", "typeButton", "summary"]
-  static values = { collection: Number, platforms: Array, url: String, owned: Object }
+  static values = { collection: Number, platforms: Array, url: String, owned: Object, wanted: Object }
 
   get storageKey() {
     return `game-pile-${this.collectionValue}`
@@ -50,7 +50,9 @@ export default class extends Controller {
     if (response?.ok && data) {
       Object.assign(game, data)
       if (this.hasLastFoundTarget) {
-        this.lastFoundTarget.textContent = `✓ ${game.name}`
+        // Jeu cherché : double vibration et bandeau qui le dit, la caméra cachant la pile
+        if (this.wishFor(game)) navigator.vibrate?.([ 100, 80, 100 ])
+        this.lastFoundTarget.textContent = this.wishFor(game) ? `★ ${game.name} : tu le cherches !` : `✓ ${game.name}`
         this.lastFoundTarget.classList.remove("hidden")
       }
     } else if (response?.status === 429) {
@@ -100,6 +102,12 @@ export default class extends Controller {
   typeTitle() {
     this.stopScan()
     this.element.querySelector("[data-games-search-target='query']").focus()
+  }
+
+  // Souhait de la collection pour ce jeu : même œuvre, et même plateforme, sauf si l'une des deux n'est pas choisie
+  wishFor(game) {
+    const wishes = this.wantedValue[game.id] || []
+    return wishes.find(wish => !wish.platform || !game.platform || wish.platform === game.platform)
   }
 
   render() {
@@ -174,6 +182,17 @@ export default class extends Controller {
         body.appendChild(warning)
       }
 
+
+      // Jeu cherché (souhait) : la ligne passe en vert, avec le prix à ne pas dépasser
+      const wish = game.name && this.wishFor(game)
+      if (wish) {
+        line.classList.replace("bg-white", "bg-emerald-50")
+        const wanted = document.createElement("p")
+        wanted.className = "text-xs font-bold text-emerald-700"
+        wanted.textContent = wish.max_price ? `Tu le cherches ! Maximum ${wish.max_price}` : "Tu le cherches !"
+        body.appendChild(wanted)
+      }
+
       const remove = document.createElement("button")
       remove.textContent = "✕"
       remove.type = "button"
@@ -213,8 +232,15 @@ export default class extends Controller {
     this.sending = true
     for (const game of [ ...this.games]) {
       if (!game.name) continue
-      const response = await this.send(game).catch(() => null)
+      const wish = this.wishFor(game)
+      const response = await this.send(game, wish).catch(() => null)
       if (response?.ok) {
+        // Souhait exaucé : supprimé côté serveur (wish_id), retiré ici pour ne plus alerter
+        if (wish) {
+          const wanted = this.wantedValue
+          wanted[game.id] = wanted[game.id].filter(other => other.id !== wish.id)
+          this.wantedValue = wanted
+        }
         const owned = this.ownedValue
         owned[game.id] = [ ...(owned[game.id] || []), game.platform ]
         this.ownedValue = owned
@@ -230,9 +256,10 @@ export default class extends Controller {
     this.render()
   }
 
-  async send(game) {
+  async send(game, wish) {
     const data = new FormData()
     data.append("quick_add", "1")
+    if (wish) data.append("wish_id", wish.id)
     data.append("item[item_type]", "VideoGameDetail")
     data.append("item[title]", game.name)
     data.append("video_game_detail[platform]", game.platform || "")

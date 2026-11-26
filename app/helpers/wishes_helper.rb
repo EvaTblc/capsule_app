@@ -1,6 +1,11 @@
 module WishesHelper
   def wish_price(wish)
-    number_to_currency(wish.max_price, precision: wish.max_price.frac.zero? ? 0 : 2)
+    euros(wish.max_price)
+  end
+
+  # Prix à la française : « 20 € », mais « 12,50 € » (les centimes seulement s'il y en a)
+  def euros(price)
+    number_to_currency(price, precision: price.frac.zero? ? 0 : 2)
   end
 
   # Prix maximum dans le champ du formulaire : « 20 » ou « 12.50 », pas « 20.0 » (BigDecimal brut)

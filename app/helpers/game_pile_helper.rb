@@ -8,4 +8,14 @@ module GamePileHelper
               .group_by(&:first)
               .transform_values { |rows| rows.map(&:last).compact_blank.uniq }
   end
+
+  # Jeux cherchés (souhaits reliés au catalogue) : igdb_id => [{ id, platform, max_price }], pour l'alerte « Tu le cherches ! »
+  def wanted_games(collection)
+    collection.wishes.joins(:product)
+              .pluck("products.igdb_id", "wishes.id", "wishes.platform", "wishes.max_price")
+              .group_by(&:first)
+              .transform_values do |rows|
+                rows.map { |_, id, platform, price| { id: id, platform: platform.presence, max_price: price && euros(price) } }
+              end
+  end
 end

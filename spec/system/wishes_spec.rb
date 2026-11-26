@@ -106,4 +106,84 @@ RSpec.describe "Souhaits", type: :system do
     expect(item.item_detailable).to have_attributes(platform: "PS2", edition: "PAL")
     expect(games.wishes).to be_empty
   end
+
+  describe "pile « Ajouter des jeux » : « Tu le cherches ! »" do
+    let(:games) { collection_of("video_games") }
+    let!(:zelda_product) { create(:product, title: "The Legend of Zelda", igdb_id: 1) }
+
+    def open_pile
+      visit collection_path(games)
+      find("[data-action='click->quick-add#open']").click
+    end
+
+    def pile = find("[data-game-pile-target='list']")
+
+    def choose_in_pile
+      fill_in placeholder: "Titre du jeu…", with: "Zelda"
+      find("[data-games-search-target='results'] div", text: "The Legend of Zelda").click
+    end
+
+    it "jeu cherché choisi par son titre : ligne en vert avec le prix maximum ; l'envoi exauce le souhait" do
+      create(:wish, collection: games, product: zelda_product, title: "Zelda", platform: "", max_price: 20)
+      open_pile
+      choose_in_pile
+
+      expect(pile).to have_css(".bg-emerald-50", text: "Tu le cherches ! Maximum 20 €")
+      click_on "Ajouter le jeu"
+
+      expect(page).to have_no_css("[data-game-pile-target='list'] div")
+      expect(games.items.last.product).to eq(zelda_product)
+      expect(games.wishes).to be_empty
+
+      # Souhait exaucé : le même jeu, rajouté à la pile, n'alerte plus
+      choose_in_pile
+      expect(pile).to have_content("The Legend of Zelda")
+      expect(pile).to have_no_content("Tu le cherches")
+    end
+
+    it "cherché sur une autre plateforme : pas d'alerte (ni de souhait supprimé)" do
+      create(:wish, collection: games, product: zelda_product, title: "Zelda", platform: "Wii U")
+      open_pile
+      choose_in_pile # jeu sorti sur Switch seulement : plateforme déjà choisie
+
+      expect(pile.find("select").value).to eq("Switch")
+      expect(pile).to have_no_content("Tu le cherches")
+      click_on "Ajouter le jeu"
+      expect(page).to have_no_css("[data-game-pile-target='list'] div")
+      expect(games.wishes.count).to eq(1)
+    end
+
+    it "jeu sans souhait : pas d'alerte" do
+      open_pile
+      choose_in_pile
+      expect(pile).to have_content("The Legend of Zelda")
+      expect(pile).to have_no_content("Tu le cherches")
+    end
+
+    describe "au scan" do
+      let!(:box) { create(:barcode_product, barcode: "0045496420246", raw_title: "Zelda Switch", platform: "Switch") }
+
+      before do
+        allow(BarcodeService).to receive(:lookup) { |ean, kind:| box if ean == box.barcode }
+        allow(BarcodeService).to receive(:names_for).and_return([ "The Legend of Zelda" ])
+      end
+
+      # Code lu par la caméra : remplacé par un appel direct (pas de caméra dans le navigateur de test)
+      def scan(code)
+        page.execute_script(<<~JS, code)
+          Stimulus.getControllerForElementAndIdentifier(document.querySelector("[data-controller~='game-pile']"), "game-pile").scan(arguments[0])
+        JS
+      end
+
+      it "boîte d'un jeu cherché : le bandeau du dernier jeu trouvé le dit (la caméra cache la pile)" do
+        user.update!(role: "premium") # le scan est réservé aux comptes Premium
+        create(:wish, collection: games, product: zelda_product, title: "Zelda", platform: "Switch", max_price: "12.5")
+        open_pile
+        scan(box.barcode)
+
+        expect(page).to have_css("[data-game-pile-target='lastFound']", text: "★ The Legend of Zelda : tu le cherches !", visible: :all)
+        expect(pile).to have_content("Tu le cherches ! Maximum 12,50 €")
+      end
+    end
+  end
 end

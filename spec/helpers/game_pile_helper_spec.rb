@@ -26,4 +26,22 @@ RSpec.describe GamePileHelper, type: :helper do
 
     expect(helper.owned_games(collection)).to eq({})
   end
+
+  describe "wanted_games (alerte « Tu le cherches ! »)" do
+    it "souhaits reliés au catalogue : identifiant du souhait, plateforme (nil pour « Peu importe »), prix à la française" do
+      okami = create(:wish, collection: collection, product: zelda, platform: "Switch", max_price: "12.5")
+      any = create(:wish, collection: collection, product: mario, platform: "", max_price: nil)
+
+      expect(helper.wanted_games(collection)).to eq(
+        7346 => [ { id: okami.id, platform: "Switch", max_price: "12,50 €" } ],
+        1074 => [ { id: any.id, platform: nil, max_price: nil } ]
+      )
+    end
+
+    it "ignore les souhaits tapés à la main (sans œuvre) et ceux des autres collections" do
+      create(:wish, collection: collection, product: nil, title: "Introuvable")
+      create(:wish, collection: create(:collection), product: zelda)
+      expect(helper.wanted_games(collection)).to eq({})
+    end
+  end
 end
