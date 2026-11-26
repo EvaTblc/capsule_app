@@ -19,7 +19,7 @@ class CollectionsController < ApplicationController
     @member = @collection.member?(current_user)
     # Seul le propriétaire modifie, partage le lien et gère les membres
     @owner = @collection.owner?(current_user)
-        # Souhaits : membres uniquement (jamais montrés aux visiteurs d'une collection publique)
+    # Souhaits : membres uniquement (jamais montrés aux visiteurs d'une collection publique)
     @wishes = @member ? @collection.wishes.includes(:author).sort_by { |wish| NaturalSort.key(wish.title) } : []
   end
 

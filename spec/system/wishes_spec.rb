@@ -86,4 +86,24 @@ RSpec.describe "Souhaits", type: :system do
     expect(page).to have_link("Ajouter un souhait")
     expect(games.wishes).to be_empty
   end
+
+  it "« Trouvé ! » : depuis la fiche, le formulaire d'item arrive pré-rempli, et le souhait devient un item" do
+    games = collection_of("video_games")
+    okami = create(:product, title: "Ōkami", igdb_id: 1)
+    create(:wish, collection: games, title: "Ōkami", product: okami, platform: "PS2", edition: "PAL")
+    visit collection_path(games)
+
+    click_on "Ōkami"
+    click_on "Je l'ai trouvé !"
+    expect(page).to have_field("Rechercher un jeu...") # type jeu déjà choisi : ses champs sont visibles
+    expect(find("input[name='item[title]']").value).to eq("Ōkami")
+    expect(find("input[name='video_game_detail[edition]']").value).to eq("PAL")
+    click_on "Valider"
+
+    expect(page).to have_content("Item ajouté !")
+    item = games.items.last
+    expect(item).to have_attributes(title: "Ōkami", product: okami)
+    expect(item.item_detailable).to have_attributes(platform: "PS2", edition: "PAL")
+    expect(games.wishes).to be_empty
+  end
 end

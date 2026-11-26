@@ -147,6 +147,7 @@ RSpec.describe "Souhaits", type: :request do
       page = Nokogiri::HTML(response.body)
       expect(page.css("input[name='wish[title]']").first["value"]).to eq("Okami")
       expect(page.text).to include("Enregistrer", "Supprimer ce souhait")
+      expect(page.css("input[name='wish[max_price]']").first["value"]).to eq("20") # pas « 20.0 »
     end
 
     it "modifier : enregistré par n'importe quel membre, retour à la collection" do
@@ -196,6 +197,67 @@ RSpec.describe "Souhaits", type: :request do
       expect(response).to have_http_status(:not_found)
       sign_in user
       expect { delete collection_wish_path(other_wish.collection, other_wish) }.not_to change(Wish, :count)
+    end
+  end
+
+  describe "« Trouvé ! » : le souhait devient un item" do
+    let(:okami) { create(:product, title: "Ōkami", igdb_id: 1234) }
+    let(:wish) { create(:wish, collection: collection, title: "Ōkami", product: okami, platform: "PS2", edition: "PAL") }
+
+    def game_item_params(extra = {})
+      { item: { item_type: "VideoGameDetail", title: "Ōkami" }, video_game_detail: { platform: "PS2", edition: "PAL" },
+        product: { igdb_id: "1234" } }.merge(extra)
+    end
+
+    it "la fiche du souhait propose « Trouvé ! » vers le formulaire d'item" do
+      get edit_collection_wish_path(collection, wish)
+      expect(response.body).to include(new_collection_item_path(collection, wish_id: wish.id), "Je l'ai trouvé !")
+    end
+
+    it "formulaire d'item pré-rempli : type jeu, titre, jeu du catalogue, plateforme, édition, souhait d'origine" do
+      get new_collection_item_path(collection, wish_id: wish.id)
+      page = Nokogiri::HTML(response.body)
+      expect(page.css("input[name='item[item_type]']").first["value"]).to eq("VideoGameDetail")
+      expect(page.css("input[name='item[title]']").first["value"]).to eq("Ōkami")
+      expect(page.css("input[name='product[igdb_id]']").first["value"]).to eq("1234")
+      expect(page.css("input[name='video_game_detail[platform]']").first["value"]).to eq("PS2")
+      expect(page.css("input[name='video_game_detail[edition]']").first["value"]).to eq("PAL")
+      expect(page.css("input[name='wish_id']").first["value"]).to eq(wish.id.to_s)
+    end
+
+    it "item enregistré : le souhait disparaît" do
+      allow(ProductCatalog).to receive(:game).and_return(okami)
+      wish
+      expect { post collection_items_path(collection), params: game_item_params(wish_id: wish.id) }
+        .to change(Item, :count).by(1).and change(Wish, :count).by(-1)
+      expect(collection.items.last.product).to eq(okami)
+    end
+
+    it "item refusé (titre vide) : le souhait reste, et le formulaire réaffiché le garde en mémoire" do
+      wish
+      params = game_item_params(wish_id: wish.id)
+      params[:item][:title] = ""
+      expect { post collection_items_path(collection), params: params }.not_to change(Wish, :count)
+      expect(response.body).to include(%(name="wish_id" id="wish_id" value="#{wish.id}"))
+    end
+
+    it "souhait d'une autre collection (id forgé) : ni pré-rempli, ni supprimé" do
+      allow(ProductCatalog).to receive(:game).and_return(okami)
+      other_wish = create(:wish, title: "Pas à moi")
+      get new_collection_item_path(collection, wish_id: other_wish.id)
+      expect(response.body).not_to include("Pas à moi", 'name="wish_id"')
+      expect { post collection_items_path(collection), params: game_item_params(wish_id: other_wish.id) }
+        .not_to change(Wish, :count)
+    end
+
+    it "collection de livres : seulement le titre (pas de détail de jeu)" do
+      books = create(:collection, category: "books")
+      create(:user_collection, user: user, collection: books)
+      book_wish = create(:wish, collection: books, title: "Veiller sur elle")
+      get new_collection_item_path(books, wish_id: book_wish.id)
+      page = Nokogiri::HTML(response.body)
+      expect(page.css("input[name='item[item_type]']").first["value"]).to be_blank
+      expect(response.body).to include("Veiller sur elle")
     end
   end
 end

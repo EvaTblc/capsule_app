@@ -1,5 +1,7 @@
 <%= form_with model: [@collection, @item], local: false, multipart: true do |f| %>
   <%= render "shared/form_errors", record: @item %>
+  <%# « Trouvé ! » : le souhait d'où vient l'item, supprimé une fois l'item enregistré %>
+  <%= hidden_field_tag :wish_id, @wish.id if @wish %>
 
 
   <div data-controller="item-type games-search">

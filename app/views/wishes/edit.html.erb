@@ -5,7 +5,14 @@
     <svg aria-hidden="true" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M15 19l-7-7 7-7"/></svg>
     <span class="truncate"><%= @collection.title %></span>
   <% end %>
-  <h1 class="mt-4 mb-6 text-[30px] font-extrabold tracking-tight leading-none">Mon souhait</h1>
+  <h1 class="mt-4 mb-5 text-[30px] font-extrabold tracking-tight leading-none">Mon souhait</h1>
+
+  <%# Trouvé : formulaire d'item pré-rempli ; le souhait disparaît une fois l'item enregistré %>
+  <%= link_to new_collection_item_path(@collection, wish_id: @wish.id),
+      class: "mb-7 w-full h-14 rounded-full bg-emerald-600 text-white text-[17px] font-bold flex items-center justify-center gap-2 shadow-[0_10px_24px_rgba(5,150,105,0.3)] active:scale-95 transition-transform duration-150" do %>
+    <svg aria-hidden="true" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    Je l'ai trouvé !
+  <% end %>
 
   <%= render "form", wish: @wish, collection: @collection %>
 

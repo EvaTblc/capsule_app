@@ -30,7 +30,7 @@
 
   <div>
     <%= f.label :max_price, "Prix maximum (€)", class: entry_label_class %>
-    <%= f.number_field :max_price, min: 0.01, step: 0.01, inputmode: "decimal", placeholder: "Ex : 20", class: entry_input_class %>
+    <%= f.number_field :max_price, value: wish_price_input(wish), min: 0.01, step: 0.01, inputmode: "decimal", placeholder: "Ex : 20", class: entry_input_class %>
     <p class="mt-1.5 px-1 text-xs text-stone-600">Pour ne pas craquer sur le coup de l'émotion en brocante.</p>
   </div>
 

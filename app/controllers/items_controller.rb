@@ -6,6 +6,8 @@ class ItemsController < ApplicationController
   before_action :set_collection, except: [ :show, :estimate, :identify ]
   before_action :set_visible_collection, only: [ :show ]
   before_action :set_item, only: [ :show, :edit, :update, :destroy ]
+  # « Trouvé ! » : le souhait d'où vient le nouvel item (pré-remplissage, puis supprimé une fois l'item enregistré)
+  before_action :set_found_wish, only: [ :new, :create ]
 
   # Type d'item inconnu (ex. item[item_type]=User forgé) : requête invalide
   rescue_from ItemSaver::UnknownDetailType, with: -> { head :bad_request }
@@ -17,12 +19,14 @@ class ItemsController < ApplicationController
 
   def new
     @item = Item.new
+    prefill_from_wish if @wish
   end
 
   def create
     @item = @collection.items.new
 
     if save_item
+      @wish&.destroy
       if quick_add?
         render json: { id: @item.id }, status: :created
       else
@@ -109,5 +113,17 @@ class ItemsController < ApplicationController
 
   def set_item
     @item = @collection.items.find(params[:id])
+  end
+
+  def set_found_wish
+    @wish = @collection.wishes.find_by(id: params[:wish_id]) if params[:wish_id].present?
+  end
+
+  # L'item reprend ce que disait le souhait : titre, jeu du catalogue, et pour un jeu sa plateforme et son édition
+  def prefill_from_wish
+    @item.assign_attributes(title: @wish.title, product: @wish.product)
+    return unless %w[video_games mixed].include?(@collection.category)
+
+    @item.item_detailable = VideoGameDetail.new(platform: @wish.platform, edition: @wish.edition)
   end
 end
