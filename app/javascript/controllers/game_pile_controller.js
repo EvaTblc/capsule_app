@@ -4,7 +4,7 @@ import BarcodeScanner from "lib/barcode_scanner"
 // Connects to data-controller="game-pile"
 export default class extends Controller {
   static targets = ["list", "submit", "scanner", "video", "searchRow", "lastFound", "typeButton", "summary"]
-  static values = { collection: Number, platforms: Array, url: String, owned: Object, wanted: Object }
+  static values = { collection: Number, platforms: Array, url: String, owned: Object, wanted: Object, friendsWanted: Object }
 
   get storageKey() {
     return `game-pile-${this.collectionValue}`
@@ -50,9 +50,11 @@ export default class extends Controller {
     if (response?.ok && data) {
       Object.assign(game, data)
       if (this.hasLastFoundTarget) {
-        // Jeu cherché : double vibration et bandeau qui le dit, la caméra cachant la pile
-        if (this.wishFor(game)) navigator.vibrate?.([ 100, 80, 100 ])
-        this.lastFoundTarget.textContent = this.wishFor(game) ? `★ ${game.name} : tu le cherches !` : `✓ ${game.name}`
+        // Jeu cherché (par moi ou un ami) : double vibration et bandeau qui le dit, la caméra cachant la pile
+        const friends = this.friendsLooking(game)
+        if (this.wishFor(game) || friends) navigator.vibrate?.([ 100, 80, 100 ])
+        this.lastFoundTarget.textContent = this.wishFor(game) ? `★ ${game.name} : tu le cherches !`
+          : friends ? `★ ${game.name} : ${friends.text}` : `✓ ${game.name}`
         this.lastFoundTarget.classList.remove("hidden")
       }
     } else if (response?.status === 429) {
@@ -108,6 +110,18 @@ export default class extends Controller {
   wishFor(game) {
     const wishes = this.wantedValue[game.id] || []
     return wishes.find(wish => !wish.platform || !game.platform || wish.platform === game.platform)
+  }
+
+  // Amis qui cherchent ce jeu (même règle de plateforme) : { text: "lou cherche ce jeu !", maxPrice } ou null
+  friendsLooking(game) {
+    const wishes = (this.friendsWantedValue[game.id] || [])
+      .filter(wish => !wish.platform || !game.platform || wish.platform === game.platform)
+    if (wishes.length === 0) return null
+
+    const names = [ ...new Set(wishes.map(wish => wish.name)) ]
+    const text = names.length === 1 ? `${names[0]} cherche ce jeu !`
+      : `${names.slice(0, -1).join(", ")} et ${names.at(-1)} cherchent ce jeu !`
+    return { text, maxPrice: wishes.length === 1 ? wishes[0].max_price : null }
   }
 
   render() {
@@ -191,6 +205,15 @@ export default class extends Controller {
         wanted.className = "text-xs font-bold text-emerald-700"
         wanted.textContent = wish.max_price ? `Tu le cherches ! Maximum ${wish.max_price}` : "Tu le cherches !"
         body.appendChild(wanted)
+      }
+
+      // Jeu cherché par un ami : en violet, avec son prix maximum s'il est seul à le chercher
+      const friends = game.name && this.friendsLooking(game)
+      if (friends) {
+        const friendsLine = document.createElement("p")
+        friendsLine.className = "text-xs font-bold text-purple-700"
+        friendsLine.textContent = friends.maxPrice ? `${friends.text} Maximum ${friends.maxPrice}` : friends.text
+        body.appendChild(friendsLine)
       }
 
       const remove = document.createElement("button")

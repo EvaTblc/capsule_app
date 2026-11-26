@@ -160,6 +160,50 @@ RSpec.describe "Souhaits", type: :system do
       expect(pile).to have_no_content("Tu le cherches")
     end
 
+    describe "souhaits des amis" do
+      let(:lou) { create(:user, email: "lou@exemple.fr") }
+      let(:lou_games) { create(:collection, title: "Jeux de Lou", category: "video_games") }
+
+      before do
+        create(:friendship, requester: lou, receiver: user, status: "accepted")
+        create(:user_collection, user: lou, collection: lou_games)
+      end
+
+      it "« lou cherche ce jeu ! » avec son prix ; l'envoi n'exauce pas son souhait (c'est le sien)" do
+        create(:wish, collection: lou_games, author: lou, product: zelda_product, title: "Zelda", max_price: 15)
+        open_pile
+        choose_in_pile
+
+        expect(pile).to have_css("p.text-purple-700", text: "lou cherche ce jeu ! Maximum 15 €")
+        expect(pile).to have_no_content("Tu le cherches")
+        click_on "Ajouter le jeu"
+        expect(page).to have_no_css("[data-game-pile-target='list'] div")
+        expect(lou_games.wishes.count).to eq(1)
+      end
+
+      it "deux amis : « lou et sam cherchent ce jeu ! », sans prix" do
+        sam = create(:user, email: "sam@exemple.fr")
+        create(:friendship, requester: user, receiver: sam, status: "accepted")
+        sam_games = create(:collection, category: "video_games")
+        create(:user_collection, user: sam, collection: sam_games)
+        create(:wish, collection: lou_games, author: lou, product: zelda_product, title: "Zelda", max_price: 15)
+        create(:wish, collection: sam_games, author: sam, product: zelda_product, title: "Zelda")
+        open_pile
+        choose_in_pile
+
+        expect(pile).to have_content(/(lou et sam|sam et lou) cherchent ce jeu !/)
+        expect(pile).to have_no_content("Maximum")
+      end
+
+      it "ami qui a coupé son interrupteur, ou autre plateforme : pas d'alerte" do
+        create(:wish, collection: lou_games, author: lou, product: zelda_product, title: "Zelda", platform: "Wii U")
+        open_pile
+        choose_in_pile
+        expect(pile).to have_content("The Legend of Zelda")
+        expect(pile).to have_no_content("cherche ce jeu")
+      end
+    end
+
     describe "au scan" do
       let!(:box) { create(:barcode_product, barcode: "0045496420246", raw_title: "Zelda Switch", platform: "Switch") }
 

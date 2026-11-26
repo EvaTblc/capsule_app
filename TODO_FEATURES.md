@@ -26,7 +26,7 @@ Décidé le 2026-11-23. Le design web sera repris tel quel dans l'appli native :
 - [x] **Liste de souhaits** (2026-11-26, en prod) : souhaits par collection (titre, jeu du catalogue, plateforme,
       édition, prix maximum, note), fiche, « Je l'ai trouvé ! » → item pré-rempli, « Tu le cherches ! » dans la pile
       (titre ou scan), souhaits des amis (interrupteur dans le profil), « Ce que je cherche » dans Mon Carnet.
-      Les notes ont été retirées (remplacées par les souhaits). v2 : « Lou cherche ce jeu ! » au scan.
+      Les notes ont été retirées (remplacées par les souhaits). « lou cherche ce jeu ! » au scan (souhaits des amis).
 - [x] **Scan en rafale** (2026-11-26, en prod, testé sur mobile) : pile « Ajouter des jeux », titres ou scan continu,
       jeux possédés et cherchés signalés, envoi groupé.
 - [x] **Refonte « Pilule »** (2026-11-26) : tous les écrans (entrée, collections, fiche, formulaires, profil, carnet,

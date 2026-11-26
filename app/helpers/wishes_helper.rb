@@ -5,7 +5,8 @@ module WishesHelper
 
   # Prix à la française : « 20 € », mais « 12,50 € » (les centimes seulement s'il y en a)
   def euros(price)
-    number_to_currency(price, precision: price.frac.zero? ? 0 : 2)
+    # Espace insécable avant « € » : le prix ne se coupe jamais en fin de ligne
+    number_to_currency(price, precision: price.frac.zero? ? 0 : 2, format: "%n\u00a0%u")
   end
 
   # Prix maximum dans le champ du formulaire : « 20 » ou « 12.50 », pas « 20.0 » (BigDecimal brut)

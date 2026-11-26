@@ -33,7 +33,7 @@ RSpec.describe GamePileHelper, type: :helper do
       any = create(:wish, collection: collection, product: mario, platform: "", max_price: nil)
 
       expect(helper.wanted_games(collection)).to eq(
-        7346 => [ { id: okami.id, platform: "Switch", max_price: "12,50 €" } ],
+        7346 => [ { id: okami.id, platform: "Switch", max_price: "12,50\u00a0€" } ],
         1074 => [ { id: any.id, platform: nil, max_price: nil } ]
       )
     end
@@ -42,6 +42,37 @@ RSpec.describe GamePileHelper, type: :helper do
       create(:wish, collection: collection, product: nil, title: "Introuvable")
       create(:wish, collection: create(:collection), product: zelda)
       expect(helper.wanted_games(collection)).to eq({})
+    end
+  end
+
+  describe "friends_wanted_games (alerte « lou cherche ce jeu ! »)" do
+    let(:me) { create(:user) }
+    let(:lou) { create(:user, email: "lou@exemple.fr") }
+    let(:lou_collection) { create(:collection) }
+
+    before do
+      create(:friendship, requester: me, receiver: lou, status: "accepted")
+      create(:user_collection, user: lou, collection: lou_collection)
+    end
+
+    it "souhaits de mes amis reliés au catalogue : prénom, plateforme, prix" do
+      create(:wish, collection: lou_collection, author: lou, product: zelda, platform: "Switch", max_price: 20)
+      expect(helper.friends_wanted_games(collection, me)).to eq(7346 => [ { name: "lou", platform: "Switch", max_price: "20\u00a0€" } ])
+    end
+
+    it "rien si l'ami a coupé son interrupteur, ni pour un non-ami" do
+      create(:wish, collection: lou_collection, author: lou, product: zelda)
+      lou.update!(wishes_visible_to_friends: false)
+      stranger_collection = create(:collection)
+      create(:wish, :by_member, collection: stranger_collection, product: mario)
+      expect(helper.friends_wanted_games(collection, me)).to eq({})
+    end
+
+    it "pas les souhaits de la collection en cours (déjà « Tu le cherches ! »), ni ceux tapés à la main" do
+      create(:user_collection, user: lou, collection: collection, role: "member")
+      create(:wish, collection: collection, author: lou, product: zelda)
+      create(:wish, collection: lou_collection, author: lou, product: nil, title: "Introuvable")
+      expect(helper.friends_wanted_games(collection, me)).to eq({})
     end
   end
 end

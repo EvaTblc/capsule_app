@@ -30,7 +30,7 @@ RSpec.describe "Souhaits d'un ami", type: :request do
     expect(response.body).to include("Ce que lou cherche")
     expect(sections).to eq([ [ "Bibliothèque", [ "Veiller sur elle" ] ], [ "Jeux de Lou", [ "Zelda 2", "Zelda 10" ] ] ])
     expect(response.body).not_to include("/wishes/")
-    expect(response.body).to include("20 €")
+    expect(response.body).to include("20\u00a0€") # espace insécable : le prix ne se coupe pas
   end
 
   it "seulement ce que l'ami a ajouté : pas les souhaits des autres membres de ses collections" do
