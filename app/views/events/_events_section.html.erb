@@ -1,0 +1,49 @@
+<%# Événements du carnet (style « Pilule ») : liste par date, puis la carte. Remplacé tel quel (cadre « events-section »)
+    après « Trouver des événements près de moi » %>
+<%= turbo_frame_tag "events-section" do %>
+  <section>
+    <% upcoming = events.count { |event| event.date && event.date >= Date.current } %>
+    <div class="mb-2 flex items-center justify-between">
+      <h2 class="text-[17px] font-extrabold">Événements</h2>
+      <% if upcoming.positive? %>
+        <span class="text-[13px] text-stone-600"><%= upcoming %> à venir</span>
+      <% end %>
+    </div>
+
+    <% if local_assigns[:alert].present? %>
+      <p class="mb-2.5 rounded-3xl bg-amber-50 px-4 py-3 text-sm text-amber-800"><%= alert %></p>
+    <% end %>
+
+    <% if events.blank? %>
+      <p class="px-1 text-sm text-stone-600">Aucun événement pour l'instant : ajoute tes vide-greniers et brocantes à venir.</p>
+    <% else %>
+      <div class="bg-white rounded-3xl px-3.5 py-1 divide-y divide-stone-100 shadow-[0_1px_2px_rgba(30,27,46,0.06)]">
+        <% events.sort_by { |event| event.date || Date::Infinity.new }.each do |event| %>
+          <% next_one = event == local_assigns[:next_event] %>
+          <%= link_to event_path(event), data: { turbo_frame: "_top" }, class: "py-2.5 flex items-center gap-3" do %>
+            <span class="h-[30px] min-w-[64px] px-2.5 shrink-0 rounded-full text-xs font-extrabold flex items-center justify-center whitespace-nowrap <%= next_one ? 'bg-red-100 text-red-700' : 'bg-stone-100 text-stone-700' %>">
+              <%= event.date ? I18n.l(event.date, format: "%-d %b") : "Date ?" %>
+            </span>
+            <span class="flex-1 min-w-0">
+              <span class="block text-sm font-bold truncate"><%= event.title %></span>
+              <span class="block text-xs text-stone-600 truncate"><%= event.address %></span>
+            </span>
+            <% if event.reminder? %>
+              <svg role="img" aria-label="Rappel activé" class="w-4 h-4 shrink-0 text-purple-700" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+            <% end %>
+          <% end %>
+        <% end %>
+      </div>
+
+      <% if current_user.address.present? && markers.any? %>
+        <div class="mt-2.5 h-[200px] rounded-3xl overflow-hidden"
+             data-controller="map"
+             data-map-markers-value="<%= markers.to_json %>"
+             data-map-api-key-value="<%= mapbox_public_token %>"
+             data-map-user-lat-value="<%= current_user.latitude.to_f %>"
+             data-map-user-lng-value="<%= current_user.longitude.to_f %>">
+        </div>
+      <% end %>
+    <% end %>
+  </section>
+<% end %>

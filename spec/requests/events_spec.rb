@@ -13,11 +13,28 @@ RSpec.describe "Événements", type: :request do
       expect(response.body).to include("Vide grenier")
     end
 
-    it "sans titre : formulaire réaffiché avec le message, onglet Événement" do
+    it "sans titre : formulaire réaffiché avec le message" do
       post events_path, params: { event: { title: "" } }
       expect(response).to have_http_status(422)
+      expect(response.body).to include("Le titre ne peut pas être vide", "Nouvel événement", 'name="event[title]"')
+    end
+
+    it "page « Nouvel événement » : formulaire complet, retour au carnet" do
+      get new_event_path
+      page = Nokogiri::HTML(response.body)
+      %w[title date address url comment reminder].each { |field| expect(page.css("[name='event[#{field}]']")).to be_present }
+      expect(page.css("a[href='#{carnet_path}']")).to be_present
+    end
+  end
+
+  describe "PATCH /events/:id" do
+    it "modifier : titre « Modifier l'événement », erreurs affichées" do
+      event = create(:event, user: user, title: "Brocante")
+      get edit_event_path(event)
+      expect(Nokogiri::HTML(response.body).text).to include("Modifier l'événement")
+      patch event_path(event), params: { event: { title: "" } }
+      expect(response).to have_http_status(422)
       expect(response.body).to include("Le titre ne peut pas être vide")
-      expect(response.body).to include('data-carnet-toggle-initial-value="event"')
     end
   end
 
@@ -25,7 +42,7 @@ RSpec.describe "Événements", type: :request do
     it "supprime l'événement et revient au carnet" do
       event = create(:event, user: user)
       expect { delete event_path(event) }.to change(Event, :count).by(-1)
-      expect(response).to redirect_to(notes_path)
+      expect(response).to redirect_to(carnet_path)
     end
   end
 

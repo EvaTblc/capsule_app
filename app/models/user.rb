@@ -9,10 +9,8 @@ class User < ApplicationRecord
   has_many :user_collections, dependent: :destroy
   has_many :collections, through: :user_collections
   has_many :items, through: :collections
-  has_many :notes, dependent: :destroy
   has_many :events, dependent: :destroy
-  # Notes/events partagés à des amis : on les garde chez l'ami, sans expéditeur
-  has_many :sent_notes, class_name: "Note", foreign_key: :sender_id, dependent: :nullify
+  # Événements partagés à des amis : on les garde chez l'ami, sans expéditeur
   has_many :sent_events, class_name: "Event", foreign_key: :sender_id, dependent: :nullify
   has_many :authored_wishes, class_name: "Wish", foreign_key: :author_id, inverse_of: :author, dependent: :nullify
   has_many :sent_friendships, class_name: "Friendship", foreign_key: :requester_id, dependent: :destroy

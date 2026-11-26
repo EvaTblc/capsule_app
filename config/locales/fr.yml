@@ -72,12 +72,6 @@ fr:
               taken: "Ce jeu est déjà dans les souhaits de cette collection."
             collection:
               invalid: "Cette collection n'est pas accessible."
-        note:
-          attributes:
-            title:
-              blank: "Le titre ne peut pas être vide"
-            collection:
-              invalid: "Cette collection n'est pas accessible"
         event:
           attributes:
             title:

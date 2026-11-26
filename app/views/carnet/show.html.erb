@@ -1,0 +1,81 @@
+<%# Mon Carnet (style « Pilule ») : la prochaine sortie, ce que je cherche (souhaits de toutes mes collections),
+    puis les événements et leur carte ; bouton flottant pour ajouter un événement %>
+<div class="min-h-screen bg-paper px-5 pt-[76px] pb-28 text-ink">
+  <h1 class="text-[34px] font-extrabold tracking-tight leading-none">Mon Carnet</h1>
+  <p class="mt-1.5 text-[15px] text-stone-600">Ce que tu cherches, et les chineries à venir.</p>
+
+  <div class="mt-6 flex flex-col gap-6">
+
+    <%# Prochaine sortie : l'événement à venir le plus proche dans le temps %>
+    <% if @next_event %>
+      <% days = (@next_event.date - Date.current).to_i %>
+      <%= link_to event_path(@next_event), class: "bg-red-100 rounded-[28px] p-4 flex items-center gap-3.5" do %>
+        <span class="w-[58px] h-16 shrink-0 rounded-[18px] bg-white flex flex-col items-center justify-center leading-none text-red-700">
+          <span class="text-2xl font-extrabold"><%= @next_event.date.day %></span>
+          <span class="mt-1 text-[11px] font-extrabold tracking-wider uppercase"><%= I18n.l(@next_event.date, format: "%b") %></span>
+        </span>
+        <span class="flex-1 min-w-0">
+          <span class="block text-[11px] font-extrabold tracking-wider uppercase text-red-800">
+            Prochaine sortie · <%= days.zero? ? "aujourd'hui" : days == 1 ? "demain" : "dans #{days} jours" %>
+          </span>
+          <span class="mt-0.5 block text-lg font-extrabold tracking-tight truncate"><%= @next_event.title %></span>
+          <span class="block text-[13px] text-stone-600 truncate"><%= @next_event.address %></span>
+        </span>
+      <% end %>
+    <% end %>
+
+    <%# Ce que je cherche : les souhaits de toutes mes collections, groupés par collection %>
+    <section>
+      <% count = @wishes_by_collection.sum { |_, wishes| wishes.size } %>
+      <div class="mb-2 flex items-center justify-between">
+        <h2 class="text-[17px] font-extrabold">Ce que je cherche</h2>
+        <% if count.positive? %>
+          <span class="text-[13px] text-stone-600"><%= count %> <%= count > 1 ? "souhaits" : "souhait" %></span>
+        <% end %>
+      </div>
+      <% if @wishes_by_collection.any? %>
+        <div class="flex flex-col gap-3">
+          <% @wishes_by_collection.each do |collection, wishes| %>
+            <div>
+              <%= link_to collection.title, collection_path(collection),
+                  class: "mb-1.5 px-1 block text-xs font-bold uppercase tracking-wider text-stone-600 truncate" %>
+              <div class="bg-white rounded-3xl divide-y divide-stone-100 shadow-[0_1px_2px_rgba(30,27,46,0.06)]">
+                <%= render partial: "wishes/wish", collection: wishes, locals: { show_author: false } %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="px-1 text-sm text-stone-600">
+          Rien pour l'instant : ajoute un souhait depuis une de tes
+          <%= link_to "collections", collections_path, class: "font-bold text-purple-700" %>,
+          dans « Je cherche ».
+        </p>
+      <% end %>
+    </section>
+
+    <%# Événements et carte (cadre remplacé après la recherche de brocantes) %>
+    <%= render "events/events_section", events: @events, markers: @markers, next_event: @next_event %>
+
+    <%# Brocantes des 7 prochains jours autour de chez moi : il faut une adresse %>
+    <% if current_user.address.present? %>
+      <%= button_to list_events_path, method: :post,
+          class: "w-full h-[52px] rounded-full border-[1.5px] border-stone-300 bg-white text-[15px] font-bold flex items-center justify-center gap-2 cursor-pointer" do %>
+        <svg aria-hidden="true" class="w-[18px] h-[18px] text-purple-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0114 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+        Trouver des événements près de moi
+      <% end %>
+    <% else %>
+      <%= link_to profile_path,
+          class: "w-full min-h-[52px] px-5 py-3 rounded-full border-[1.5px] border-dashed border-stone-400 text-stone-700 text-sm font-bold flex items-center justify-center text-center" do %>
+        Ajoute ton adresse dans ton profil pour trouver les brocantes près de chez toi
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<%# Ajouter un événement (vide-grenier, brocante…) %>
+<%= link_to new_event_path,
+    class: "fixed bottom-24 right-5 z-10 h-[54px] pl-4 pr-5 rounded-full bg-purple-700 text-white text-[15px] font-bold flex items-center gap-2 shadow-[0_10px_24px_rgba(126,34,206,0.35)] active:scale-95 transition-transform duration-150" do %>
+  <svg aria-hidden="true" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  Événement
+<% end %>

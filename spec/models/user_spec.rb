@@ -3,7 +3,6 @@ require "rails_helper"
 RSpec.describe User, type: :model do
   describe "associations" do
     it { should have_many(:user_collections) }
-    it { should have_many(:notes) }
     it { should have_many(:events) }
     it { should have_many(:sent_friendships).class_name("Friendship") }
     it { should have_many(:received_friendships).class_name("Friendship") }
@@ -83,17 +82,16 @@ RSpec.describe User, type: :model do
       end
     end
 
-    it "supprime ses notes, événements et amitiés" do
-      create(:note, user: eva)
+    it "supprime ses événements et amitiés" do
       create(:event, user: eva)
       create(:friendship, requester: eva, receiver: bob)
       expect { eva.destroy! }.not_to raise_error
-      expect(Note.where(user_id: eva.id)).to be_empty
+      expect(Event.where(user_id: eva.id)).to be_empty
       expect(Friendship.count).to eq(0)
     end
 
-    it "garde les notes partagées chez l'ami, sans expéditeur" do
-      shared = create(:note, user: bob, sender: eva)
+    it "garde les événements partagés chez l'ami, sans expéditeur" do
+      shared = create(:event, user: bob, sender: eva)
       eva.destroy!
       expect(shared.reload.sender_id).to be_nil
     end

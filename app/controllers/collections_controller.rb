@@ -15,7 +15,7 @@ class CollectionsController < ApplicationController
   def show
     @items = @collection.items.includes(:item_detailable, :product).with_attached_images.sort_by { |i| NaturalSort.key(i.title) }
     @members = @collection.user_collections.includes(:user)
-    # Visiteur d'une collection publique : lecture seule (pas d'édition, d'invitation, d'ajout ni de notes)
+    # Visiteur d'une collection publique : lecture seule (pas d'édition, d'invitation, d'ajout ni de souhaits)
     @member = @collection.member?(current_user)
     # Seul le propriétaire modifie, partage le lien et gère les membres
     @owner = @collection.owner?(current_user)

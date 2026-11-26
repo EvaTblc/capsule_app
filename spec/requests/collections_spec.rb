@@ -66,19 +66,19 @@ RSpec.describe "Collections", type: :request do
     let(:visitor) { create(:user) }
     let(:public_collection) { collection_for(owner, public: true) }
     let!(:item) { create(:item, collection: public_collection, title: "Zelda") }
-    before { create(:note, user: owner, title: "Note perso", collection: public_collection) }
+    before { create(:wish, collection: public_collection, author: owner, title: "Souhait perso") }
 
     context "visiteur connecté" do
       before { sign_in visitor }
 
-      it "voit la collection, sans édition, invitation, ajout ni notes" do
+      it "voit la collection, sans édition, invitation, ajout ni souhaits" do
         get collection_path(public_collection)
         expect(response).to have_http_status(200)
         expect(response.body).to include("Zelda")
         expect(response.body).not_to include(public_collection.invite_token) # le lien d'invitation donne les droits de membre
         expect(response.body).not_to include(edit_collection_path(public_collection))
         expect(response.body).not_to include(new_collection_item_path(public_collection))
-        expect(response.body).not_to include("Note perso")
+        expect(response.body).not_to include("Souhait perso")
       end
 
       it "voit la fiche d'un item, sans édition ni estimation" do
@@ -105,7 +105,7 @@ RSpec.describe "Collections", type: :request do
       sign_in owner
       get collection_path(public_collection)
       expect(response.body).to include(public_collection.invite_token)
-        .and include(new_collection_item_path(public_collection)).and include("Note perso")
+        .and include(new_collection_item_path(public_collection)).and include("Souhait perso")
     end
   end
 

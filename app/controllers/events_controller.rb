@@ -1,27 +1,26 @@
 class EventsController < ApplicationController
+  include EventMarkers
   before_action :authenticate_user!
   before_action :set_event, only: [ :show, :edit, :update, :destroy, :share ]
   def show
   end
 
+  def new
+    @event = Event.new
+  end
+
   def list_events
     alert = import_nearby_events
 
-    @events = Event.nearby_for(current_user)
-    @markers = @events.geocoded.map do |event|
-      {
-        lat: event.latitude.to_f,
-        lng: event.longitude.to_f,
-        info_window_html: render_to_string(partial: "notes/info_window", locals: { event: event }, formats: [ :html ])
-      }
-    end
+    @events = Event.nearby_for(current_user).to_a
+    next_event = @events.select { |event| event.date&.>=(Date.current) }.min_by(&:date)
 
     respond_to do |format|
       format.turbo_stream do
         render turbo_stream: turbo_stream.replace(
           "events-section",
-          partial: "notes/events_section",
-          locals: { events: @events, markers: @markers, alert: alert }
+          partial: "events/events_section",
+          locals: { events: @events, markers: event_markers(@events), next_event: next_event, alert: alert }
         )
       end
     end
@@ -63,15 +62,11 @@ class EventsController < ApplicationController
     if @event.save
       redirect_to event_path(@event)
     else
-      # Le formulaire d'événement vit dans notes/new (pas de vue events/new)
-      @note = Note.new
-      render "notes/new", status: :unprocessable_entity
+      render :new, status: :unprocessable_entity
     end
   end
 
-  def edit
-    @note = Note.new
-  end
+  def edit; end
 
   def update
     if @event.update(events_params)
@@ -82,7 +77,7 @@ class EventsController < ApplicationController
   end
 
   def destroy
-    redirect_to notes_path, status: :see_other if @event.destroy
+    redirect_to carnet_path, status: :see_other if @event.destroy
   end
 
   private

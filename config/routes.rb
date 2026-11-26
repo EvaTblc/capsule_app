@@ -43,13 +43,10 @@ Rails.application.routes.draw do
     get "search/movie_barcode", to: "search#movie_barcode"
   end
 
-  resources :notes, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
-    member do
-      post :share
-    end
-  end
+  # Mon Carnet : ce que je cherche (souhaits) et les chineries à venir (événements)
+  get "carnet", to: "carnet#show", as: "carnet"
   resources :events, only: [ :show, :new, :create, :edit, :update, :destroy ] do
-      member do
+    member do
       post :share
     end
   end

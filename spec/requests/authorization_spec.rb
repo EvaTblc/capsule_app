@@ -10,7 +10,6 @@ RSpec.describe "Autorisations", type: :request do
     end
   end
   let!(:item) { create(:item, collection: collection) }
-  let!(:note) { create(:note, user: eva) }
   let!(:event) { create(:event, user: eva) }
 
   context "utilisateur connecté qui n'est pas membre" do
@@ -20,7 +19,6 @@ RSpec.describe "Autorisations", type: :request do
     it("ne voit pas l'item") { get collection_item_path(collection, item); expect(response).to have_http_status(404) }
     it("ne peut pas éditer l'item") { get edit_collection_item_path(collection, item); expect(response).to have_http_status(404) }
     it("ne peut pas estimer l'item") { post estimate_item_path(item); expect(response).to have_http_status(404) }
-    it("ne voit pas la note") { get note_path(note); expect(response).to have_http_status(404) }
     it("ne voit pas l'événement") { get event_path(event); expect(response).to have_http_status(404) }
 
     it "ne peut pas supprimer l'item" do
@@ -33,8 +31,8 @@ RSpec.describe "Autorisations", type: :request do
       }.not_to change(Item, :count)
     end
 
-    it "ne peut pas supprimer la note" do
-      expect { delete note_path(note) }.not_to change(Note, :count)
+    it "ne peut pas supprimer l'événement" do
+      expect { delete event_path(event) }.not_to change(Event, :count)
     end
   end
 
@@ -55,18 +53,10 @@ RSpec.describe "Autorisations", type: :request do
   end
 
   describe "partage" do
-    it "on ne peut partager une note qu'avec un ami" do
+    it "on ne peut partager un événement qu'avec un ami" do
       sign_in eva
-      expect { post share_note_path(note), params: { friend_id: intrus.id } }.not_to change(Note, :count)
+      expect { post share_event_path(event), params: { friend_id: intrus.id } }.not_to change(Event, :count)
       expect(response).to have_http_status(404)
-    end
-
-    it "une note ne peut pas être rattachée à la collection d'un autre" do
-      sign_in intrus
-      expect {
-        post notes_path, params: { note: { title: "Spam", collection_id: collection.id } }
-      }.not_to change(Note, :count)
-      expect(response).to have_http_status(422)
     end
   end
 

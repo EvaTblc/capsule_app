@@ -50,9 +50,9 @@ RSpec.describe "Contraintes de la base" do
 
   it "un expéditeur supprimé en SQL est vidé, pas laissé orphelin" do
     sender = create(:user)
-    note = create(:note, user: user, sender: sender)
+    event = create(:event, user: user, sender: sender)
     User.where(id: sender.id).delete_all # sans callbacks Rails
-    expect(note.reload.sender_id).to be_nil
+    expect(event.reload.sender_id).to be_nil
   end
 
   describe "catalogue" do

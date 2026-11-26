@@ -69,12 +69,11 @@ RSpec.describe "Lien d'invitation et membres", type: :request do
       expect(response).to have_http_status(404)
     end
 
-    it "les notes du membre retiré ne restent pas affichées dans la collection" do
-      note = create(:note, user: member, collection: collection)
+    it "les souhaits du membre retiré restent dans la collection (ils sont à la collection)" do
+      wish = create(:wish, collection: collection, author: member)
       sign_in owner
       delete collection_membership_path(collection, membership_of(member))
-      expect(note.reload.collection_id).to be_nil
-      expect(Note.exists?(note.id)).to be true # la note reste à son auteur
+      expect(wish.reload.collection).to eq(collection)
     end
 
     it "un membre ne peut pas retirer un autre membre" do
@@ -102,11 +101,5 @@ RSpec.describe "Lien d'invitation et membres", type: :request do
       expect(response).to redirect_to(collections_path)
       expect(collection.member?(member)).to be false
     end
-  end
-
-  it "supprimer la collection supprime toujours ses notes (pas de détachement dans ce cas)" do
-    note = create(:note, user: member, collection: collection)
-    collection.destroy
-    expect(Note.exists?(note.id)).to be false
   end
 end

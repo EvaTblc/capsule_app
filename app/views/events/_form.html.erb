@@ -1,0 +1,46 @@
+<%# Formulaire d'un événement (création et modification), style « Pilule » %>
+<% textarea = "w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 " \
+              "focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200 resize-none" %>
+<%= form_with model: event, class: "flex flex-col gap-5" do |f| %>
+  <%= render "shared/form_errors", record: event %>
+
+  <div>
+    <%= f.label :title, "Titre", class: entry_label_class %>
+    <%= f.text_field :title, placeholder: "Ex : Vide-grenier de Montreuil", class: entry_input_class %>
+  </div>
+
+  <div>
+    <%= f.label :date, "Date", class: entry_label_class %>
+    <%= f.date_field :date, class: entry_input_class %>
+  </div>
+
+  <div>
+    <%= f.label :address, "Adresse ou ville", class: entry_label_class %>
+    <%= f.text_field :address, placeholder: "Ex : Place de la mairie, Montreuil", class: entry_input_class %>
+  </div>
+
+  <div>
+    <%= f.label :url, "Lien (facultatif)", class: entry_label_class %>
+    <%= f.url_field :url, placeholder: "https://…", class: entry_input_class %>
+  </div>
+
+  <div>
+    <%= f.label :comment, "Commentaire", class: entry_label_class %>
+    <%= f.text_area :comment, rows: 3, placeholder: "Horaires, parking, stands à ne pas rater…", class: textarea %>
+  </div>
+
+  <label class="flex items-center justify-between gap-4 bg-white rounded-3xl px-5 py-4 cursor-pointer shadow-[0_1px_2px_rgba(30,27,46,0.06)]">
+    <span>
+      <span class="block text-[15px] font-bold">Me le rappeler</span>
+      <span class="block text-xs text-stone-600">Dans la cloche en haut de l'écran, la semaine de l'événement</span>
+    </span>
+    <%= f.check_box :reminder, role: "switch",
+        class: "appearance-none shrink-0 w-11 h-[26px] rounded-full bg-gray-300 relative cursor-pointer transition-colors checked:bg-purple-700 " \
+               "before:content-[''] before:absolute before:top-[3px] before:left-[3px] before:w-5 before:h-5 before:rounded-full before:bg-white " \
+               "before:transition-transform checked:before:translate-x-[18px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600" %>
+  </label>
+
+  <%= f.button type: "submit", class: "#{entry_button_class} mt-2" do %>
+    <%= entry_button_content("Enregistrer") %>
+  <% end %>
+<% end %>

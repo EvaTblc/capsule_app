@@ -1,7 +1,6 @@
 # db/seeds.rb
 puts "Nettoyage..."
 Friendship.destroy_all
-Note.destroy_all
 Event.destroy_all
 UserCollection.destroy_all
 Item.destroy_all

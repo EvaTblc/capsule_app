@@ -2,7 +2,6 @@ class Collection < ApplicationRecord
   has_many :items, dependent: :destroy
   has_many :user_collections, dependent: :destroy
   has_many :users, through: :user_collections
-  has_many :notes, dependent: :destroy
   has_many :wishes, dependent: :destroy
 
   has_one_attached :cover_image

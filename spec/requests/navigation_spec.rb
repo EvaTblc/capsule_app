@@ -12,7 +12,7 @@ RSpec.describe "Barre d'onglets", type: :request do
     get collections_path
     expect(current_tab).to eq([ "Collections" ])
 
-    get notes_path
+    get carnet_path
     expect(current_tab).to eq([ "Mon Carnet" ])
 
     get profile_path
