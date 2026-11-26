@@ -1,11 +1,20 @@
-<%# Messages flash (notice / alert) de toute l'appli : bulle flottante sous la barre du haut %>
+<%# Messages flash (notice / alert) de toute l'appli : bulle flottante sous la barre du haut (style « Pilule ») :
+    confirmation en encre avec une coche, erreur sur fond rouge pâle %>
 <% flash.each do |type, message| %>
   <% next if message.blank? || !%w[notice alert].include?(type.to_s) %>
+  <% alert = type.to_s == "alert" %>
   <div data-controller="flash" data-action="click->flash#dismiss" data-turbo-temporary
-       role="<%= type.to_s == "alert" ? "alert" : "status" %>"
-       class="fixed <%= user_signed_in? ? "top-16" : "top-4" %> left-4 right-4 z-50 mx-auto max-w-sm cursor-pointer
-              rounded-xl px-4 py-3 text-sm font-medium shadow-lg transition-opacity duration-300
-              <%= type.to_s == "alert" ? "bg-red-50 text-red-700 border border-red-100" : "bg-purple-50 text-purple-700 border border-purple-100" %>">
-    <%= message %>
+       role="<%= alert ? "alert" : "status" %>"
+       class="fixed <%= user_signed_in? ? "top-[68px]" : "top-4" %> left-4 right-4 z-50 mx-auto max-w-sm cursor-pointer
+              flex items-start gap-2.5 rounded-3xl px-4 py-3 text-sm font-semibold shadow-[0_10px_30px_rgba(30,27,46,0.22)] transition-opacity duration-300
+              <%= alert ? "bg-red-50 text-red-800 border-[1.5px] border-red-200" : "bg-ink text-white" %>">
+    <span aria-hidden="true" class="mt-px w-5 h-5 shrink-0 rounded-full flex items-center justify-center <%= alert ? "bg-red-600 text-white" : "bg-purple-700" %>">
+      <% if alert %>
+        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M12 7v6M12 17v.5"/></svg>
+      <% else %>
+        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>
+      <% end %>
+    </span>
+    <span><%= message %></span>
   </div>
 <% end %>

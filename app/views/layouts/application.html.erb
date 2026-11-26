@@ -49,10 +49,10 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body class="bg-paper text-ink">
     <% if user_signed_in? %>
       <% upcoming_reminders = current_user.events.where(reminder: true).where(date: Date.today..7.days.from_now.to_date).count %>
-      <header class="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 flex justify-between items-center px-4 h-14 z-20">
+      <header class="fixed top-0 left-0 right-0 bg-paper/90 backdrop-blur border-b border-stone-200/70 flex justify-between items-center px-4 h-14 z-20">
         <a href="/" class="flex items-center gap-1.5 font-display text-2xl font-extrabold leading-none text-ink">
           <%= image_tag "logo-mark.svg", alt: "", class: "w-7 h-7 -rotate-[8deg]" %>
           capsule
@@ -94,12 +94,12 @@
                 class="w-9 h-9 rounded-full object-cover"
                 data-avatar-target="img"
                 data-action="error->avatar#error">
-            <div data-avatar-target="fallback" class="hidden w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
-              <span class="text-purple-600 font-bold text-sm"><%= current_user.email[0].upcase %></span>
+            <div data-avatar-target="fallback" class="hidden w-9 h-9 rounded-full bg-ink flex items-center justify-center">
+              <span class="text-white font-bold text-sm"><%= current_user.email[0].upcase %></span>
             </div>
           <% else %>
-            <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
-              <span class="text-purple-600 font-bold text-sm"><%= current_user.email[0].upcase %></span>
+            <div class="w-9 h-9 rounded-full bg-ink flex items-center justify-center">
+              <span class="text-white font-bold text-sm"><%= current_user.email[0].upcase %></span>
             </div>
           <% end %>
         </div>
@@ -111,7 +111,8 @@
     <%= yield %>
 
     <% if user_signed_in? %>
-      <%# Onglets : celui de la page en cours en violet (aria-current), les autres en gris %>
+      <%# Onglets : celui de la page en cours en encre, son icône dans une pastille lilas (aria-current), les autres en gris.
+          Barre web provisoire : l'appli native (Hotwire Native) utilisera la barre d'onglets d'iOS / Android %>
       <% tabs = [
         [ collections_path, "Collections", %w[collections items].include?(controller_name),
           "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" ],
@@ -120,14 +121,16 @@
         [ profile_path, "Profil", controller_name == "pages" && %w[profile edit_address].include?(action_name),
           "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" ]
       ] %>
-      <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center h-16 z-20" aria-label="Navigation principale">
+      <nav class="fixed bottom-0 left-0 right-0 bg-paper/95 backdrop-blur border-t border-stone-200/70 flex justify-around items-center h-16 z-20" aria-label="Navigation principale">
         <% tabs.each do |path, label, active, icon| %>
           <%= link_to path, aria: { current: ("page" if active) },
-              class: "flex flex-col items-center gap-1 min-w-16 transition-colors duration-200 #{active ? 'text-purple-700' : 'text-gray-500 hover:text-purple-600'}" do %>
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="<%= icon %>" />
-            </svg>
-            <span class="text-xs <%= 'font-semibold' if active %>"><%= label %></span>
+              class: "flex flex-col items-center gap-0.5 min-w-16 transition-colors duration-200 #{active ? 'text-ink' : 'text-stone-500 hover:text-ink'}" do %>
+            <span class="px-4 py-1 rounded-full <%= active ? 'bg-lilac text-purple-800' : '' %>">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="<%= icon %>" />
+              </svg>
+            </span>
+            <span class="text-xs <%= active ? 'font-bold' : 'font-medium' %>"><%= label %></span>
           <% end %>
         <% end %>
       </nav>
