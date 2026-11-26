@@ -70,7 +70,7 @@ RSpec.describe "Types d'items : parcours complet (navigateur)", type: :system do
     expect(page).to have_content("Item ajouté !")
     item = Item.last
     expect(item.item_detailable).to have_attributes(platform: "PS5", genre: "Aventure", developer: "Clover Studio", completed: true)
-    expect(page).to have_content("Oui")
+    expect(page).to have_css("section span", text: "Complet")
     edit_title(games, item, "Okami HD")
     expect(page).to have_content("Item mis à jour !")
     expect(item.reload.item_detailable).to have_attributes(platform: "PS5", completed: true)

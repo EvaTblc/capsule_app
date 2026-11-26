@@ -126,7 +126,7 @@ RSpec.describe "Items", type: :request do
       detail = create(:video_game_detail, summary_en: "An epic adventure", description: nil)
       item = create(:item, collection: games, item_detailable: detail, item_detailable_type: "VideoGameDetail")
       get collection_item_path(games, item)
-      expect(response.body).to include("An epic adventure", "Description (en anglais)")
+      expect(response.body).to include("An epic adventure", "Résumé (en anglais)")
     end
 
     it "affiche la description française, jamais le résumé anglais interne" do
@@ -220,34 +220,43 @@ RSpec.describe "Items", type: :request do
     end
   end
 
-  describe "GET fiche : image d'en-tête" do
+  describe "GET fiche : en-tête (couleur du type, jaquette penchée, titre et pastilles)" do
     let(:games) { collection_of("video_games") }
     let(:diamant) { create(:product, igdb_id: 1560, details: { "cover_image_id" => "co1zht" }) }
     let(:cover_url) { "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1zht.jpg" }
 
-    def header_html
-      Nokogiri::HTML(response.body).at_css("h1").ancestors("div.rounded-3xl").first.to_html
-    end
+    def header = Nokogiri::HTML(response.body).at_css("h1").ancestors("section").first
 
-    it "jeu sans photo relié au catalogue : sa jaquette IGDB (grand format), voile sombre et texte blanc" do
+    it "jeu sans photo relié au catalogue : sa jaquette IGDB (grand format), sur la couleur des jeux" do
       item = Item.create!(title: "Pokémon Diamant", collection: games, product: diamant, item_detailable: VideoGameDetail.create!)
       get collection_item_path(games, item)
-      expect(header_html).to include("background-image: url('#{cover_url}')", "bg-black opacity-40", "text-white")
+      expect(header.at_css("img")["src"]).to eq(cover_url)
+      expect(header["class"]).to include("bg-blue-100")
     end
 
     it "avec photo : la photo passe avant la jaquette" do
       item = Item.create!(title: "Pokémon Diamant", collection: games, product: diamant, item_detailable: VideoGameDetail.create!)
       item.images.attach(io: File.open(Rails.root.join("spec/fixtures/files/figurine.jpg")), filename: "photo.jpg", content_type: "image/jpeg")
       get collection_item_path(games, item)
-      expect(header_html).to include("background-image", "/rails/active_storage/")
-      expect(header_html).not_to include("images.igdb.com")
+      expect(header.at_css("img")["src"]).to include("/rails/active_storage/")
+      expect(header.to_html).not_to include("images.igdb.com")
     end
 
-    it "sans photo ni jaquette (livre) : fond coloré du type, sans image" do
+    it "sans photo ni jaquette (livre) : l'icône du type à la place, sur la couleur des livres" do
       item = create(:item, collection: collection_of("books"))
       get collection_item_path(item.collection, item)
-      expect(header_html).not_to include("background-image", "text-white")
-      expect(header_html).to include("bg-emerald-50")
+      expect(header.at_css("img")).to be_nil
+      expect(header["class"]).to include("bg-emerald-100")
+    end
+
+    it "pastilles : plateforme (couleur de son bandeau), « Complet », état ; retirées de la liste des infos" do
+      detail = VideoGameDetail.create!(platform: "Switch", completed: true, genre: "Aventure")
+      item = Item.create!(title: "Zelda", collection: games, item_detailable: detail, condition: "Très bon état")
+      get collection_item_path(games, item)
+      chips = header.css("h1 + div span").map { |chip| chip.text.strip }
+      expect(chips).to eq([ "Switch", "Complet", "Très bon état" ])
+      expect(header.at_css("span[style*='#{ItemTilesHelper::PLATFORM_BANDS['Switch']}']")).to be_present
+      expect(Nokogiri::HTML(response.body).css("p.text-stone-600").map(&:text)).to eq([ "Genre" ])
     end
   end
 
@@ -262,16 +271,18 @@ RSpec.describe "Items", type: :request do
 
   describe "GET fiche : ordre des champs" do
     def labels
-      Nokogiri::HTML(response.body).css("div.bg-white.border p.uppercase").map { |label| label.text.strip }
+      Nokogiri::HTML(response.body).css("p.text-stone-600").map { |label| label.text.strip }
     end
 
-    it "jeu : plateforme, édition, complet, année, développeur, genre, puis la description en dernier" do
+    it "jeu : édition, année, développeur, genre (plateforme et complet en pastilles), puis le résumé dans sa carte" do
       games = collection_of("video_games")
       detail = VideoGameDetail.create!(platform: "PS5", genre: "Aventure", developer: "Clover", release_date: 2006,
                                        description: "Amaterasu…", completed: true, edition: "Standard")
       item = Item.create!(title: "Okami", collection: games, item_detailable: detail)
       get collection_item_path(games, item)
-      expect(labels.first(7)).to eq([ "Plateforme", "Édition", "Jeu complet", "Année de sortie", "Développeur", "Genre", "Description" ])
+      expect(labels.first(4)).to eq([ "Édition", "Année de sortie", "Développeur", "Genre" ])
+      expect(Nokogiri::HTML(response.body).at_css("h2").text.strip).to eq("Résumé")
+      expect(response.body).to include("Amaterasu…")
     end
 
     it "jeu : chaque champ affichable a sa place dans l'ordre (aucun oublié en fin de fiche)" do

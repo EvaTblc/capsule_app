@@ -478,7 +478,7 @@ RSpec.describe "Items (navigateur)", type: :system do
 
       visit collection_item_path(books, item)
       expect(page).not_to have_text("Cette fonction est réservée aux comptes Premium.")
-      click_on "Estimer la valeur · Premium"
+      click_on "Estimer la valeur" # bouton cadenassé (🔒), réservé aux comptes Premium
 
       expect(page).to have_css("#estimation", text: "Cette fonction est réservée aux comptes Premium.")
     end
