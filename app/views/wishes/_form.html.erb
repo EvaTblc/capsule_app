@@ -1,23 +1,30 @@
 <%# Formulaire d'un souhait (création et modification), style « Pilule » %>
 <% textarea = "w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 " \
               "focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200 resize-none" %>
-<%= form_with model: [ collection, wish ], class: "flex flex-col gap-5" do |f| %>
+<% games = %w[video_games mixed].include?(collection.category) %>
+<%= form_with model: [ collection, wish ], class: "flex flex-col gap-5", data: { controller: ("games-search" if games) } do |f| %>
   <%= render "shared/form_errors", record: wish %>
+
+  <% if games %>
+    <%# Jeu choisi via la recherche ou le scan : seul son identifiant part, le serveur relit l'œuvre chez IGDB %>
+    <%= hidden_field_tag "product[igdb_id]", wish.product&.igdb_id, id: nil, data: { games_search_target: "igdbId" } %>
+    <%= render "shared/game_search" %>
+  <% end %>
 
   <div>
     <%= f.label :title, "Titre", class: entry_label_class %>
-    <%= f.text_field :title, placeholder: "Ex : Ōkami", class: entry_input_class %>
+    <%= f.text_field :title, placeholder: "Ex : Ōkami", class: entry_input_class, data: { games_search_target: "title" } %>
   </div>
 
   <%# Plateforme et édition : seulement pour les jeux %>
-  <% if %w[video_games mixed].include?(collection.category) %>
+  <% if games %>
     <div>
       <%= f.label :platform, "Plateforme", class: entry_label_class %>
-      <%= f.select :platform, VideoGameDetail::PLATFORMS, { include_blank: "Peu importe" }, class: entry_input_class %>
+      <%= f.select :platform, VideoGameDetail::PLATFORMS, { include_blank: "Peu importe" }, class: entry_input_class, data: { games_search_target: "platform" } %>
     </div>
     <div>
       <%= f.label :edition, "Édition", class: entry_label_class %>
-      <%= f.text_field :edition, placeholder: "PAL, Platinum, Collector…", class: entry_input_class %>
+      <%= f.text_field :edition, placeholder: "PAL, Platinum, Collector…", class: entry_input_class, data: { games_search_target: "edition" } %>
     </div>
   <% end %>
 
