@@ -91,6 +91,58 @@ RSpec.describe Wish, type: :model do
     end
   end
 
+  describe ".visible_to (qui voit quoi)" do
+    let(:me) { create(:user) }
+    let(:friend) { create(:user) }
+    let(:friend_collection) { create(:collection) }
+    let!(:friend_wish) { create(:wish, :by_member, member: friend, collection: friend_collection) }
+
+    def befriend(user, status: "accepted") = create(:friendship, requester: me, receiver: user, status: status)
+
+    it "membre : voit tous les souhaits de ses collections, quel qu'en soit l'auteur" do
+      shared = create(:user_collection, user: me, role: "member").collection
+      by_me = create(:wish, :by_member, member: me, collection: create(:collection))
+      by_other_member = create(:wish, collection: shared)
+      expect(Wish.visible_to(me)).to contain_exactly(by_me, by_other_member)
+    end
+
+    it "ami (dans les deux sens de la demande) : voit les souhaits qu'il a ajoutés" do
+      create(:friendship, requester: friend, receiver: me, status: "accepted")
+      expect(Wish.visible_to(me)).to contain_exactly(friend_wish)
+    end
+
+    it "ami qui a coupé l'interrupteur : ne voit rien" do
+      befriend(friend)
+      friend.update!(wishes_visible_to_friends: false)
+      expect(Wish.visible_to(me)).to be_empty
+    end
+
+    it "ami : ne voit pas les souhaits ajoutés par les autres membres de ses collections (qui ne sont pas ses amis)" do
+      befriend(friend)
+      not_my_friend_wish = create(:wish, :by_member, collection: friend_collection)
+      expect(Wish.visible_to(me)).not_to include(not_my_friend_wish)
+    end
+
+    it "demande d'ami en attente ou refusée : ne voit rien" do
+      befriend(friend, status: "pending")
+      expect(Wish.visible_to(me)).to be_empty
+    end
+
+    it "collection publique : ses souhaits restent invisibles aux visiteurs" do
+      friend_collection.update!(public: true)
+      expect(Wish.visible_to(me)).to be_empty
+    end
+
+    it "une seule requête, quel que soit le nombre de collections et d'amis" do
+      befriend(friend)
+      me.reload # créé avant le comptage
+      queries = 0
+      counter = ->(*, payload) { queries += 1 unless payload[:name] == "SCHEMA" }
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { Wish.visible_to(me).to_a }
+      expect(queries).to eq(1)
+    end
+  end
+
   it "côté utilisateur : les amis voient ses souhaits par défaut" do
     expect(User.new.wishes_visible_to_friends).to be(true)
   end
