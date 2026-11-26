@@ -61,6 +61,17 @@ fr:
               inclusion: "Choisis une édition dans la liste."
             condition_box:
               inclusion: "Choisis l'état de la boîte dans la liste."
+        wish:
+          attributes:
+            title:
+              blank: "Donne un titre à ton souhait."
+            max_price:
+              not_a_number: "Le prix maximum doit être un nombre, par exemple 20 ou 12.50."
+              greater_than: "Le prix maximum doit être supérieur à 0 €."
+            product_id:
+              taken: "Ce jeu est déjà dans les souhaits de cette collection."
+            collection:
+              invalid: "Cette collection n'est pas accessible."
         note:
           attributes:
             title:

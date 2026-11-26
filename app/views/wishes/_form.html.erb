@@ -1,0 +1,38 @@
+<%# Formulaire d'un souhait (création et modification), style « Pilule » %>
+<% textarea = "w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 " \
+              "focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200 resize-none" %>
+<%= form_with model: [ collection, wish ], class: "flex flex-col gap-5" do |f| %>
+  <%= render "shared/form_errors", record: wish %>
+
+  <div>
+    <%= f.label :title, "Titre", class: entry_label_class %>
+    <%= f.text_field :title, placeholder: "Ex : Ōkami", class: entry_input_class %>
+  </div>
+
+  <%# Plateforme et édition : seulement pour les jeux %>
+  <% if %w[video_games mixed].include?(collection.category) %>
+    <div>
+      <%= f.label :platform, "Plateforme", class: entry_label_class %>
+      <%= f.select :platform, VideoGameDetail::PLATFORMS, { include_blank: "Peu importe" }, class: entry_input_class %>
+    </div>
+    <div>
+      <%= f.label :edition, "Édition", class: entry_label_class %>
+      <%= f.text_field :edition, placeholder: "PAL, Platinum, Collector…", class: entry_input_class %>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :max_price, "Prix maximum (€)", class: entry_label_class %>
+    <%= f.number_field :max_price, min: 0.01, step: 0.01, inputmode: "decimal", placeholder: "Ex : 20", class: entry_input_class %>
+    <p class="mt-1.5 px-1 text-xs text-stone-600">Pour ne pas craquer sur le coup de l'émotion en brocante.</p>
+  </div>
+
+  <div>
+    <%= f.label :note, "Note", class: entry_label_class %>
+    <%= f.text_area :note, rows: 3, placeholder: "Avec boîte et notice, pas de version Platinum…", class: textarea %>
+  </div>
+
+  <%= f.button type: "submit", class: "#{entry_button_class} mt-2" do %>
+    <%= entry_button_content("Ajouter à mes souhaits") %>
+  <% end %>
+<% end %>
