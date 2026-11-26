@@ -1,90 +1,75 @@
-<div class="p-4 pb-24">
-
-  <% style = Collection::CATEGORY_STYLES[@collection.category] %>
-
-  <div class="rounded-3xl mt-14 mb-4 relative overflow-hidden <%= @collection.cover_image.attached? ? 'h-48' : style %>"
-      style="<%= @collection.cover_image.attached? ? "background-image: url('#{url_for(@collection.cover_image)}'); background-size: cover; background-position: center;" : "" %>">
-
-    <% if @collection.cover_image.attached? %>
-      <div class="absolute inset-0 bg-black opacity-40 rounded-3xl"></div>
+<%# Page d'une collection (style « Pilule ») : en-tête sur la couleur de la catégorie (ou la photo de couverture),
+    recherche et affichage grille / liste, filtres, items ; membres et notes dessous ; boutons d'ajout flottants %>
+<div class="min-h-screen bg-paper pt-14 pb-28 text-ink" data-controller="collection-filter">
+  <% cover = @collection.cover_image.attached? %>
+  <section class="relative overflow-hidden rounded-b-[36px] px-5 pt-3 pb-5 <%= cover ? 'bg-ink text-white' : collection_tint(@collection.category) %>">
+    <% if cover %>
+      <%= image_tag @collection.cover_image, alt: "", class: "absolute inset-0 w-full h-full object-cover" %>
+      <div class="absolute inset-0 bg-black/45"></div>
     <% end %>
 
-    <div class="relative z-10 h-full flex flex-col justify-between p-6">
-
-      <div>
-        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-3">
-          <% category_to_icon = { "comics" => "comics", "movies" => "movies", "music" => "music", "video_games" => "video_games", "figurines" => "figurines", "trading_cards" => "trading_cards", "board_games" => "board_games", "books" => "book", "mixed" => "mixed", "other" => "other" } %>
-          <%= render "collections/icons/#{category_to_icon[@collection.category]}" %>      </div>
-        <p class="text-xs font-semibold uppercase tracking-widest <%= @collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= category_label(@collection.category) %></p>
-        <div class="flex items-center justify-between gap-2">
-          <h1 class="text-3xl font-black tracking-tight <%= @collection.cover_image.attached? ? 'text-white' : '' %>"><%= @collection.title %></h1>
-          <div class="flex items-center gap-2 shrink-0">
-            <%# Édition et lien d'invitation : propriétaire uniquement (le lien d'invitation fait devenir membre) %>
-            <% if @owner %>
-            <%= link_to edit_collection_path(@collection), class: "w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm" do %>
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            <% end %>
-
-            <button data-controller="share"
-                    data-share-url-value="<%= invite_url(token: @collection.invite_token) %>"
-                    data-action="click->share#copy"
-                    class="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-            </button>
-            <% end %>
-          </div>
+    <div class="relative flex items-center justify-between gap-2 mb-4">
+      <%= link_to collections_path, class: "inline-flex items-center gap-1 h-10 pl-2.5 pr-3.5 rounded-full bg-white text-ink text-sm font-bold" do %>
+        <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M15 19l-7-7 7-7"/></svg>
+        Mes collections
+      <% end %>
+      <%# Édition et lien d'invitation : propriétaire uniquement (le lien d'invitation fait devenir membre) %>
+      <% if @owner %>
+        <div class="flex items-center gap-2">
+          <%= link_to edit_collection_path(@collection), aria: { label: "Modifier la collection" },
+              class: "w-10 h-10 rounded-full bg-white text-ink flex items-center justify-center" do %>
+            <svg aria-hidden="true" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+          <% end %>
+          <button type="button" aria-label="Copier le lien d'invitation"
+                  data-controller="share"
+                  data-share-url-value="<%= invite_url(token: @collection.invite_token) %>"
+                  data-action="click->share#copy"
+                  class="w-10 h-10 rounded-full bg-white text-ink flex items-center justify-center">
+            <svg aria-hidden="true" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+          </button>
         </div>
-        <p class="text-sm <%= @collection.cover_image.attached? ? 'text-white opacity-75' : 'text-gray-400' %>"><%= items_count(@collection.items.count) %></p>
-
-      </div>
+      <% end %>
     </div>
 
-  </div>
-  <%= link_to collections_path, class: "flex items-center gap-1 text-xs text-gray-400 mb-3" do %>
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-    MES COLLECTIONS
-  <% end %>
-
-  <div data-controller="collection-filter">
+    <p class="relative text-xs font-semibold uppercase tracking-widest <%= cover ? 'text-white/80' : 'text-stone-700' %>">
+      <%= category_label(@collection.category) %> · <%= items_count(@collection.items.count) %>
+    </p>
+    <h1 class="relative mt-1 mb-4 text-[34px] font-extrabold tracking-tight leading-none break-words"><%= @collection.title %></h1>
 
     <%# Recherche (instantanée, dans la page) et choix grille / liste, retenu par le navigateur %>
-    <div class="flex items-center gap-2 mb-3">
-      <label class="flex-1 min-w-0 h-11 rounded-xl bg-gray-100 flex items-center gap-2 px-3">
-        <svg class="w-[18px] h-[18px] text-gray-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <div class="relative flex items-center gap-2">
+      <label class="flex-1 min-w-0 h-12 rounded-full bg-white flex items-center gap-2.5 px-4">
+        <svg class="w-[18px] h-[18px] text-stone-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
         <input type="search"
               placeholder="Chercher dans <%= @collection.title %>…"
               aria-label="Chercher dans la collection"
               data-collection-filter-target="search"
               data-action="input->collection-filter#filter"
-              class="flex-1 min-w-0 bg-transparent border-0 p-0 text-[15px] text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0">
+              class="flex-1 min-w-0 bg-transparent border-0 p-0 text-[15px] text-ink placeholder-gray-500 focus:outline-none focus:ring-0">
       </label>
-      <div class="flex rounded-xl bg-gray-100 p-[3px] gap-0.5 shrink-0" role="group" aria-label="Affichage">
+      <div class="flex rounded-full bg-white p-1 gap-0.5 shrink-0" role="group" aria-label="Affichage">
         <button type="button" aria-label="Vue grille" aria-pressed="true"
                 data-collection-filter-target="gridButton" data-action="collection-filter#showGrid"
-                class="w-[38px] h-[38px] rounded-[9px] flex items-center justify-center text-gray-500 aria-pressed:bg-white aria-pressed:text-purple-700 aria-pressed:shadow-sm">
+                class="w-10 h-10 rounded-full flex items-center justify-center text-stone-500 aria-pressed:bg-ink aria-pressed:text-white">
           <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
         </button>
         <button type="button" aria-label="Vue liste" aria-pressed="false"
                 data-collection-filter-target="listButton" data-action="collection-filter#showList"
-                class="w-[38px] h-[38px] rounded-[9px] flex items-center justify-center text-gray-500 aria-pressed:bg-white aria-pressed:text-purple-700 aria-pressed:shadow-sm">
+                class="w-10 h-10 rounded-full flex items-center justify-center text-stone-500 aria-pressed:bg-ink aria-pressed:text-white">
           <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
         </button>
       </div>
     </div>
+  </section>
 
+  <div class="px-5 pt-4">
     <% unless @items.empty? %>
       <%# Filtres rapides : un seul choix à la fois (« Tous » pour revenir), plus « Complets » qui s'y ajoute %>
       <% facets = collection_facets(@items, @collection.category) %>
       <% completable = collection_completable?(@items) %>
-      <% chip = "h-8 px-3.5 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 border border-gray-200 bg-white text-gray-700 aria-pressed:bg-purple-700 aria-pressed:border-purple-700 aria-pressed:text-white" %>
+      <% chip = "h-9 px-4 rounded-full text-sm font-semibold whitespace-nowrap shrink-0 border-[1.5px] border-stone-200 bg-white text-ink aria-pressed:bg-ink aria-pressed:border-ink aria-pressed:text-white" %>
       <% if facets.any? || completable %>
-        <div class="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 mb-2 [scrollbar-width:none]" role="group" aria-label="Filtres rapides">
+        <div class="flex gap-2 overflow-x-auto -mx-5 px-5 pb-1 mb-2 [scrollbar-width:none]" role="group" aria-label="Filtres rapides">
           <button type="button" class="<%= chip %>" aria-pressed="true"
                   data-collection-filter-target="facetChip" data-facet="" data-action="collection-filter#pickFacet">Tous</button>
           <% facets.each do |facet| %>
@@ -100,11 +85,11 @@
 
       <%# Nombre d'items affichés, et tri (retenu par le navigateur) %>
       <div class="flex items-center justify-between gap-3 mb-3">
-        <span class="text-[13px] text-gray-500" data-collection-filter-target="count" aria-live="polite"><%= items_count(@items.size) %></span>
-        <label class="flex items-center gap-1 text-[13px] font-semibold text-gray-700">
+        <span class="text-[13px] text-stone-600" data-collection-filter-target="count" aria-live="polite"><%= items_count(@items.size) %></span>
+        <label class="flex items-center gap-1 text-[13px] font-bold text-ink">
           <span class="sr-only">Trier par</span>
           <select data-collection-filter-target="sort" data-action="collection-filter#sort"
-                  class="appearance-none bg-transparent border-0 p-0 pr-5 text-[13px] font-semibold text-gray-700 text-right focus:outline-none focus:ring-0 bg-no-repeat bg-right"
+                  class="appearance-none bg-transparent border-0 p-0 pr-5 text-[13px] font-bold text-ink text-right focus:outline-none focus:ring-0 bg-no-repeat bg-right"
                   style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E&quot;); background-size: 14px;">
             <%= options_for_select(collection_sort_options(@collection.category), "title") %>
           </select>
@@ -149,8 +134,8 @@
     <%# Membres : qui a accès à la collection. Le propriétaire gère le lien et retire des membres %>
     <% if @member %>
       <div class="mb-4">
-        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Membres</h2>
-        <div class="bg-white border border-gray-100 rounded-xl divide-y divide-gray-50">
+        <h2 class="text-base font-extrabold mb-2">Membres</h2>
+        <div class="bg-white rounded-3xl divide-y divide-stone-100 shadow-[0_1px_2px_rgba(30,27,46,0.06)]">
           <% @members.each do |membership| %>
             <div class="px-4 py-3 flex items-center gap-3">
               <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
@@ -175,7 +160,7 @@
         </div>
 
         <% if @owner %>
-          <div class="mt-2 bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+          <div class="mt-2 bg-stone-100 rounded-3xl px-4 py-3 flex items-center justify-between gap-3">
             <p class="text-xs text-gray-500">
               Toute personne qui a le lien d'invitation peut rejoindre la collection et la modifier.
             </p>
@@ -191,11 +176,11 @@
     <%# Les notes sont personnelles aux membres : jamais montrées aux visiteurs %>
     <% if @member && @collection.notes.any? %>
       <div class="mb-4">
-        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Notes</h2>
+        <h2 class="text-base font-extrabold mb-2">Notes</h2>
         <div class="flex flex-col gap-2">
           <% @collection.notes.each do |note| %>
             <%= link_to note_path(note) do %>
-              <div class="bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-center gap-3 active:scale-95 transition-transform duration-150">
+              <div class="bg-white rounded-3xl px-4 py-3 flex items-center gap-3 shadow-[0_1px_2px_rgba(30,27,46,0.06)] active:scale-95 transition-transform duration-150">
                 <div class="w-8 h-8 rounded-xl <%= note.reminder? ? 'bg-purple-50' : 'bg-gray-50' %> flex items-center justify-center shrink-0">
                   <% if note.reminder? %>
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="currentColor">
@@ -228,16 +213,17 @@
       <%= image_tag "vinted-logo.svg", size: "50x50" %> Trouver des Pépites
     <% end %>
   </div>
+</div>
 
 <%# Boutons d'ajout : membres uniquement %>
 <% if @member %>
 <div data-controller="quick-add">
   <% if @collection.category == "video_games" %>
-    <%# Bouton éclair %>
-    <button data-action="click->quick-add#open"
-            class="fixed bottom-24 right-24 z-10 bg-white border-2 border-purple-600 text-purple-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform duration-150">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+    <%# Bouton éclair : la pile « Ajouter des jeux » (titres et scan en rafale), à gauche du bouton « Ajouter » %>
+    <button type="button" data-action="click->quick-add#open" aria-label="Ajouter des jeux (titres ou scan)"
+            class="fixed bottom-24 right-[158px] z-10 w-14 h-14 rounded-full bg-white text-purple-700 border-[1.5px] border-stone-200 flex items-center justify-center shadow-[0_10px_24px_rgba(30,27,46,0.18)] active:scale-95 transition-transform duration-150">
+      <svg aria-hidden="true" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
       </svg>
     </button>
 
@@ -315,10 +301,11 @@
     </div>
   <% end %>
 
-  <%= link_to new_collection_item_path(@collection), class: "fixed bottom-24 right-6 z-10 bg-purple-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-purple-300 active:scale-95 transition-transform duration-150" do %>
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-    </svg>
+  <%# Formulaire complet d'un nouvel item %>
+  <%= link_to new_collection_item_path(@collection),
+      class: "fixed bottom-24 right-5 z-10 h-14 w-[126px] rounded-full bg-purple-700 text-white text-base font-bold flex items-center justify-center gap-2 shadow-[0_10px_24px_rgba(126,34,206,0.35)] active:scale-95 transition-transform duration-150" do %>
+    <svg aria-hidden="true" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+    Ajouter
   <% end %>
 </div>
 <% end %>

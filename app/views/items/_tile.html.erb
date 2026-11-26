@@ -4,7 +4,7 @@
 <% compact = local_assigns.fetch(:compact, false) %>
 <% cover = item_cover_url(item, size: compact ? :cover_small : :cover_big) %>
 <% badge = item_tile_badge(item) unless compact %>
-<div class="relative w-full aspect-[3/4] <%= compact ? 'rounded-lg' : 'rounded-xl' %> overflow-hidden bg-gray-100">
+<div class="relative w-full aspect-[3/4] <%= compact ? 'rounded-lg' : 'rounded-2xl' %> overflow-hidden bg-stone-100">
   <% if item.images.attached? %>
     <% photo = item.images.first %>
     <%# Vignette réduite (Item :thumb) ; photo d'origine seulement si son format ne se redimensionne pas %>
@@ -27,6 +27,10 @@
     <% end %>
   <% end %>
   <% if badge %>
-    <span class="absolute bottom-1.5 right-1.5 bg-white text-purple-800 text-[10px] font-bold px-1.5 py-0.5 rounded-lg shadow-sm"><%= badge %></span>
+    <%# « Complet » : petite coche encre, le mot reste lu par les lecteurs d'écran %>
+    <span class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-ink text-white flex items-center justify-center" title="<%= badge %>">
+      <svg aria-hidden="true" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>
+      <span class="sr-only"><%= badge %></span>
+    </span>
   <% end %>
 </div>

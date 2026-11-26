@@ -17,23 +17,23 @@
   <%# Grille : la vignette, le titre sur deux lignes, l'info utile %>
   <div class="group-data-[view=list]:hidden flex flex-col gap-1.5">
     <%= render "items/tile", item: item %>
-    <p class="text-[13px] font-bold leading-tight text-gray-900 line-clamp-2 break-words"><%= item.title %></p>
+    <p class="text-[13px] font-bold leading-tight text-ink line-clamp-2 break-words"><%= item.title %></p>
     <% if subtitle %>
-      <p class="text-xs text-gray-500 truncate -mt-0.5"><%= subtitle %></p>
+      <p class="text-xs text-stone-600 truncate -mt-0.5"><%= subtitle %></p>
     <% end %>
   </div>
 
   <%# Liste compacte : petite vignette, titre, info utile et badge %>
-  <div class="hidden group-data-[view=list]:flex items-center gap-3 py-2.5 border-b border-gray-100">
+  <div class="hidden group-data-[view=list]:flex items-center gap-3 py-2.5 border-b border-stone-200/70">
     <div class="w-11 shrink-0"><%= render "items/tile", item: item, compact: true %></div>
     <div class="flex-1 min-w-0 flex flex-col gap-0.5">
-      <p class="text-[15px] font-bold text-gray-900 truncate"><%= item.title %></p>
+      <p class="text-[15px] font-bold text-ink truncate"><%= item.title %></p>
       <div class="flex items-center gap-1.5 min-w-0">
         <% if subtitle %>
-          <span class="text-[13px] text-gray-500 truncate"><%= subtitle %></span>
+          <span class="text-[13px] text-stone-600 truncate"><%= subtitle %></span>
         <% end %>
         <% if badge %>
-          <span class="shrink-0 bg-purple-100 text-purple-800 text-[11px] font-bold px-1.5 py-0.5 rounded-lg"><%= badge %></span>
+          <span class="shrink-0 bg-ink text-white text-[11px] font-bold px-2 py-0.5 rounded-full"><%= badge %></span>
         <% end %>
       </div>
     </div>
