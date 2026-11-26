@@ -229,16 +229,19 @@
 
     <%# Panel %>
     <div data-quick-add-target="panel" class="hidden fixed inset-0 z-50 flex flex-col justify-end">
-      <div class="absolute inset-0 bg-black opacity-40" data-action="click->quick-add#close"></div>
-      <div class="relative bg-white rounded-t-3xl flex flex-col h-[90vh]" data-controller="games-search game-pile" data-action="games-search:chosen->game-pile#add"
+      <div class="absolute inset-0 bg-ink/50" data-action="click->quick-add#close"></div>
+      <div class="relative bg-paper text-ink rounded-t-[32px] flex flex-col h-[90vh]" data-controller="games-search game-pile" data-action="games-search:chosen->game-pile#add"
       data-game-pile-collection-value="<%= @collection.id %>"
       data-game-pile-platforms-value="<%= VideoGameDetail::PLATFORMS.to_json%>"
       data-game-pile-url-value="<%= collection_items_path(@collection) %>"
       data-game-pile-owned-value="<%= owned_games(@collection).to_json %>"
       data-games-search-clear-after-choice-value="true">
         <div class="flex items-center justify-between px-5 pt-4 pb-3">
-          <h2 class="text-lg font-black">Ajouter des jeux</h2>
-          <button data-action="click->quick-add#close" class="text-gray-400 text-xl">✕</button>
+          <h2 class="text-[22px] font-extrabold tracking-tight">Ajouter des jeux</h2>
+          <button type="button" data-action="click->quick-add#close" aria-label="Fermer"
+                  class="w-11 h-11 rounded-full bg-white border-[1.5px] border-stone-200 flex items-center justify-center">
+            <svg aria-hidden="true" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
         </div>
         <%# Recherche par titre et bouton scan, côte à côte ; la caméra prend leur place pendant un scan %>
         <div data-game-pile-target="searchRow" class="flex gap-2 px-5">
@@ -246,14 +249,14 @@
             <input data-games-search-target="query"
                   data-action="input->games-search#search"
                   placeholder="Titre du jeu…"
-                  class="w-full h-12 border border-purple-300 rounded-xl px-4 text-sm focus:outline-none focus:border-purple-400">
+                  class="w-full h-12 border-[1.5px] border-purple-300 rounded-full bg-white px-5 text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200">
             <div data-games-search-target="results"
-                class="hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg max-h-64 overflow-y-auto"></div>
+                class="hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-stone-100 rounded-2xl shadow-lg max-h-64 overflow-y-auto"></div>
           </div>
           <%# Scan en rafale : UPCitemdb, payant au-delà de l'essai → réservé aux comptes premium %>
           <% if current_user.paid_features? %>
             <button type="button" data-action="game-pile#startScan" aria-label="Scanner des boîtes"
-                    class="w-12 h-12 shrink-0 bg-purple-600 text-white rounded-xl flex items-center justify-center">
+                    class="w-12 h-12 shrink-0 bg-purple-700 text-white rounded-full flex items-center justify-center">
               <svg aria-hidden="true" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <path d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2M8 8v8M11 8v8M14 8v8M17 8v8"/>
               </svg>
@@ -264,7 +267,7 @@
         <% if current_user.paid_features? %>
           <%# Pendant un scan, la caméra prend la place de la recherche : cadre de visée, dernier jeu trouvé, « Terminer » %>
           <div data-game-pile-target="scanner" class="hidden px-5">
-            <div class="relative h-[210px] rounded-2xl overflow-hidden bg-gray-800">
+            <div class="relative h-[210px] rounded-3xl overflow-hidden bg-ink">
               <%# playsinline + muted : sans eux, l'iPhone ouvre la vidéo en plein écran ou ne la lance pas %>
               <video data-game-pile-target="video" class="absolute inset-0 w-full h-full object-cover" playsinline muted autoplay></video>
               <div aria-hidden="true" class="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -282,20 +285,20 @@
         <% end %>
 
         <div class="flex items-center justify-between px-5 pt-4 pb-1 min-h-11">
-          <p class="text-[13px] font-bold text-gray-700">Ta pile</p>
+          <p class="text-base font-extrabold">Ta pile</p>
           <% if current_user.paid_features? %>
             <%# Pendant un scan : revenir à la recherche par titre %>
             <button type="button" data-game-pile-target="typeButton" data-action="game-pile#typeTitle"
-                    class="hidden h-10 text-purple-700 text-[13px] font-bold">Taper un titre</button>
+                    class="hidden h-10 px-4 rounded-full bg-white border-[1.5px] border-stone-200 text-ink text-[13px] font-bold">Taper un titre</button>
           <% end %>
         </div>
         <div data-game-pile-target="list" class="flex-1 min-h-0 overflow-y-auto px-5"></div>
 
-        <div class="px-5 pt-3 pb-7 border-t border-gray-100">
+        <div class="px-5 pt-3 pb-7 border-t border-stone-200/70">
           <button type="button" data-game-pile-target="submit" data-action="game-pile#submit"
-                  class="hidden w-full h-12 bg-purple-600 text-white rounded-xl font-semibold text-sm disabled:bg-purple-200 disabled:text-purple-800"></button>
+                  class="hidden w-full h-14 rounded-full bg-ink text-white text-base font-bold cursor-pointer hover:bg-black disabled:bg-stone-300 disabled:text-stone-600 disabled:cursor-not-allowed"></button>
           <%# Pourquoi le bouton est grisé, ou quels jeux ne partiront pas %>
-          <p data-game-pile-target="summary" aria-live="polite" class="mt-1.5 text-xs text-gray-500 text-center empty:hidden"></p>
+          <p data-game-pile-target="summary" aria-live="polite" class="mt-2 text-xs text-stone-600 text-center empty:hidden"></p>
         </div>
       </div>
     </div>

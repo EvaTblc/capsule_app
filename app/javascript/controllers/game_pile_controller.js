@@ -106,7 +106,7 @@ export default class extends Controller {
     this.listTarget.innerHTML = ""
     this.games.forEach((game, index) => {
       const line = document.createElement("div")
-      line.className = "flex gap-3 py-2.5 border-b border-gray-100 items-start"
+      line.className = "flex gap-3 p-2.5 mb-2 rounded-2xl bg-white items-start shadow-[0_1px_2px_rgba(30,27,46,0.06)]"
 
       // Jaquette d'IGDB si on la connaît, sinon un emplacement gris
       const cover = document.createElement(game.cover_url ? "img" : "div")
@@ -114,7 +114,7 @@ export default class extends Controller {
         cover.src = game.cover_url
         cover.alt = ""
       }
-      cover.className = "w-10 h-[54px] rounded-md bg-gray-100 object-cover shrink-0"
+      cover.className = "w-10 h-[54px] rounded-lg bg-stone-100 object-cover shrink-0"
       line.appendChild(cover)
 
       // Colonne du milieu : titre, réglages, messages
@@ -123,7 +123,7 @@ export default class extends Controller {
       line.appendChild(body)
 
       const title = document.createElement("p")
-      title.className = "text-[15px] font-semibold truncate"
+      title.className = "text-[15px] font-bold truncate"
       title.textContent = game.name || (game.searching ? `Recherche du code ${game.barcode}…` : `Code ${game.barcode}`)
       body.appendChild(title)
 
@@ -134,7 +134,7 @@ export default class extends Controller {
 
         // Plateforme à gauche : en violet tant qu'elle n'est pas choisie
         const select = document.createElement("select")
-        select.className = `h-[30px] rounded-full border px-2.5 text-[13px] ${game.platform ? "border-gray-200 bg-white text-gray-700" : "border-purple-500 bg-purple-50 text-purple-800 font-semibold"}`
+        select.className = `h-8 rounded-full border-[1.5px] px-3 text-[13px] font-semibold ${game.platform ? "border-stone-200 bg-white text-ink" : "border-purple-500 bg-purple-50 text-purple-800"}`
         select.add(new Option("Plateforme ?", ""))
         const choices = game.app_platforms?.length ? game.app_platforms : this.platformsValue
         choices.forEach(platform => select.add(new Option(platform, platform)))
@@ -148,7 +148,7 @@ export default class extends Controller {
 
         // « Complet » à droite
         const label = document.createElement("label")
-        label.className = "flex items-center gap-2 text-[13px] text-gray-700"
+        label.className = "flex items-center gap-2 text-[13px] font-semibold text-stone-700"
         label.textContent = "Complet"
         const checkbox = document.createElement("input")
         checkbox.type = "checkbox"
@@ -177,7 +177,10 @@ export default class extends Controller {
       const remove = document.createElement("button")
       remove.textContent = "✕"
       remove.type = "button"
+      remove.setAttribute("aria-label", `Retirer ${game.name || `le code ${game.barcode}`} de la pile`)
+      remove.className = "w-9 h-9 shrink-0 rounded-full text-stone-500 hover:bg-stone-100 hover:text-ink"
       if (game.error) {
+        line.classList.replace("bg-white", "bg-red-50")
         line.classList.add("text-red-600")
         const errorMessage = document.createElement("p")
         errorMessage.className = "text-xs"
