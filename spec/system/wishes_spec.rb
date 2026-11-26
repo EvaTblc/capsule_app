@@ -65,4 +65,25 @@ RSpec.describe "Souhaits", type: :system do
     expect(page).to have_content("Souhait ajouté !")
     expect(books.wishes.last).to have_attributes(title: "Veiller sur elle", product: nil)
   end
+
+  it "depuis la collection : taper sur un souhait ouvre sa fiche, on le modifie, puis on le supprime" do
+    games = collection_of("video_games")
+    create(:wish, collection: games, title: "Ōkami", platform: "PS2", max_price: 20)
+    visit collection_path(games)
+
+    click_on "Ōkami"
+    expect(page).to have_content("Mon souhait")
+    expect(find_field("Plateforme").value).to eq("PS2")
+    fill_in "Prix maximum (€)", with: "15"
+    click_on "Enregistrer"
+
+    expect(page).to have_content("Souhait modifié.")
+    expect(page).to have_content("15 €")
+
+    click_on "Ōkami"
+    accept_confirm("Supprimer ce souhait ?") { click_on "Supprimer ce souhait" }
+    expect(page).to have_content("Souhait supprimé.")
+    expect(page).to have_link("Ajouter un souhait")
+    expect(games.wishes).to be_empty
+  end
 end

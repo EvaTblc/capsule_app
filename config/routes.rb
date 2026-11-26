@@ -17,7 +17,7 @@ Rails.application.routes.draw do
 
   resources :collections do
     resources :items
-    resources :wishes, only: [ :new, :create ]
+    resources :wishes, only: [ :new, :create, :edit, :update, :destroy ]
     # Retirer un membre (propriétaire) ou quitter la collection (membre)
     resources :memberships, only: :destroy
     member do

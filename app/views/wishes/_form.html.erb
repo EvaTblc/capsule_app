@@ -40,6 +40,6 @@
   </div>
 
   <%= f.button type: "submit", class: "#{entry_button_class} mt-2" do %>
-    <%= entry_button_content("Ajouter à mes souhaits") %>
+    <%= entry_button_content(wish.persisted? ? "Enregistrer" : "Ajouter à mes souhaits") %>
   <% end %>
 <% end %>

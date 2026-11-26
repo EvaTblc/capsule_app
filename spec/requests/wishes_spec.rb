@@ -71,7 +71,7 @@ RSpec.describe "Souhaits", type: :request do
       create(:wish, collection: collection, title: "Zelda 2", max_price: 20)
       create(:wish, collection: collection, title: "Ōkami")
       get collection_path(collection)
-      rows = section.css(".divide-y > div").map { |row| row.text.squish }
+      rows = section.css(".divide-y > a").map { |row| row.text.squish }
       # Tri naturel sans accents : Ōkami à la lettre O, Zelda 2 avant Zelda 10
       expect(rows).to eq([ "Ōkami", "Zelda 2 Prix maximum :≤ 20 €", "Zelda 10 Switch · PAL Prix maximum :≤ 12,50 €" ])
       expect(section.text).to include("Souhait") # bouton d'ajout, une fois la liste commencée
@@ -133,6 +133,69 @@ RSpec.describe "Souhaits", type: :request do
       sign_out user
       post collection_wishes_path(collection), params: wish_params
       expect(response).to redirect_to(new_user_session_path)
+    end
+  end
+
+  describe "fiche d'un souhait (modifier, supprimer)" do
+    let(:wish) { create(:wish, collection: collection, title: "Okami", max_price: 20) }
+
+    it "la ligne de la collection mène à la fiche, pré-remplie, avec « Enregistrer »" do
+      wish
+      get collection_path(collection)
+      expect(response.body).to include(edit_collection_wish_path(collection, wish))
+      get edit_collection_wish_path(collection, wish)
+      page = Nokogiri::HTML(response.body)
+      expect(page.css("input[name='wish[title]']").first["value"]).to eq("Okami")
+      expect(page.text).to include("Enregistrer", "Supprimer ce souhait")
+    end
+
+    it "modifier : enregistré par n'importe quel membre, retour à la collection" do
+      patch collection_wish_path(collection, wish), params: { wish: { title: "Ōkami", max_price: "15" } }
+      expect(wish.reload).to have_attributes(title: "Ōkami", max_price: 15)
+      expect(response).to redirect_to(collection_path(collection))
+    end
+
+    it "modifier sans toucher au jeu : le souhait reste relié à la même œuvre (champ caché renvoyé)" do
+      okami = create(:product, igdb_id: 1234)
+      wish.update!(product: okami)
+      allow(ProductCatalog).to receive(:game).with("1234").and_return(okami)
+      patch collection_wish_path(collection, wish), params: { wish: { title: "Ōkami" }, product: { igdb_id: "1234" } }
+      expect(wish.reload.product).to eq(okami)
+    end
+
+    it "modifier avec une erreur : fiche réaffichée (422), rien n'est changé" do
+      patch collection_wish_path(collection, wish), params: { wish: { title: "" } }
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Donne un titre à ton souhait.")
+      expect(wish.reload.title).to eq("Okami")
+    end
+
+    it "supprimer : le souhait disparaît, retour à la collection" do
+      wish
+      expect { delete collection_wish_path(collection, wish) }.to change(Wish, :count).by(-1)
+      expect(response).to redirect_to(collection_path(collection))
+    end
+
+    it "souhait d'une autre collection, appelé via la mienne (id forgé) : 404, ni lu, ni modifié, ni supprimé" do
+      other_wish = create(:wish, title: "Pas à moi")
+      # Après un 404, le cookie de session n'est pas réécrit : on se reconnecte avant chaque requête
+      get edit_collection_wish_path(collection, other_wish)
+      expect(response).to have_http_status(:not_found)
+      sign_in user
+      patch collection_wish_path(collection, other_wish), params: { wish: { title: "Piraté" } }
+      expect(response).to have_http_status(:not_found)
+      sign_in user
+      expect { delete collection_wish_path(collection, other_wish) }.not_to change(Wish, :count)
+      expect(response).to have_http_status(:not_found)
+      expect(other_wish.reload.title).to eq("Pas à moi")
+    end
+
+    it "non-membre, via la vraie collection du souhait : 404" do
+      other_wish = create(:wish, title: "Pas à moi")
+      get edit_collection_wish_path(other_wish.collection, other_wish)
+      expect(response).to have_http_status(:not_found)
+      sign_in user
+      expect { delete collection_wish_path(other_wish.collection, other_wish) }.not_to change(Wish, :count)
     end
   end
 end

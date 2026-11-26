@@ -1,6 +1,7 @@
 class WishesController < ApplicationController
   before_action :authenticate_user!
   before_action :set_collection
+  before_action :set_wish, only: [ :edit, :update, :destroy ]
 
   def new
     @wish = @collection.wishes.new
@@ -18,10 +19,32 @@ class WishesController < ApplicationController
     end
   end
 
+  def edit; end
+
+  def update
+    @wish.assign_attributes(wish_params)
+    @wish.product = catalog_product
+
+    if @wish.save
+      redirect_to @collection, notice: "Souhait modifié."
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    @wish.destroy
+    redirect_to @collection, notice: "Souhait supprimé."
+  end
+
   private
 
   def set_collection
     @collection = current_user.collections.find(params[:collection_id])
+  end
+
+  def set_wish
+    @wish = @collection.wishes.find(params[:id])
   end
 
   def wish_params
