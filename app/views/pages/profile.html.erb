@@ -1,291 +1,137 @@
-<div class="min-h-screen p-4 pt-20 pb-24">
+<%# Profil (style « Pilule ») : en haut, sur fond lilas, l'avatar, le nom, le type de compte et trois chiffres ;
+    dessous, les demandes d'amis reçues, les amis (et l'ajout d'un ami), l'adresse ; en bas, le compte et la déconnexion %>
+<% card = "bg-white rounded-3xl shadow-[0_1px_2px_rgba(30,27,46,0.06)]" %>
+<% small_pill = "h-8 px-3 rounded-full border-[1.5px] border-stone-200 bg-white text-xs font-bold text-stone-600 hover:text-ink" %>
+<div class="min-h-screen bg-paper pt-14 pb-24 text-ink">
 
-  <%# Avatar + Infos %>
-  <div class="flex items-center gap-4 mb-8">
+  <section class="bg-lilac rounded-b-[36px] px-5 pt-6 pb-6 flex flex-col items-center text-center gap-1.5">
     <% if current_user.avatar_url %>
-      <img src="<%= current_user.avatar_url %>" class="w-16 h-16 rounded-full object-cover">
+      <img src="<%= current_user.avatar_url %>" alt="" class="w-[84px] h-[84px] rounded-full object-cover border-4 border-white">
     <% else %>
-      <div class="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
-        <span class="text-purple-600 font-bold text-xl"><%= current_user.email[0].upcase %></span>
+      <span aria-hidden="true" class="w-[84px] h-[84px] rounded-full bg-ink text-white text-[34px] font-extrabold flex items-center justify-center border-4 border-white">
+        <%= current_user.email[0].upcase %>
+      </span>
+    <% end %>
+    <h1 class="mt-1.5 text-[28px] font-extrabold tracking-tight leading-none break-all"><%= current_user.email.split("@").first %></h1>
+    <p class="text-sm text-[#4c3d6b] break-all"><%= current_user.email %></p>
+    <%# Type de compte : ce à quoi l'utilisateur a droit (Free : pas d'IA ni de scan payant) %>
+    <% role_style = { "admin" => "bg-ink text-white", "premium" => "bg-purple-700 text-white", "free" => "bg-white text-stone-700" } %>
+    <span class="mt-1 h-7 px-3 rounded-full text-xs font-bold flex items-center gap-1 <%= role_style[current_user.role] %>">
+      <% unless current_user.free? %>
+        <svg aria-hidden="true" class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z"/></svg>
+      <% end %>
+      <%= t("roles.#{current_user.role}", default: current_user.role.capitalize) %>
+    </span>
+
+    <% items_total = @collections_owned.sum { |c| c.items.size } + @collections_shared.sum { |c| c.items.size } %>
+    <dl class="mt-4 w-full grid grid-cols-3 gap-2">
+      <% [ [ @collections_owned.size, @collections_owned.size > 1 ? "collections" : "collection" ],
+           [ items_total, items_total > 1 ? "items" : "item" ],
+           [ @collections_shared.size, @collections_shared.size > 1 ? "partagées" : "partagée" ] ].each do |value, label| %>
+        <div class="bg-white rounded-[20px] py-2.5 px-1.5 flex flex-col-reverse">
+          <dt class="text-xs text-stone-600"><%= label %></dt>
+          <dd class="text-[22px] font-extrabold leading-tight"><%= value %></dd>
+        </div>
+      <% end %>
+    </dl>
+  </section>
+
+  <div class="px-5 pt-5 flex flex-col gap-6">
+
+    <%# Demandes reçues : en premier, c'est ce qui attend une réponse %>
+    <% if @pending_friendships.any? %>
+      <div>
+        <h2 class="mb-2 text-[17px] font-extrabold">Demandes reçues</h2>
+        <div class="flex flex-col gap-2">
+          <% @pending_friendships.each do |friendship| %>
+            <div class="<%= card %> px-3.5 py-3 flex items-center gap-3">
+              <%= person_avatar(friendship.requester) %>
+              <div class="flex-1 min-w-0">
+                <p class="text-[15px] font-bold truncate"><%= friendship.requester.email.split("@").first %></p>
+                <p class="text-xs text-stone-600 truncate"><%= friendship.requester.email %></p>
+              </div>
+              <%= button_to "Accepter", accept_friendship_path(friendship), method: :patch,
+                  class: "h-9 px-3.5 rounded-full bg-ink text-white text-[13px] font-bold" %>
+              <%= button_to reject_friendship_path(friendship), method: :patch,
+                  aria: { label: "Refuser la demande de #{friendship.requester.email.split('@').first}" },
+                  class: "w-9 h-9 rounded-full border-[1.5px] border-stone-200 bg-white text-stone-600 flex items-center justify-center" do %>
+                <svg aria-hidden="true" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
       </div>
     <% end %>
-    <div>
-      <h1 class="text-2xl font-black tracking-tight"><%= current_user.email.split("@").first %></h1>
-      <p class="text-sm text-gray-400"><%= current_user.email %></p>
-      <%# Type de compte : ce à quoi l'utilisateur a droit (Free : pas d'IA ni de scan payant) %>
-      <% role_style = { "admin" => "bg-gray-900 text-white", "premium" => "bg-purple-600 text-white", "free" => "bg-gray-100 text-gray-500" } %>
-      <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold <%= role_style[current_user.role] %>">
-        <%= t("roles.#{current_user.role}", default: current_user.role.capitalize) %>
-      </span>
-    </div>
-  </div>
 
-  <%# Adresse %>
-  <div class="mb-8">
-    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Mon adresse</h2>
-    <%= turbo_frame_tag "address" do %>
-      <% if current_user.address.present? %>
-        <div class="bg-gray-50 rounded-2xl p-4 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <p class="text-sm text-gray-700 font-medium"><%= current_user.address %></p>
-          </div>
-          <%= link_to edit_address_path, class: "text-xs text-purple-600 font-semibold" do %>
-            Modifier
+    <%# Amis, demandes envoyées (en attente), puis l'ajout d'un ami par e-mail %>
+    <div>
+      <h2 class="mb-2 text-[17px] font-extrabold">Mes amis</h2>
+      <% if @friends.any? || @sent_friendships.any? %>
+        <div class="<%= card %> px-3.5 py-1 divide-y divide-stone-100">
+          <% @friends.each do |friend| %>
+            <div class="py-2.5 flex items-center gap-3">
+              <%= person_avatar(friend) %>
+              <div class="flex-1 min-w-0">
+                <p class="text-[15px] font-bold truncate"><%= friend.email.split("@").first %></p>
+                <p class="text-xs text-stone-600 truncate"><%= friend.email %></p>
+              </div>
+              <%= button_to "Retirer", friendship_path(@friendships_by_friend[friend.id]), method: :delete, class: small_pill %>
+            </div>
+          <% end %>
+          <% @sent_friendships.each do |friendship| %>
+            <div class="py-2.5 flex items-center gap-3">
+              <%= person_avatar(friendship.receiver) %>
+              <div class="flex-1 min-w-0">
+                <p class="text-[15px] font-bold truncate"><%= friendship.receiver.email.split("@").first %></p>
+                <p class="text-xs text-stone-600">En attente…</p>
+              </div>
+              <%= button_to "Annuler", friendship_path(friendship), method: :delete, class: small_pill %>
+            </div>
           <% end %>
         </div>
       <% else %>
-        <%= link_to edit_address_path, class: "w-full flex items-center justify-center gap-2 border border-dashed border-purple-200 bg-purple-50 text-purple-600 py-3 rounded-2xl text-sm font-semibold" do %>
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Ajouter mon adresse
-        <% end %>
+        <p class="px-1 text-sm text-stone-600">Aucun ami pour l'instant : ajoute-en un avec son e-mail.</p>
       <% end %>
-    <% end %>
-  </div>
 
-  <%# Amis %>
-  <div class="mb-8">
-    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Mes amis</h2>
-    <% if @friends.any? %>
-      <div class="flex flex-col gap-2">
-        <% @friends.each do |friend| %>
-          <div class="bg-white border border-gray-100 rounded-2xl px-4 py-3 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-              <% if friend.avatar_url.present? %>
-                <img src="<%= friend.avatar_url %>" class="w-9 h-9 rounded-full object-cover">
-              <% else %>
-                <span class="text-purple-600 font-bold text-sm"><%= friend.email[0].upcase %></span>
-              <% end %>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-gray-900 truncate"><%= friend.email.split("@").first %></p>
-              <p class="text-xs text-gray-400 truncate"><%= friend.email %></p>
-            </div>
-            <%= button_to friendship_path(@friendships_by_friend[friend.id]),
-                method: :delete,
-                class: "text-xs text-red-400 font-semibold" do %>
-              Retirer
-            <% end %>
+      <%= form_with url: friendships_path, method: :post, class: "mt-2.5 flex gap-2" do |f| %>
+        <%= f.email_field :receiver_email, placeholder: "E-mail de ton ami·e", aria: { label: "E-mail de ton ami·e" },
+            class: "flex-1 min-w-0 h-12 rounded-full border-[1.5px] border-stone-200 bg-white px-[18px] text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200" %>
+        <%= f.submit "Ajouter", class: "h-12 px-[18px] rounded-full bg-purple-700 text-white text-[15px] font-bold cursor-pointer" %>
+      <% end %>
+    </div>
+
+    <%# Adresse : sert à trouver les vide-greniers proches (Mon Carnet) %>
+    <div>
+      <h2 class="mb-2 text-[17px] font-extrabold">Mon adresse</h2>
+      <%= turbo_frame_tag "address" do %>
+        <% if current_user.address.present? %>
+          <div class="<%= card %> px-4 py-3.5 flex items-center gap-3">
+            <span aria-hidden="true" class="w-10 h-10 shrink-0 rounded-full bg-lilac text-purple-700 flex items-center justify-center">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0114 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+            </span>
+            <p class="flex-1 min-w-0 text-sm font-medium break-words"><%= current_user.address %></p>
+            <%= link_to "Modifier", edit_address_path, class: "#{small_pill} flex items-center" %>
           </div>
-        <% end %>
-      </div>
-    <% else %>
-      <div class="bg-gray-50 rounded-2xl px-4 py-6 text-center">
-        <p class="text-sm font-semibold text-gray-900">Aucun ami pour l'instant</p>
-        <p class="text-xs text-gray-400 mt-1">Recherche un ami par email ci-dessous</p>
-      </div>
-    <% end %>
-    <% if @sent_friendships.any? %>
-      <div class="mb-8">
-        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Demandes envoyées</h2>
-        <div class="flex flex-col gap-2">
-          <% @sent_friendships.each do |friendship| %>
-            <div class="bg-white border border-gray-100 rounded-2xl px-4 py-3 flex items-center gap-3">
-              <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-                <% if friendship.receiver.avatar_url.present? %>
-                  <img src="<%= friendship.receiver.avatar_url %>" class="w-9 h-9 rounded-full object-cover">
-                <% else %>
-                  <span class="text-purple-600 font-bold text-sm"><%= friendship.receiver.email[0].upcase %></span>
-                <% end %>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-gray-900 truncate"><%= friendship.receiver.email.split("@").first %></p>
-                <p class="text-xs text-gray-400">En attente...</p>
-              </div>
-              <%= button_to friendship_path(friendship), method: :delete,
-                  class: "text-xs text-gray-400 font-semibold" do %>
-                Annuler
-              <% end %>
-            </div>
+        <% else %>
+          <%= link_to edit_address_path,
+              class: "w-full h-14 flex items-center justify-center gap-2 rounded-full border-[1.5px] border-dashed border-stone-400 text-stone-700 text-[15px] font-bold" do %>
+            <svg aria-hidden="true" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Ajouter mon adresse
           <% end %>
-        </div>
-      </div>
-    <% end %>
-
-    <%# Recherche par email %>
-    <div class="mt-3">
-      <%= form_with url: friendships_path, method: :post, class: "flex gap-2" do |f| %>
-        <%= f.email_field :receiver_email,
-            placeholder: "Email de ton ami",
-            class: "flex-1 bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-purple-300" %>
-        <%= f.submit "Ajouter", class: "bg-purple-600 text-white px-4 py-3 rounded-xl text-sm font-semibold" %>
-      <% end %>
-    </div>
-  </div>
-
-  <%# Demandes reçues %>
-  <% if @pending_friendships.any? %>
-    <div class="mb-8">
-      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Demandes reçues</h2>
-      <div class="flex flex-col gap-2">
-        <% @pending_friendships.each do |friendship| %>
-          <div class="bg-white border border-gray-100 rounded-2xl px-4 py-3 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-              <% if friendship.requester.avatar_url.present? %>
-                <img src="<%= friendship.requester.avatar_url %>" class="w-9 h-9 rounded-full object-cover">
-              <% else %>
-                <span class="text-purple-600 font-bold text-sm"><%= friendship.requester.email[0].upcase %></span>
-              <% end %>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-gray-900 truncate"><%= friendship.requester.email.split("@").first %></p>
-              <p class="text-xs text-gray-400 truncate"><%= friendship.requester.email %></p>
-            </div>
-            <div class="flex gap-2">
-              <%= button_to accept_friendship_path(friendship), method: :patch,
-                  class: "bg-purple-600 text-white px-3 py-1.5 rounded-xl text-xs font-semibold" do %>
-                Accepter
-              <% end %>
-              <%= button_to reject_friendship_path(friendship), method: :patch,
-                  class: "bg-gray-100 text-gray-500 px-3 py-1.5 rounded-xl text-xs font-semibold" do %>
-                Refuser
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
-
-  <%# Stats collections %>
-  <div class="mb-8">
-    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Stats</h2>
-    <div class="flex gap-3">
-      <div class="bg-purple-50 rounded-2xl px-4 py-3 flex-1 text-center">
-        <p class="text-2xl font-black text-purple-600"><%= @collections_owned.count %></p>
-        <p class="text-xs text-gray-400 mt-1">Collections</p>
-      </div>
-      <div class="bg-purple-50 rounded-2xl px-4 py-3 flex-1 text-center">
-        <p class="text-2xl font-black text-purple-600"><%= @collections_shared.count %></p>
-        <p class="text-xs text-gray-400 mt-1">Partagées</p>
-      </div>
-      <div class="bg-purple-50 rounded-2xl px-4 py-3 flex-1 text-center">
-        <p class="text-2xl font-black text-purple-600"><%= @collections_owned.sum { |c| c.items.size } + @collections_shared.sum { |c| c.items.size } %></p>
-        <p class="text-xs text-gray-400 mt-1">Items</p>
-      </div>
-    </div>
-  </div>
-
-  <%# Mes collections %>
-  <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Mes collections</h2>
-  <div class="flex flex-col gap-3 mb-8">
-    <% @collections_owned.each do |collection| %>
-      <%= link_to collection_path(collection) do %>
-        <div class="bg-white border border-gray-100 rounded-2xl p-4 active:scale-95 transition-transform duration-150">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-8 h-8 rounded-lg <%= Collection::CATEGORY_STYLES[collection.category] %> flex items-center justify-center shrink-0">
-              <%= render "collections/icons/#{collection.category == 'books' ? 'book' : collection.category}" %>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold truncate"><%= collection.title %></p>
-              <p class="text-xs text-gray-400"><%= items_count(collection.items.size) %></p>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-
-          <% if collection.category == "video_games" %>
-            <% completed = collection.items.select { |i| i.item_detailable.try(:completed?) }.count %>
-            <% incomplete = collection.items.size - completed %>
-            <div class="flex gap-2">
-              <div class="flex-1 bg-purple-50 rounded-xl px-3 py-3 text-center">
-                <p class="text-sm font-black text-purple-600"><%= completed %></p>
-                <p class="text-xs text-gray-400">Complets</p>
-              </div>
-              <div class="flex-1 bg-gray-50 rounded-xl px-3 py-3 text-center">
-                <p class="text-sm font-black text-gray-600"><%= incomplete %></p>
-                <p class="text-xs text-gray-400">Incomplets</p>
-              </div>
-              <% platforms = collection.items.map { |i| i.item_detailable.try(:platform) }.compact.uniq.count %>
-              <div class="flex-1 bg-gray-50 rounded-xl px-3 py-3 text-center">
-                <p class="text-sm font-black text-gray-600"><%= platforms %></p>
-                <p class="text-xs text-gray-400">Plateformes</p>
-              </div>
-            </div>
-          <% elsif collection.category == "books" %>
-            <% authors = collection.items.map { |i| i.item_detailable.try(:author) }.compact.uniq.count %>
-            <div class="flex gap-2">
-              <div class="flex-1 bg-purple-50 rounded-xl px-3 py-3 text-center">
-                <p class="text-sm font-black text-purple-600"><%= collection.items.size %></p>
-                <p class="text-xs text-gray-400">Livres</p>
-              </div>
-              <div class="flex-1 bg-gray-50 rounded-xl px-3 py-3 text-center">
-                <p class="text-sm font-black text-gray-600"><%= authors %></p>
-                <p class="text-xs text-gray-400">Auteurs</p>
-              </div>
-            </div>
-          <% elsif collection.category == "movies" %>
-            <% formats = collection.items.map { |i| i.item_detailable.try(:format) }.compact.uniq %>
-            <div class="flex gap-2 flex-wrap">
-              <% formats.each do |format| %>
-                <div class="bg-gray-50 rounded-xl px-4 py-3 text-center">
-                  <p class="text-xs font-semibold text-gray-600"><%= format %></p>
-                </div>
-              <% end %>
-            </div>
-          <% elsif collection.category == "music" %>
-            <% formats = collection.items.map { |i| i.item_detailable.try(:format) }.compact.uniq %>
-            <div class="flex gap-2 flex-wrap">
-              <% formats.each do |format| %>
-                <div class="bg-gray-50 rounded-xl px-4 py-3 text-center">
-                  <p class="text-xs font-semibold text-gray-600"><%= format %></p>
-                </div>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
-    <% end %>
-  </div>
-
-  <% if @collections_shared.any? %>
-    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Partagées avec moi</h2>
-    <div class="flex flex-col gap-2 mb-8">
-      <% @collections_shared.each do |collection| %>
-        <%= link_to collection_path(collection) do %>
-          <div class="bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-center gap-3 active:scale-95 transition-transform duration-150">
-            <div class="w-8 h-8 rounded-lg <%= Collection::CATEGORY_STYLES[collection.category] %> flex items-center justify-center shrink-0">
-              <%= render "collections/icons/#{collection.category == 'books' ? 'book' : collection.category}" %>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold truncate"><%= collection.title %></p>
-              <p class="text-xs text-gray-400"><%= items_count(collection.items.size) %></p>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
         <% end %>
       <% end %>
     </div>
-  <% end %>
 
-  <%# Compte : e-mail, mot de passe, suppression %>
-  <%= link_to edit_user_registration_path,
-      class: "w-full flex items-center justify-center gap-2 text-gray-600 border border-gray-200 bg-white py-3 rounded-xl text-sm font-semibold mb-3 active:scale-95 transition-transform duration-150" do %>
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-    Mon compte
-  <% end %>
-
-  <%# Crédits des sources de données %>
-  <%= link_to "Crédits", credits_path, class: "block text-center text-xs text-gray-400 mb-3" %>
-
-  <%# Déconnexion %>
-  <%= link_to destroy_user_session_path, data: { turbo_method: :delete },
-      class: "w-full flex items-center justify-center gap-2 text-red-400 border border-red-100 bg-red-50 py-3 rounded-xl text-sm font-semibold active:scale-95 transition-transform duration-150" do %>
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-    </svg>
-    Se déconnecter
-  <% end %>
-
+    <%# Compte (e-mail, mot de passe, suppression), déconnexion, crédits des sources de données %>
+    <div class="flex flex-col gap-2.5 pt-1">
+      <%= link_to edit_user_registration_path,
+          class: "h-14 rounded-full border-[1.5px] border-stone-300 bg-white text-base font-bold flex items-center justify-center gap-2" do %>
+        <svg aria-hidden="true" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
+        Mon compte
+      <% end %>
+      <%= link_to "Se déconnecter", destroy_user_session_path, data: { turbo_method: :delete },
+          class: "h-14 rounded-full border-[1.5px] border-red-200 bg-white text-red-700 text-base font-bold flex items-center justify-center" %>
+      <%= link_to "Crédits", credits_path, class: "self-center p-2 text-xs text-gray-500 hover:text-purple-800" %>
+    </div>
+  </div>
 </div>

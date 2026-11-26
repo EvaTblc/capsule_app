@@ -1,12 +1,8 @@
+<%# Modification de l'adresse, dans le cadre « address » du profil (style « Pilule ») %>
 <%= turbo_frame_tag "address" do %>
-  <div class="flex flex-col gap-4">
-    <%= form_with model: current_user, url: update_address_path, method: :patch, class: "flex flex-col gap-4" do |f| %>
-      <div>
-        <%= f.text_field :address,
-            placeholder: "Ex: Nantes, Loire-Atlantique",
-            class: "w-full bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-purple-300" %>
-      </div>
-      <%= f.submit "Enregistrer", class: "w-full bg-purple-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-purple-700 transition-colors duration-200" %>
-    <% end %>
-  </div>
+  <%= form_with model: current_user, url: update_address_path, method: :patch, class: "flex gap-2" do |f| %>
+    <%= f.text_field :address, placeholder: "Ex : Nantes, Loire-Atlantique", aria: { label: "Mon adresse" }, autofocus: true,
+        class: "flex-1 min-w-0 h-12 rounded-full border-[1.5px] border-stone-200 bg-white px-[18px] text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200" %>
+    <%= f.submit "Enregistrer", class: "h-12 px-[18px] rounded-full bg-ink text-white text-[15px] font-bold cursor-pointer" %>
+  <% end %>
 <% end %>

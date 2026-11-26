@@ -59,6 +59,23 @@ RSpec.describe "Profil", type: :request do
     expect(assigns(:collections_shared).map(&:title)).to eq([ "Livres d'une amie" ])
   end
 
+  it "en-tête : trois chiffres (collections à soi, items de toutes ses collections, collections partagées), accordés" do
+    games = collection_with_role("Mes jeux", "owner", category: "video_games")
+    2.times { game(games) }
+    create(:item, collection: collection_with_role("Livres d'une amie", "member"))
+    get profile_path
+    stats = Nokogiri::HTML(response.body).css("dl div").map { |stat| stat.text.squish }
+    expect(stats).to eq([ "collection 1", "items 3", "partagée 1" ])
+  end
+
+  it "demande reçue : « Accepter » et refus nommé pour les lecteurs d'écran ; ajout d'un ami par e-mail" do
+    lou = create(:user, email: "lou@exemple.fr")
+    request = create(:friendship, requester: lou, receiver: user, status: "pending")
+    get profile_path
+    expect(response.body).to include(accept_friendship_path(request), reject_friendship_path(request))
+    expect(response.body).to include('aria-label="Refuser la demande de lou"', "E-mail de ton ami·e")
+  end
+
   it "page adresse" do
     get edit_address_path
     expect(response).to have_http_status(200)
