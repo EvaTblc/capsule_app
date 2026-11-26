@@ -4,7 +4,7 @@ Cap : renforcer ce qui rend Capsule unique (collectionneurs français, plusieurs
 plutôt que copier les catalogueurs généralistes (Libib, CLZ…).
 La partie technique de chaque chantier est dans [TODO_TECH.md](TODO_TECH.md).
 
-Dernière mise à jour : 2026-11-23
+Dernière mise à jour : 2026-11-26
 
 ## Objectif : v1 « finie », avant de passer en appli native (Hotwire Native)
 
@@ -21,9 +21,16 @@ Décidé le 2026-11-23. Le design web sera repris tel quel dans l'appli native :
       Jeux vidéo à 100 % : [x] messages d'erreur en français ; [x] scan sur iPhone (lecteur de secours, testé
       dans Firefox Android, jamais sur un vrai iPhone) ; [x] jaquette en tête de fiche (recadrée au centre ; idée : jaquette entière sur fond flouté) ;
       [x] ordre des champs de la fiche ; [x] fiche rafraîchie après traduction ; [x] résumés manquants (games:recover_summaries, 18 jeux en
-      prod ; 10 jeux sans lien au catalogue : à relier à la main).
-- [ ] **Liste de souhaits** (voir Priorité 1).
-- [ ] **Scan en rafale** (voir Priorité 1).
+      prod ; 10 jeux sans lien au catalogue : à relier à la main) ; [x] scan en rafale ; [x] liste de souhaits.
+      RESTE pour les jeux : relier les 10 jeux à la main ; essai du scan sur un vrai iPhone.
+- [x] **Liste de souhaits** (2026-11-26, en prod) : souhaits par collection (titre, jeu du catalogue, plateforme,
+      édition, prix maximum, note), fiche, « Je l'ai trouvé ! » → item pré-rempli, « Tu le cherches ! » dans la pile
+      (titre ou scan), souhaits des amis (interrupteur dans le profil), « Ce que je cherche » dans Mon Carnet.
+      Les notes ont été retirées (remplacées par les souhaits). v2 : « Lou cherche ce jeu ! » au scan.
+- [x] **Scan en rafale** (2026-11-26, en prod, testé sur mobile) : pile « Ajouter des jeux », titres ou scan continu,
+      jeux possédés et cherchés signalés, envoi groupé.
+- [x] **Refonte « Pilule »** (2026-11-26) : tous les écrans (entrée, collections, fiche, formulaires, profil, carnet,
+      événements) ; logo capsule de gachapon.
 - [x] **Finitions** : textes en français et pluriels (2026-11-23) ; plus de ✕ ni de rouge pour « incomplet »,
       icône de carnet pour « Mon Carnet », onglet de la page en cours signalé (2026-11-24). Largeur maximale sur
       ordinateur : reportée, à décider à la fin de la v1 avec le passage en natif.
@@ -38,17 +45,18 @@ Décidé le 2026-11-23. Le design web sera repris tel quel dans l'appli native :
 
 ## Priorité 1
 
-- [ ] **Scan sur iPhone** — aujourd'hui impossible : Safari ne sait pas lire les codes-barres. La fonction phare est
+- [x] **Scan sur iPhone** — fait le 2026-11-24 (lecteur de secours) ; essai sur un vrai iPhone à faire. Avant : : Safari ne sait pas lire les codes-barres. La fonction phare est
       donc invisible pour une bonne partie des utilisateurs.
-- [ ] **Liste de souhaits reliée aux brocantes** — « les jeux / films / livres que je cherche », consultable et
+- [x] **Liste de souhaits reliée aux brocantes** (2026-11-26) — « les jeux / films / livres que je cherche », consultable et
       partageable avant d'aller chiner. Combinaison qui n'existe chez aucun concurrent.
-- [ ] **Scan en rafale** — enchaîner les codes-barres pour cataloguer une étagère, puis vérifier le tout à la fin
+- [x] **Scan en rafale** (2026-11-26) — enchaîner les codes-barres pour cataloguer une étagère, puis vérifier le tout à la fin
       (aujourd'hui : un formulaire par scan).
 
 ## Priorité 2
 
 - [ ] **Séries incomplètes** — « il te manque les tomes 4 à 6 de L'Atelier des sorciers ».
-- [ ] **Doublons** — « tu as déjà ce jeu » au moment de l'ajout, même dans une autre édition (le catalogue le permet).
+- [ ] **Doublons** — fait dans la pile (« Déjà dans ta collection sur Switch ») ; reste : au formulaire complet,
+      et « tu as déjà ce jeu » au moment de l'ajout, même dans une autre édition (le catalogue le permet).
 - [ ] **Cote réelle et valeur de la collection** — prix constatés sur le marché de l'occasion et évolution de la
       valeur totale. Argument naturel pour le Premium (les sources fiables sont souvent payantes).
 - [ ] **Prêts** — « prêté à Bob le 3 mars », avec rappel.
