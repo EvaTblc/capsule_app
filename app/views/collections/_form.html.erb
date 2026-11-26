@@ -1,61 +1,60 @@
+<%# Formulaire d'une collection (création et modification), style « Pilule » %>
+<% input = "w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 " \
+           "focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200" %>
+<% label = "text-[13px] font-semibold text-stone-700 mb-1.5 px-1 block" %>
+<% category_to_icon = {
+  "movies" => "movies", "music" => "music", "video_games" => "video_games", "figurines" => "figurines",
+  "trading_cards" => "trading_cards", "board_games" => "board_games", "books" => "book", "mixed" => "mixed", "other" => "other"
+} %>
 
-  <h1 class="text-2xl font-black tracking-tight mb-6">Nouvelle collection</h1>
+<%= form_with model: @collection, local: false, class: "flex flex-col gap-5" do |f| %>
+  <%= render "shared/form_errors", record: collection %>
 
-  <%= form_with model: @collection, local: false do |f| %>
-    <%= render "shared/form_errors", record: collection %>
-    <div class="flex flex-col gap-4">
+  <div>
+    <%= f.label :title, "Titre", class: label %>
+    <%= f.text_field :title, placeholder: "Ma collection Batman…", class: input %>
+  </div>
 
-      <div>
-        <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
-        <%= f.text_field :title, placeholder: "Ma collection Batman...", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
-      </div>
+  <div>
+    <%= f.label :description, "Description", class: label %>
+    <%= f.text_area :description, placeholder: "Ce que tu ranges dans cette collection…", rows: 3, class: "#{input} resize-none" %>
+  </div>
 
-      <div>
-        <label class="text-sm font-semibold text-gray-600 mb-1 block">Description</label>
-        <%= f.text_area :description, placeholder: "Décrivez votre collection...", rows: 3, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200 resize-none" %>
-      </div>
-
-    </div>
-    <div>
-      <label class="text-sm font-semibold text-gray-600 mb-3 block">Catégorie</label>
-
-      <div data-controller="category">
-        <%= f.hidden_field :category, data: { category_target: "input" } %>
-        <% category_to_icon = {
-          "movies"        => "movies",
-          "music"         => "music",
-          "video_games"   => "video_games",
-          "figurines"     => "figurines",
-          "trading_cards" => "trading_cards",
-          "board_games"   => "board_games",
-          "books"         => "book",
-          "mixed"         => "mixed",
-          "other"         => "other"
-        } %>
-        <div class="grid grid-cols-3 gap-2">
-          <% Collection.available_categories(collection.category_was).each do |cat| %>
-            <div data-category-target="card"
-                data-category="<%= cat %>"
-                data-action="click->category#select"
-                class="border-2 border-gray-100 bg-white rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer transition-all duration-150 active:scale-95">
-              <%= render "collections/icons/#{category_to_icon[cat]}" %>
-              <span class="text-xs font-medium text-gray-500 text-center"><%= category_label(cat) %></span>
-            </div>
-          <% end %>
+  <div data-controller="category">
+    <p class="<%= label %>">Catégorie</p>
+    <%= f.hidden_field :category, data: { category_target: "input" } %>
+    <div class="grid grid-cols-3 gap-2">
+      <% Collection.available_categories(collection.category_was).each do |cat| %>
+        <div data-category-target="card"
+             data-category="<%= cat %>"
+             data-action="click->category#select"
+             class="border-2 border-gray-100 bg-white rounded-2xl p-3 flex flex-col items-center gap-2 cursor-pointer transition-all duration-150 active:scale-95">
+          <%= render "collections/icons/#{category_to_icon[cat]}" %>
+          <span class="text-xs font-semibold text-stone-700 text-center"><%= category_label(cat) %></span>
         </div>
-      </div>
+      <% end %>
     </div>
-    <div class="mt-4 flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
-      <div>
-        <p class="text-sm font-semibold text-gray-600">Collection publique</p>
-        <p class="text-xs text-gray-400">Consultable (sans modification) par toute personne connectée qui a le lien</p>
-      </div>
-      <%= f.check_box :public, class: "w-5 h-5 accent-purple-600" %>
-      </div>
-    <div>
-      <label class="text-sm font-semibold text-gray-600 mb-1 block">Image de couverture</label>
-        <%= f.file_field :cover_image, accept: "image/*", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400" %>
-    </div>
-    <%= f.submit "Valider", class: "mt-4 w-full bg-purple-600 text-white font-semibold py-3 rounded-xl shadow-md shadow-purple-200 active:scale-95 transition-transform duration-150" %>
+  </div>
+
+  <label class="flex items-center justify-between gap-4 bg-white rounded-3xl px-5 py-4 cursor-pointer shadow-[0_1px_2px_rgba(30,27,46,0.06)]">
+    <span>
+      <span class="block text-[15px] font-bold">Collection publique</span>
+      <span class="block text-xs text-stone-600">Consultable (sans modification) par toute personne connectée qui a le lien</span>
+    </span>
+    <%= f.check_box :public, role: "switch",
+        class: "appearance-none shrink-0 w-11 h-[26px] rounded-full bg-gray-300 relative cursor-pointer transition-colors checked:bg-purple-700 " \
+               "before:content-[''] before:absolute before:top-[3px] before:left-[3px] before:w-5 before:h-5 before:rounded-full before:bg-white " \
+               "before:transition-transform checked:before:translate-x-[18px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600" %>
+  </label>
+
+  <div>
+    <%= f.label :cover_image, "Image de couverture", class: label %>
+    <%= f.file_field :cover_image, accept: "image/*",
+        class: "w-full text-sm text-stone-600 file:mr-3 file:h-11 file:px-5 file:rounded-full file:border-[1.5px] file:border-stone-300 " \
+               "file:bg-white file:text-ink file:font-bold file:cursor-pointer" %>
+  </div>
+
+  <%= f.button type: "submit", class: "#{entry_button_class} mt-1" do %>
+    <%= entry_button_content("Valider") %>
   <% end %>
-</div>
+<% end %>

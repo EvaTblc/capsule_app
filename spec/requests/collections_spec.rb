@@ -134,6 +134,16 @@ RSpec.describe "Collections", type: :request do
       expect(response.body).to include("Le titre ne peut pas être vide")
     end
 
+    it "titres : « Nouvelle collection » à la création, « Modifier la collection » à la modification" do
+      sign_in owner
+      get new_collection_path
+      expect(Nokogiri::HTML(response.body).at_css("h1").text).to eq("Nouvelle collection")
+      collection = collection_for(owner, title: "Mes jeux")
+      get edit_collection_path(collection)
+      expect(Nokogiri::HTML(response.body).at_css("h1").text).to eq("Modifier la collection")
+      expect(response.body).to include("Supprimer la collection")
+    end
+
     it "une collection de figurines existante garde sa catégorie à la modification" do
       sign_in owner
       collection = Collection.new(title: "Funko", category: "figurines").tap { |c| c.save!(validate: false) }
