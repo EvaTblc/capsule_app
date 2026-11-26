@@ -56,6 +56,50 @@ RSpec.describe "Souhaits", type: :request do
     end
   end
 
+  describe "section « Je cherche » de la collection" do
+    def section
+      Nokogiri::HTML(response.body).xpath("//h2[text()='Je cherche']/ancestor::div[contains(@class,'mb-4')][1]").first
+    end
+
+    it "aucun souhait : un bouton « Ajouter un souhait » vers le formulaire" do
+      get collection_path(collection)
+      expect(section.css("a[href='#{new_collection_wish_path(collection)}']").text.squish).to eq("Ajouter un souhait")
+    end
+
+    it "souhaits triés comme les items, avec plateforme, édition et prix à la française" do
+      create(:wish, collection: collection, title: "Zelda 10", platform: "Switch", edition: "PAL", max_price: "12.5")
+      create(:wish, collection: collection, title: "Zelda 2", max_price: 20)
+      create(:wish, collection: collection, title: "Ōkami")
+      get collection_path(collection)
+      rows = section.css(".divide-y > div").map { |row| row.text.squish }
+      # Tri naturel sans accents : Ōkami à la lettre O, Zelda 2 avant Zelda 10
+      expect(rows).to eq([ "Ōkami", "Zelda 2 Prix maximum :≤ 20 €", "Zelda 10 Switch · PAL Prix maximum :≤ 12,50 €" ])
+      expect(section.text).to include("Souhait") # bouton d'ajout, une fois la liste commencée
+    end
+
+    it "collection partagée : chaque souhait dit qui l'a ajouté" do
+      lou = create(:user, email: "lou@exemple.fr")
+      create(:user_collection, user: lou, collection: collection, role: "member")
+      create(:wish, collection: collection, author: lou, title: "Ōkami")
+      get collection_path(collection)
+      expect(section.text.squish).to include("Ōkami ajouté par lou")
+    end
+
+    it "collection solo : pas de mention de l'auteur" do
+      create(:wish, collection: collection, author: user, title: "Ōkami")
+      get collection_path(collection)
+      expect(section.text).not_to include("ajouté par")
+    end
+
+    it "visiteur d'une collection publique : pas de section, pas de souhaits" do
+      public_collection = create(:collection, public: true)
+      create(:wish, collection: public_collection, title: "Secret")
+      get collection_path(public_collection)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Je cherche", "Secret")
+    end
+  end
+
   describe "formulaire d'ajout" do
     it "collection de jeux : titre, plateforme (« Peu importe » par défaut), édition, prix maximum, note" do
       get new_collection_wish_path(collection)

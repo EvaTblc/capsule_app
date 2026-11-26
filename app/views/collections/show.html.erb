@@ -131,6 +131,33 @@
       </div>
     <% end %>
 
+    <%# Souhaits : ce que les membres cherchent pour cette collection (jamais montrés aux visiteurs) %>
+    <% if @member %>
+      <div class="mb-4">
+        <div class="mb-2 flex items-center justify-between">
+          <h2 class="text-base font-extrabold">Je cherche</h2>
+          <% if @wishes.any? %>
+            <%= link_to new_collection_wish_path(@collection),
+                class: "h-8 px-3 rounded-full border-[1.5px] border-stone-200 bg-white text-xs font-bold text-stone-700 flex items-center gap-1" do %>
+              <svg aria-hidden="true" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              Souhait
+            <% end %>
+          <% end %>
+        </div>
+        <% if @wishes.any? %>
+          <div class="bg-white rounded-3xl divide-y divide-stone-100 shadow-[0_1px_2px_rgba(30,27,46,0.06)]">
+            <%= render partial: "wishes/wish", collection: @wishes, locals: { show_author: @members.size > 1 } %>
+          </div>
+        <% else %>
+          <%= link_to new_collection_wish_path(@collection),
+              class: "w-full h-14 flex items-center justify-center gap-2 rounded-full border-[1.5px] border-dashed border-stone-400 text-stone-700 text-[15px] font-bold" do %>
+            <svg aria-hidden="true" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Ajouter un souhait
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
     <%# Membres : qui a accès à la collection. Le propriétaire gère le lien et retire des membres %>
     <% if @member %>
       <div class="mb-4">
