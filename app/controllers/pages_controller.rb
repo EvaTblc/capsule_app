@@ -50,7 +50,7 @@ class PagesController < ApplicationController
   def offline
     render layout: false
   end
-  
+
   private
 
   def address_params

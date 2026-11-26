@@ -72,4 +72,5 @@ Rails.application.routes.draw do
   get "profile/address/edit", to: "pages#edit_address", as: "edit_address"
   patch "profile/address", to: "pages#update_address", as: "update_address"
   patch "profile/wishes_visibility", to: "pages#update_wishes_visibility", as: "update_wishes_visibility"
+  get "friends/:friend_id/wishes", to: "friend_wishes#index", as: "friend_wishes"
 end

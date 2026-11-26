@@ -1,0 +1,31 @@
+<%# Souhaits d'un ami (style « Pilule ») : retour au profil, puis ses souhaits groupés par collection, en lecture seule %>
+<% name = @friend.email.split("@").first %>
+<div class="min-h-screen bg-paper px-5 pt-[68px] pb-24 text-ink">
+  <%= link_to profile_path,
+      class: "inline-flex max-w-full items-center gap-1 h-10 pl-2.5 pr-3.5 rounded-full bg-white border-[1.5px] border-stone-200 text-sm font-bold" do %>
+    <svg aria-hidden="true" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M15 19l-7-7 7-7"/></svg>
+    Profil
+  <% end %>
+
+  <div class="mt-4 mb-6 flex items-center gap-3">
+    <%= person_avatar(@friend, size: "w-12 h-12 text-lg") %>
+    <h1 class="min-w-0 text-[28px] font-extrabold tracking-tight leading-tight break-words">Ce que <%= name %> cherche</h1>
+  </div>
+
+  <% if @wishes_by_collection.any? %>
+    <div class="flex flex-col gap-6">
+      <% @wishes_by_collection.each do |collection, wishes| %>
+        <section>
+          <h2 class="mb-2 px-1 text-[17px] font-extrabold truncate"><%= collection.title %></h2>
+          <div class="bg-white rounded-3xl divide-y divide-stone-100 shadow-[0_1px_2px_rgba(30,27,46,0.06)]">
+            <%= render partial: "wishes/wish", collection: wishes, locals: { show_author: false, link: false } %>
+          </div>
+        </section>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="px-1 text-[15px] text-stone-600">
+      <%= @friend.wishes_visible_to_friends ? "#{name} ne cherche rien pour l'instant." : "#{name} ne partage pas ses souhaits." %>
+    </p>
+  <% end %>
+</div>

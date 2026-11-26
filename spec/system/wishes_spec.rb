@@ -200,4 +200,20 @@ RSpec.describe "Souhaits", type: :system do
     expect(page).to have_css("turbo-frame#wishes_visibility input[role='switch']:checked")
     expect(user.reload.wishes_visible_to_friends).to be(true)
   end
+
+  it "profil : taper sur un ami ouvre ce qu'il cherche, en lecture seule" do
+    lou = create(:user, email: "lou@exemple.fr")
+    create(:friendship, requester: user, receiver: lou, status: "accepted")
+    lou_games = create(:collection, title: "Jeux de Lou", category: "video_games")
+    create(:user_collection, user: lou, collection: lou_games)
+    create(:wish, collection: lou_games, author: lou, title: "Ōkami", platform: "PS2", max_price: 20)
+
+    visit profile_path
+    click_on "lou"
+
+    expect(page).to have_content("Ce que lou cherche")
+    expect(page).to have_content("Jeux de Lou")
+    expect(page).to have_content("Ōkami")
+    expect(page).to have_no_link("Ōkami")
+  end
 end

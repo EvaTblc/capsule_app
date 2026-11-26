@@ -70,11 +70,14 @@
         <div class="<%= card %> px-3.5 py-1 divide-y divide-stone-100">
           <% @friends.each do |friend| %>
             <div class="py-2.5 flex items-center gap-3">
-              <%= person_avatar(friend) %>
-              <div class="flex-1 min-w-0">
-                <p class="text-[15px] font-bold truncate"><%= friend.email.split("@").first %></p>
-                <p class="text-xs text-stone-600 truncate"><%= friend.email %></p>
-              </div>
+              <%# Avatar et nom : vers ses souhaits (lecture seule) %>
+              <%= link_to friend_wishes_path(friend), class: "flex-1 min-w-0 flex items-center gap-3" do %>
+                <%= person_avatar(friend) %>
+                <span class="flex-1 min-w-0">
+                  <span class="block text-[15px] font-bold truncate"><%= friend.email.split("@").first %></span>
+                  <span class="block text-xs text-purple-700 font-semibold">Voir ses souhaits</span>
+                </span>
+              <% end %>
               <%= button_to "Retirer", friendship_path(@friendships_by_friend[friend.id]), method: :delete, class: small_pill %>
             </div>
           <% end %>
