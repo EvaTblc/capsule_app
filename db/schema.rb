@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_16_135000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_26_105743) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -406,6 +406,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_135000) do
     t.decimal "longitude"
     t.string "address"
     t.string "role", default: "free", null: false
+    t.boolean "wishes_visible_to_friends", default: true, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["provider", "uid"], name: "index_users_on_provider_and_uid", unique: true, where: "((provider IS NOT NULL) AND (uid IS NOT NULL))"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
@@ -423,6 +424,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_135000) do
     t.boolean "completed", default: false
     t.text "summary_en"
     t.string "edition"
+  end
+
+  create_table "wishes", force: :cascade do |t|
+    t.bigint "collection_id", null: false
+    t.bigint "author_id"
+    t.bigint "product_id"
+    t.string "title", null: false
+    t.string "platform"
+    t.string "edition"
+    t.decimal "max_price", precision: 8, scale: 2
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_wishes_on_author_id"
+    t.index ["collection_id", "product_id"], name: "index_wishes_on_collection_id_and_product_id", unique: true, where: "(product_id IS NOT NULL)"
+    t.index ["collection_id"], name: "index_wishes_on_collection_id"
+    t.index ["product_id"], name: "index_wishes_on_product_id"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
@@ -446,4 +464,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_135000) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "user_collections", "collections"
   add_foreign_key "user_collections", "users"
+  add_foreign_key "wishes", "collections"
+  add_foreign_key "wishes", "products", on_delete: :nullify
+  add_foreign_key "wishes", "users", column: "author_id", on_delete: :nullify
 end

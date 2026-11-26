@@ -14,7 +14,7 @@ class User < ApplicationRecord
   # Notes/events partagés à des amis : on les garde chez l'ami, sans expéditeur
   has_many :sent_notes, class_name: "Note", foreign_key: :sender_id, dependent: :nullify
   has_many :sent_events, class_name: "Event", foreign_key: :sender_id, dependent: :nullify
-
+  has_many :authored_wishes, class_name: "Wish", foreign_key: :author_id, inverse_of: :author, dependent: :nullify
   has_many :sent_friendships, class_name: "Friendship", foreign_key: :requester_id, dependent: :destroy
   has_many :received_friendships, class_name: "Friendship", foreign_key: :receiver_id, dependent: :destroy
   # Boîtes du catalogue reliées à une œuvre par ce compte ; la base vide la référence si le compte est supprimé
