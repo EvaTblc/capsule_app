@@ -33,6 +33,24 @@ RSpec.describe "Collections", type: :request do
       expect(response.body).to include("8 items")
     end
 
+    it "chaque collection est une capsule à la couleur de sa catégorie, avec son nombre d'items ; puis « Nouvelle collection »" do
+      games = collection_for(owner, title: "Mes jeux", category: "video_games")
+      2.times { create(:item, collection: games) }
+      get collections_path
+      capsule = Nokogiri::HTML(response.body).at_css("a[href='#{collection_path(games)}']")
+      expect(capsule["class"]).to include("rounded-full", "bg-blue-100")
+      expect(capsule.text.squish).to include("Mes jeux", "2 items")
+      expect(response.body).to include("Nouvelle collection", "2 items dans 1 capsule")
+      collection_for(owner, title: "Mangas", category: "books")
+      get collections_path
+      expect(response.body).to include("2 items dans 2 capsules")
+    end
+
+    it "sans collection : le logo et un bouton pour créer la première" do
+      get collections_path
+      expect(response.body).to include("Aucune collection", "Créer une collection", "logo-")
+    end
+
     it "fait un nombre de requêtes constant, quel que soit le nombre de collections" do
       add_collections = ->(n) { n.times { |i| create(:item, collection: collection_for(owner, title: "C#{i}#{rand(1000)}")) } }
       add_collections.(8)
