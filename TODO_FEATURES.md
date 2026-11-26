@@ -22,7 +22,7 @@ Décidé le 2026-11-23. Le design web sera repris tel quel dans l'appli native :
       dans Firefox Android, jamais sur un vrai iPhone) ; [x] jaquette en tête de fiche (recadrée au centre ; idée : jaquette entière sur fond flouté) ;
       [x] ordre des champs de la fiche ; [x] fiche rafraîchie après traduction ; [x] résumés manquants (games:recover_summaries, 18 jeux en
       prod ; 10 jeux sans lien au catalogue : à relier à la main) ; [x] scan en rafale ; [x] liste de souhaits.
-      RESTE pour les jeux : relier les 10 jeux à la main ; essai du scan sur un vrai iPhone.
+      [x] 10 jeux reliés au catalogue à la main (2026-11-26). RESTE pour les jeux : essai du scan sur un vrai iPhone.
 - [x] **Liste de souhaits** (2026-11-26, en prod) : souhaits par collection (titre, jeu du catalogue, plateforme,
       édition, prix maximum, note), fiche, « Je l'ai trouvé ! » → item pré-rempli, « Tu le cherches ! » dans la pile
       (titre ou scan), souhaits des amis (interrupteur dans le profil), « Ce que je cherche » dans Mon Carnet.
