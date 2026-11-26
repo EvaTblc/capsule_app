@@ -64,7 +64,7 @@ RSpec.describe "Types d'items : parcours complet (navigateur)", type: :system do
       fill_in placeholder: "Développeur", with: "Clover Studio"
       fill_in placeholder: "Standard, Collector, Steelbook...", with: "Standard"
       click_on "PS5"
-      check "Jeu complet avec notice ?"
+      check "Jeu complet avec notice\u00a0?" # espace insécable avant le « ? »
     end
     click_on "Valider"
     expect(page).to have_content("Item ajouté !")

@@ -5,24 +5,24 @@
   <%# Film choisi : seul son identifiant part, le serveur relit l'œuvre au catalogue (Wikidata, jamais TMDB) %>
   <%= hidden_field_tag "product[tmdb_id]", f.object.product&.tmdb_id, id: nil, data: { "movie-search-target": "tmdbId" } %>
   <div class="relative mb-4">
-    <label class="text-sm font-semibold text-gray-600 mb-1 block">Recherche</label>
+    <label class="text-[13px] font-semibold text-stone-700 mb-1.5 px-1 block">Recherche</label>
     <div class="flex gap-2">
       <input data-movie-search-target="query"
             data-action="input->movie-search#search"
             placeholder="Rechercher un film..."
-            class="flex-1 border border-purple-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+            class="flex-1 min-w-0 h-12 border-[1.5px] border-purple-300 rounded-full bg-white px-4 text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200">
       <%# Scan : UPCitemdb, payant au-delà de l'essai → verrouillé pour un compte free %>
       <% if current_user.paid_features? %>
       <button type="button"
               data-action="click->movie-search#startScan"
-              class="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center shrink-0">
+              class="w-12 h-12 bg-purple-700 rounded-full flex items-center justify-center shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       </button>
       <% else %>
-        <%= render layout: "shared/premium_lock", locals: { button_class: "w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center", wrapper_class: "shrink-0" } do %>
+        <%= render layout: "shared/premium_lock", locals: { button_class: "w-12 h-12 bg-stone-200 rounded-full flex items-center justify-center", wrapper_class: "shrink-0" } do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -31,7 +31,7 @@
         <% end %>
       <% end %>
     </div>
-    <div data-movie-search-target="results" class="hidden absolute z-20 w-full bg-white border border-gray-100 rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto"></div>
+    <div data-movie-search-target="results" class="hidden absolute z-20 w-full bg-white border border-stone-100 rounded-2xl shadow-lg mt-1 max-h-64 overflow-y-auto"></div>
   </div>
 
   <%# Scanner modal %>
@@ -49,39 +49,39 @@
     </div>
   </div>
   <div class="mb-4">
-    <label class="text-sm font-semibold text-gray-600 mb-1 block">Titre</label>
-    <input data-movie-search-target="title" name="item[title]" placeholder="Titre de l'item..." value="<%= @item.title %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    <label class="text-[13px] font-semibold text-stone-700 mb-1.5 px-1 block">Titre</label>
+    <input data-movie-search-target="title" name="item[title]" placeholder="Titre de l'item..." value="<%= @item.title %>" class="w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200">
   </div>
   <div class="mb-4">
-    <label class="text-sm font-semibold text-gray-600 mb-1 block">État</label>
-    <%= f.select :condition, Item::CONDITIONS, { include_blank: "Sélectionner..." }, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+    <label class="text-[13px] font-semibold text-stone-700 mb-1.5 px-1 block">État</label>
+    <%= f.select :condition, Item::CONDITIONS, { include_blank: "Sélectionner..." }, class: "w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200" %>
   </div>
   <div class="mb-4">
-    <label class="text-sm font-semibold text-gray-600 mb-1 block">Date d'acquisition</label>
-    <%= f.date_field :acquired_at, class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200" %>
+    <label class="text-[13px] font-semibold text-stone-700 mb-1.5 px-1 block">Date d'acquisition</label>
+    <%= f.date_field :acquired_at, class: "w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200" %>
   </div>
   <div class="mb-4">
-    <label class="text-sm font-semibold text-gray-600 mb-1 block">Description</label>
-    <textarea data-movie-search-target="description" name="movie_detail[description]" placeholder="Description..." rows="3" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200 resize-none"><%= movie_detail&.description %></textarea>
+    <label class="text-[13px] font-semibold text-stone-700 mb-1.5 px-1 block">Description</label>
+    <textarea data-movie-search-target="description" name="movie_detail[description]" placeholder="Description..." rows="3" class="w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200 resize-none"><%= movie_detail&.description %></textarea>
   </div>
   <div class="mb-4">
-    <label class="text-sm font-semibold text-gray-600 mb-1 block">Réalisateur</label>
-    <input data-movie-search-target="director" name="movie_detail[director]" placeholder="Réalisateur" value="<%= movie_detail&.director %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    <label class="text-[13px] font-semibold text-stone-700 mb-1.5 px-1 block">Réalisateur</label>
+    <input data-movie-search-target="director" name="movie_detail[director]" placeholder="Réalisateur" value="<%= movie_detail&.director %>" class="w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200">
   </div>
   <div class="mb-4">
-    <label class="text-sm font-semibold text-gray-600 mb-1 block">Année</label>
-    <input data-movie-search-target="year" name="movie_detail[year]" type="number" placeholder="Année" value="<%= movie_detail&.year %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    <label class="text-[13px] font-semibold text-stone-700 mb-1.5 px-1 block">Année</label>
+    <input data-movie-search-target="year" name="movie_detail[year]" type="number" placeholder="Année" value="<%= movie_detail&.year %>" class="w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200">
   </div>
   <div class="mb-4">
-    <label class="text-sm font-semibold text-gray-600 mb-1 block">Studio</label>
-    <input data-movie-search-target="studio" name="movie_detail[studio]" placeholder="Studio" value="<%= movie_detail&.studio %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    <label class="text-[13px] font-semibold text-stone-700 mb-1.5 px-1 block">Studio</label>
+    <input data-movie-search-target="studio" name="movie_detail[studio]" placeholder="Studio" value="<%= movie_detail&.studio %>" class="w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200">
   </div>
   <div class="mb-4">
-    <label class="text-sm font-semibold text-gray-600 mb-1 block">Format</label>
-    <input data-movie-search-target="format" name="movie_detail[format]" placeholder="Format (DVD, Blu-ray...)" value="<%= movie_detail&.format %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    <label class="text-[13px] font-semibold text-stone-700 mb-1.5 px-1 block">Format</label>
+    <input data-movie-search-target="format" name="movie_detail[format]" placeholder="Format (DVD, Blu-ray...)" value="<%= movie_detail&.format %>" class="w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200">
   </div>
   <div class="mb-4">
-    <label class="text-sm font-semibold text-gray-600 mb-1 block">Édition</label>
-    <input data-movie-search-target="edition" name="movie_detail[edition]" placeholder="Standard, Collector, Steelbook..." value="<%= movie_detail&.edition %>" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors duration-200">
+    <label class="text-[13px] font-semibold text-stone-700 mb-1.5 px-1 block">Édition</label>
+    <input data-movie-search-target="edition" name="movie_detail[edition]" placeholder="Standard, Collector, Steelbook..." value="<%= movie_detail&.edition %>" class="w-full border-[1.5px] border-stone-200 rounded-2xl bg-white px-4 py-3 text-base text-ink placeholder:text-gray-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200">
   </div>
 </div>

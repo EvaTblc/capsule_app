@@ -1,6 +1,11 @@
-<div class="min-h-screen p-4 pt-6 pb-24">
-  <h1 class="text-2xl font-black tracking-tight mb-6">Nouvelle pépite</h1>
+<%# Nouvel item (style « Pilule ») : retour à la collection, titre, puis le formulaire %>
+<div class="min-h-screen bg-paper px-5 pt-[68px] pb-24 text-ink">
+  <%= link_to collection_path(@collection),
+      class: "inline-flex max-w-full items-center gap-1 h-10 pl-2.5 pr-3.5 rounded-full bg-white border-[1.5px] border-stone-200 text-sm font-bold" do %>
+    <svg aria-hidden="true" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M15 19l-7-7 7-7"/></svg>
+    <span class="truncate"><%= @collection.title %></span>
+  <% end %>
+  <h1 class="mt-4 mb-6 text-[30px] font-extrabold tracking-tight leading-none">Nouvelle pépite</h1>
 
   <%= render "form", item: @item, collection: @collection %>
-
 </div>
