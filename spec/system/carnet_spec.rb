@@ -27,4 +27,21 @@ RSpec.describe "Mon Carnet", type: :system do
     click_on "Mon Carnet", match: :first
     expect(page).to have_content(/prochaine sortie · dans 5 jours/i) # en majuscules par le CSS
   end
+
+  it "détail d'un événement : le partager avec un ami, puis le supprimer" do
+    lou = create(:user, email: "lou@exemple.fr")
+    create(:friendship, requester: user, receiver: lou, status: "accepted")
+    event = create(:event, user: user, title: "Brocante de Vincennes", date: Date.current + 3)
+
+    visit event_path(event)
+    expect(page).to have_content("Brocante de Vincennes")
+    click_on "lou"
+    expect(page).to have_content("Envoyé à lou !")
+    expect(lou.events.last).to have_attributes(title: "Brocante de Vincennes", sender: user)
+
+    accept_confirm("Supprimer cet événement ?") { find("button[aria-label=\"Supprimer l'événement\"]").click }
+    expect(page).to have_content("Mon Carnet")
+    expect(page).to have_no_content("Brocante de Vincennes")
+    expect(user.events).to be_empty
+  end
 end

@@ -8,7 +8,6 @@
 
     <%# Prochaine sortie : l'événement à venir le plus proche dans le temps %>
     <% if @next_event %>
-      <% days = (@next_event.date - Date.current).to_i %>
       <%= link_to event_path(@next_event), class: "bg-red-100 rounded-[28px] p-4 flex items-center gap-3.5" do %>
         <span class="w-[58px] h-16 shrink-0 rounded-[18px] bg-white flex flex-col items-center justify-center leading-none text-red-700">
           <span class="text-2xl font-extrabold"><%= @next_event.date.day %></span>
@@ -16,7 +15,7 @@
         </span>
         <span class="flex-1 min-w-0">
           <span class="block text-[11px] font-extrabold tracking-wider uppercase text-red-800">
-            Prochaine sortie · <%= days.zero? ? "aujourd'hui" : days == 1 ? "demain" : "dans #{days} jours" %>
+            Prochaine sortie · <%= event_countdown(@next_event.date) %>
           </span>
           <span class="mt-0.5 block text-lg font-extrabold tracking-tight truncate"><%= @next_event.title %></span>
           <span class="block text-[13px] text-stone-600 truncate"><%= @next_event.address %></span>

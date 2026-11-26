@@ -38,6 +38,43 @@ RSpec.describe "Événements", type: :request do
     end
   end
 
+  describe "GET /events/:id (détail)" do
+    def page_text = Nokogiri::HTML(response.body).text.squish
+
+    it "date en toutes lettres et compte à rebours, rappel, adresse, lien, commentaire, Modifier / Supprimer" do
+      event = create(:event, user: user, title: "Vide-grenier de Montreuil", date: Date.new(2026, 12, 1), reminder: true,
+                             address: "Place de la mairie", url: "https://brocabrac.fr/1", comment: "Parking derrière l'église")
+      travel_to Date.new(2026, 11, 26) do
+        get event_path(event)
+      end
+      expect(page_text).to include("mardi 1 décembre · dans 5 jours", "Vide-grenier de Montreuil", "Rappel activé",
+                                   "Place de la mairie", "Voir l'annonce", "Parking derrière l'église")
+      page = Nokogiri::HTML(response.body)
+      expect(page.css("a[href='#{edit_event_path(event)}']").text.squish).to eq("Modifier")
+      expect(page.css("button").map { |button| button["aria-label"] }).to include("Supprimer l'événement")
+      expect(page.css("a[href='https://brocabrac.fr/1']").first["rel"]).to eq("noopener")
+    end
+
+    it "événement minimal (ni date, ni adresse, ni lien) : la page s'affiche quand même" do
+      event = Event.create!(user: user, title: "Sans rien")
+      get event_path(event)
+      expect(response).to have_http_status(:ok)
+      expect(page_text).to include("Sans rien")
+      expect(page_text).not_to include("Rappel activé", "Voir l'annonce")
+    end
+
+    it "partage : un bouton par ami ; aucun ami, pas de section" do
+      get event_path(create(:event, user: user))
+      expect(page_text).not_to include("Partager avec")
+      friend = create(:user, email: "lou@exemple.fr")
+      create(:friendship, requester: user, receiver: friend, status: "accepted")
+      event = create(:event, user: user)
+      get event_path(event)
+      share = Nokogiri::HTML(response.body).css("#share-event-#{event.id} button").map { |button| button.text.squish }
+      expect(share).to eq([ "L lou" ]) # initiale de l'avatar, puis le nom
+    end
+  end
+
   describe "DELETE /events/:id" do
     it "supprime l'événement et revient au carnet" do
       event = create(:event, user: user)
@@ -54,6 +91,12 @@ RSpec.describe "Événements", type: :request do
       event = create(:event, user: user, url: "https://brocabrac.fr/1")
       expect { post share_event_path(event), params: { friend_id: friend.id } }.to change(friend.events, :count).by(1)
       expect(friend.events.last.sender).to eq(user)
+    end
+
+    it "réponse Turbo : le partage est remplacé par « Envoyé à … ! »" do
+      event = create(:event, user: user)
+      post share_event_path(event), params: { friend_id: friend.id }, as: :turbo_stream
+      expect(response.body).to include(%(target="share-event-#{event.id}"), "Envoyé à #{friend.email.split('@').first} !")
     end
 
     it "ne duplique pas une brocante que l'ami a déjà (et ne plante pas)" do

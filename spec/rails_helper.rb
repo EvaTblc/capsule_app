@@ -79,6 +79,8 @@ RSpec.configure do |config|
 
   RSpec.configure do |config|
     config.include FactoryBot::Syntax::Methods
+    # travel_to : figer la date du jour (compte à rebours des événements…)
+    config.include ActiveSupport::Testing::TimeHelpers
   end
 
   RSpec.configure do |config|

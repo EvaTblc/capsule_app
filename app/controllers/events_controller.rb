@@ -49,7 +49,8 @@ class EventsController < ApplicationController
       format.turbo_stream do
         render turbo_stream: turbo_stream.replace(
           "share-event-#{@event.id}",
-          html: helpers.tag.p("Envoyé !", class: "text-xs text-green-500 font-semibold")
+          html: helpers.tag.p("Envoyé à #{friend.email.split('@').first} !", id: "share-event-#{@event.id}",
+                              class: "h-11 px-4 rounded-full bg-emerald-100 text-emerald-800 text-sm font-bold flex items-center")
         )
       end
       format.html { redirect_to event_path(@event), notice: "Événement partagé !" }
